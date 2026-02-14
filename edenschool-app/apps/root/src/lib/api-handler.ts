@@ -1,0 +1,18 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ApiUnauthorizedError } from './session';
+
+type HandlerFn = (req: NextRequest, context?: any) => Promise<NextResponse | Response>;
+
+export function withErrorHandler(handler: HandlerFn): HandlerFn {
+  return async (req: NextRequest, context?: any) => {
+    try {
+      return await handler(req, context);
+    } catch (error) {
+      if (error instanceof ApiUnauthorizedError) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      console.error('API error:', error);
+      return NextResponse.json({ error: '오류가 발생했습니다.' }, { status: 500 });
+    }
+  };
+}

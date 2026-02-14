@@ -1,0 +1,129 @@
+import pool from '../db';
+import type { RowDataPacket, ResultSetHeader } from 'mysql2';
+
+// ROOT + Admin: insertSmsSendResultNine
+export async function insertSmsSendResultNine(phone: string, message: string, type: string, resultMessage: string): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO sms_send_result_nine (phone, message, type, result_message, send_time) VALUES (?,?,?,?,now())`,
+    [phone, message, type, resultMessage]
+  );
+  return result.insertId;
+}
+
+// Admin: insertSmsSendResult
+export async function insertSmsSendResult(phone: string, message: string, type: string, resultCode: string, resultMessage: string, cmid: string): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO sms_send_result (phone, message, type, result_code, result_message, cmid, send_time) VALUES (?,?,?,?,?,?,now())`,
+    [phone, message, type, resultCode, resultMessage, cmid]
+  );
+  return result.insertId;
+}
+
+// Admin: selectSendHistory
+export async function selectSendHistory(num: string): Promise<Record<string, any>[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT message as msg, date_format(send_time, "%Y-%m-%d %h:%m") as date FROM sms_send_result_nine WHERE phone=? ORDER BY id DESC LIMIT 3`,
+    [num]
+  );
+  return rows;
+}
+
+// Admin: selectPhoneByClassIds
+export async function selectPhoneByClassIds(classIds: number[]): Promise<Record<string, any>[]> {
+  if (classIds.length === 0) return [];
+  const placeholders = classIds.map(() => '?').join(',');
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT ci.name as className, s.name as studentName, s.sphone, s.pphone FROM student s, class_status cs, class_info ci WHERE ci.id IN (${placeholders}) AND cs.status=1 AND s.status=1 AND cs.class_id=ci.id AND s.id=cs.student_id ORDER BY className ASC, studentName ASC`,
+    classIds
+  );
+  return rows;
+}
+
+// Admin: selectMemoByTeacherId
+export async function selectMemoByTeacherId(id: number): Promise<string | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT memo FROM sms_memo WHERE teacher_id=?`,
+    [id]
+  );
+  return rows[0]?.memo || null;
+}
+
+// Admin: insertMemo
+export async function insertMemo(teacherId: number, memo: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO sms_memo (memo, teacher_id, insert_time, update_time) VALUES (?,?,now(),now())`,
+    [memo, teacherId]
+  );
+}
+
+// Admin: updateMemoByTeacherId
+export async function updateMemoByTeacherId(teacherId: number, memo: string): Promise<void> {
+  await pool.query(
+    `UPDATE sms_memo SET memo=?, update_time=now() WHERE teacher_id=?`,
+    [memo, teacherId]
+  );
+}
+
+// Template CRUD
+export async function selectTemplatesByTeacherId(teacherId: number): Promise<Record<string, any>[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, title, content, date_format(insert_time, '%Y-%m-%d %H:%i') as created_at FROM sms_template WHERE teacher_id=? ORDER BY update_time DESC`,
+    [teacherId]
+  );
+  return rows;
+}
+
+export async function insertTemplate(teacherId: number, title: string, content: string): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO sms_template (teacher_id, title, content, insert_time, update_time) VALUES (?,?,?,now(),now())`,
+    [teacherId, title, content]
+  );
+  return result.insertId;
+}
+
+export async function updateTemplate(id: number, teacherId: number, title: string, content: string): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE sms_template SET title=?, content=?, update_time=now() WHERE id=? AND teacher_id=?`,
+    [title, content, id, teacherId]
+  );
+  return result.affectedRows;
+}
+
+export async function deleteTemplate(id: number, teacherId: number): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `DELETE FROM sms_template WHERE id=? AND teacher_id=?`,
+    [id, teacherId]
+  );
+  return result.affectedRows;
+}
+
+// Batch send history (duplicate prevention)
+export async function selectSendHistoryBatch(phones: string[]): Promise<Record<string, any>[]> {
+  if (phones.length === 0) return [];
+  const placeholders = phones.map(() => '?').join(',');
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT phone, message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time FROM sms_send_result_nine WHERE phone IN (${placeholders}) AND send_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY send_time DESC`,
+    phones
+  );
+  return rows;
+}
+
+// sms_send_result_renew: insert with sender ID
+export async function insertSmsSendResultRenew(
+  sendId: number, phone: string, message: string, type: string, resultMessage: string
+): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO sms_send_result_renew (send_id, phone, message, type, result_message, send_time) VALUES (?,?,?,?,?,now())`,
+    [sendId, phone, message, type, resultMessage]
+  );
+  return result.insertId;
+}
+
+// sms_send_result_renew: recent history by sender ID
+export async function selectSendHistoryBySenderId(sendId: number, limit: number = 20): Promise<Record<string, any>[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT phone, message, type, result_message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time FROM sms_send_result_renew WHERE send_id=? ORDER BY id DESC LIMIT ?`,
+    [sendId, limit]
+  );
+  return rows;
+}

@@ -1,0 +1,20 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminApiSession } from '@/lib/admin-session';
+import { withErrorHandler } from '@/lib/api-handler';
+import { insertClassInfo } from '@edenschool/common/queries/class';
+
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  await requireAdminApiSession();
+
+  try {
+    const body = await req.json();
+    const { name, subject, grade, year, day, hour, minute, teacherOne, teacherTwo, code, price } = body;
+
+    const classId = await insertClassInfo({ name, subject, grade, year, day, hour, minute, teacherOne, teacherTwo, code, price });
+
+    return NextResponse.json({ success: true, id: classId });
+  } catch (error) {
+    console.error('Create class error:', error);
+    return NextResponse.json({ success: false, error: '수강반 추가에 실패했습니다.' }, { status: 500 });
+  }
+});

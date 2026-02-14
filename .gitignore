@@ -1,0 +1,40 @@
+# ── 한글 파일 데이터 폴더 (용량이 크고 코드가 아닌 데이터) ──
+이든 학교별 한글파일/
+쪼개기 파일/
+타지역 시험지 한글파일/
+
+# ── 레거시 JSP 프로젝트 ──
+admin/
+ROOT/
+
+# ── 템플릿 원본 / 테스트 파일 (scripts/ 안에 복사본 있음) ──
+SAMPLE.hwpx
+SAMPLE2.hwpx
+test_formatted.hwpx
+nul
+
+# ── Node.js / 빌드 ──
+node_modules/
+.next/
+dist/
+.turbo/
+
+# ── 환경변수 (실제 값 포함 - 절대 커밋 금지) ──
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ── Claude Code 작업 디렉토리 ──
+.claude/
+
+# ── OS / IDE ──
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── 임시 파일 ──
+*.tmp

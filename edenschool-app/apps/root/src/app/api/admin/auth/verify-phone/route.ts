@@ -1,0 +1,35 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getAdminSession } from '@/lib/admin-session';
+
+export async function POST(req: NextRequest) {
+  try {
+    const { code } = await req.json();
+
+    if (!code) {
+      return new NextResponse('EMPTY');
+    }
+
+    const session = await getAdminSession();
+    const verification = session.phoneVerification;
+
+    if (!verification) {
+      return new NextResponse('NO_REQUEST');
+    }
+
+    if (Date.now() > verification.expiresAt) {
+      delete session.phoneVerification;
+      await session.save();
+      return new NextResponse('EXPIRED');
+    }
+
+    if (code !== verification.code) {
+      return new NextResponse('WRONG');
+    }
+
+    // Verification successful
+    return new NextResponse('OK');
+  } catch (error) {
+    console.error('Verify phone error:', error);
+    return new NextResponse('FAIL', { status: 500 });
+  }
+}
