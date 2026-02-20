@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { selectEmailByEmail, updatePassByEmail, selectUserPhoneByEmail } from '@edenschool/common/queries/user';
 import { hashPassword } from '@edenschool/common/password';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { isValidEmail } from '@edenschool/common/validation';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 attempts per 15 minutes per IP
+  const limited = checkRateLimit(req, 'find-pass', 5, 15 * 60 * 1000);
+  if (limited) return limited;
+
   const { email } = await req.json();
 
   if (!email || !isValidEmail(email)) {
@@ -16,8 +22,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '등록된 이메일을 찾을 수 없습니다.' });
   }
 
-  // Generate temporary password
-  const tempPw = Math.random().toString(36).slice(-8);
+  // Generate cryptographically secure temporary password (12 chars)
+  const tempPw = randomBytes(9).toString('base64url').slice(0, 12);
   const hashedPw = await hashPassword(tempPw);
   await updatePassByEmail(email, hashedPw);
 

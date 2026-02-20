@@ -1,5 +1,5 @@
 import pool from '../db';
-import type { ClassInfo, ClassStatus, ClassStudentJoinInfo } from '../types';
+import type { ClassInfo, ClassStatus } from '../types';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 // ROOT: selectSchoolLectureList
@@ -22,15 +22,6 @@ export async function selectClassInfoAll(): Promise<ClassInfo[]> {
 export async function selectClassInfoListLive(): Promise<ClassInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT * FROM class_info WHERE liveStatus=1 ORDER BY hour ASC, minute ASC`
-  );
-  return rows as ClassInfo[];
-}
-
-// Admin: selectClassInfoListLiveByTeacherName
-export async function selectClassInfoListLiveByTeacherName(name: string): Promise<ClassInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM class_info WHERE (teacherOne=? OR teacherTwo=?) AND liveStatus=1 ORDER BY hour ASC, minute ASC`,
-    [name, name]
   );
   return rows as ClassInfo[];
 }
@@ -74,15 +65,6 @@ export async function endClass(id: number): Promise<void> {
 // Admin: restartClass
 export async function restartClass(id: number): Promise<void> {
   await pool.query(`UPDATE class_info SET liveStatus=1 WHERE id=?`, [id]);
-}
-
-// Admin: selectClassStudentCount
-export async function selectClassStudentCount(id: number): Promise<number> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT count(0) as cnt FROM class_status WHERE class_id=? AND status=1`,
-    [id]
-  );
-  return rows[0].cnt;
 }
 
 // Admin: selectClassIdByName
@@ -142,62 +124,6 @@ export async function endClassStatus(studentId: number): Promise<number> {
     [studentId]
   );
   return result.affectedRows;
-}
-
-// Admin: selectClassIdFromStatus
-export async function selectClassIdFromStatus(studentId: number, classId: number): Promise<number> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT class_id FROM class_status WHERE student_id=? AND class_id=? AND status=1`,
-    [studentId, classId]
-  );
-  return rows[0]?.class_id ?? -1;
-}
-
-// Admin: selectClassStudentList
-export async function selectClassStudentList(): Promise<ClassStudentJoinInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT s.name as studentName, dc.name as defaultClassName, sc.name as schoolClassName, s.school, s.year, s.id as studentId, dc.id as defaultClassId, sc.id as schoolClassId FROM student as s
-     LEFT JOIN (SELECT ci.id, ci.name, cs.student_id, cs.status, ci.code FROM class_status cs, class_info ci WHERE cs.status=1 AND cs.class_id=ci.id AND ci.code="D") as dc ON s.id = dc.student_id
-     LEFT JOIN (SELECT ci.id, ci.name, cs.student_id, cs.status, ci.code FROM class_status cs, class_info ci WHERE cs.status=1 AND cs.class_id=ci.id AND ci.code="S") as sc ON s.id = sc.student_id
-     WHERE s.status=1 AND s.status ORDER BY s.name ASC`
-  );
-  return rows as ClassStudentJoinInfo[];
-}
-
-// Admin: selectClassInfoByYear
-export async function selectClassInfoByYear(year: number): Promise<ClassInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name FROM class_info WHERE grade="고" AND year=? AND liveStatus=1 ORDER BY name ASC`,
-    [year]
-  );
-  return rows as ClassInfo[];
-}
-
-// Admin: selectTestClassInfoListByYear
-export async function selectTestClassInfoListByYear(year: number): Promise<ClassInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name FROM class_info WHERE year=? AND liveStatus=1 ORDER BY name ASC`,
-    [year]
-  );
-  return rows as ClassInfo[];
-}
-
-// Admin: selectLectureListByGradeYear
-export async function selectLectureListByGradeYear(grade: string, year: string): Promise<ClassInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, day, hour, minute, teacherOne, teacherTwo FROM class_info WHERE grade=? AND year=? AND liveStatus=1`,
-    [grade, year]
-  );
-  return rows as ClassInfo[];
-}
-
-// Admin: selectSchoolGradeYearListByYear
-export async function selectSchoolGradeYearListByYear(year: number): Promise<string[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT DISTINCT concat(school, " ", grade, year) as name FROM student WHERE status=1 AND grade="고" AND year=? ORDER BY name ASC`,
-    [year]
-  );
-  return rows.map((r) => r.name);
 }
 
 // Admin: selectTeacherClassListByTeacherName

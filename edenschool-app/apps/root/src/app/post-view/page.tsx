@@ -3,6 +3,14 @@ import { getSession } from '@/lib/session';
 import { selectPostInfoById, selectCommentList, updatePostReadCount } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
 
+/** YouTube/Vimeo embed 링크를 iframe으로 변환 */
+function embedVideos(html: string): string {
+  return html.replace(
+    /<a\s+href="(https?:\/\/(?:www\.)?(?:youtube\.com\/embed\/|player\.vimeo\.com\/video\/)[^"]+)"[^>]*>[^<]*<\/a>/gi,
+    '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:16px 0"><iframe src="$1" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>'
+  );
+}
+
 export default async function PostViewPage({
   searchParams,
 }: {
@@ -22,81 +30,83 @@ export default async function PostViewPage({
   const session = await getSession();
 
   return (
-    <div className="container mt-4">
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-1">{post.subject}</h5>
-          <small className="text-muted">
-            {post.writer} | {post.date} | 조회 {post.readCount}
-          </small>
+    <div className="eden-container">
+      <div className="eden-card" style={{ marginBottom: 20 }}>
+        <div className="eden-card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <span style={{ fontSize: 18, fontWeight: 700 }}>{post.subject}</span>
+          <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>
+            {post.writer} &middot; {post.date} &middot; 조회 {post.readCount}
+          </span>
         </div>
-        <div className="card-body">
-          <div dangerouslySetInnerHTML={{ __html: post.contents }} />
+        <div className="eden-card-body">
+          <div dangerouslySetInnerHTML={{ __html: embedVideos(post.contents) }} />
         </div>
       </div>
 
       {files.length > 0 && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <h6 className="card-title">첨부파일</h6>
-            <ul className="list-unstyled mb-0">
-              {files.map((file) => (
-                <li key={file.id}>
-                  <a href={`/api/file/download/${file.id}`} download>
-                    <i className="fas fa-download" /> {file.filename}
-                  </a>
-                </li>
-              ))}
-            </ul>
+        <div className="eden-card" style={{ marginBottom: 20 }}>
+          <div className="eden-card-header">
+            <i className="fas fa-paperclip"></i> 첨부파일
+          </div>
+          <div className="eden-card-body">
+            {files.map((file) => (
+              <div key={file.id} className="eden-file-item">
+                <i className="fas fa-file-alt"></i>
+                <a href={`/api/file/download/${file.id}`} download>
+                  {file.filename}
+                </a>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="card mb-4">
-        <div className="card-body">
-          <h6 className="card-title">댓글 ({comments.length})</h6>
-
+      <div className="eden-card" style={{ marginBottom: 20 }}>
+        <div className="eden-card-header">
+          <i className="fas fa-comments"></i> 댓글 ({comments.length})
+        </div>
+        <div className="eden-card-body">
           {session.user && (
-            <form action="/api/comment" method="POST" className="mb-3">
+            <form action="/api/comment" method="POST" style={{ marginBottom: comments.length > 0 ? 16 : 0 }}>
               <input type="hidden" name="postId" value={id} />
               <input type="hidden" name="userId" value={session.user.id} />
-              <div className="input-group">
-                <input type="text" name="text" className="form-control" placeholder="댓글을 입력하세요" required />
-                <div className="input-group-append">
-                  <button type="submit" className="btn btn-primary">등록</button>
-                </div>
+              <div className="eden-input-row">
+                <input type="text" name="text" placeholder="댓글을 입력하세요" required />
+                <button type="submit" className="eden-btn eden-btn-primary">등록</button>
               </div>
             </form>
           )}
 
           {comments.length > 0 ? (
-            <ul className="list-group">
-              {comments.map((c) => (
-                <li key={c.id} className="list-group-item">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>{c.writer}</strong>
-                      <small className="text-muted ml-2">{c.date}</small>
-                    </div>
-                    {session.user && session.user.id === c.userId && (
-                      <form action="/api/comment/delete" method="POST" style={{ display: 'inline' }}>
-                        <input type="hidden" name="commentId" value={c.id} />
-                        <input type="hidden" name="postId" value={id} />
-                        <button type="submit" className="btn btn-sm btn-outline-danger">삭제</button>
-                      </form>
-                    )}
+            comments.map((c) => (
+              <div key={c.id} className="eden-comment">
+                <div className="eden-comment-header">
+                  <div>
+                    <span className="eden-comment-author">{c.writer}</span>
+                    <span className="eden-comment-date" style={{ marginLeft: 8 }}>{c.date}</span>
                   </div>
-                  <p className="mb-0 mt-1">{c.text}</p>
-                </li>
-              ))}
-            </ul>
+                  {session.user && session.user.id === c.userId && (
+                    <form action="/api/comment/delete" method="POST" style={{ display: 'inline' }}>
+                      <input type="hidden" name="commentId" value={c.id} />
+                      <input type="hidden" name="postId" value={id} />
+                      <button type="submit" className="eden-btn eden-btn-danger eden-btn-sm">삭제</button>
+                    </form>
+                  )}
+                </div>
+                <p className="eden-comment-text">{c.text}</p>
+              </div>
+            ))
           ) : (
-            <p className="text-muted mb-0">댓글이 없습니다.</p>
+            <div className="eden-empty" style={{ padding: '20px 0' }}>
+              댓글이 없습니다.
+            </div>
           )}
         </div>
       </div>
 
-      <a href="/board" className="btn btn-secondary">목록</a>
+      <a href="/board" className="eden-btn eden-btn-secondary">
+        <i className="fas fa-list"></i> 목록
+      </a>
     </div>
   );
 }

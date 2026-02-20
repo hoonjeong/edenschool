@@ -55,15 +55,6 @@ export async function selectLectureListByAdminName(name: string): Promise<Lectur
   return rows as Lecture[];
 }
 
-// Admin: selectLectureModifyById
-export async function selectLectureModifyById(id: number): Promise<Lecture | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT l.id, l.subject, l.description, l.url, l.teacher, l.code, l.lecture_date as lectureDate, c.name as className FROM lecture l, class_info c WHERE l.id=? AND c.id=l.class_id`,
-    [id]
-  );
-  return (rows[0] as Lecture) || null;
-}
-
 // Admin: selectSpecialLectureModifyById
 export async function selectSpecialLectureModifyById(id: number): Promise<Lecture | null> {
   const [rows] = await pool.query<RowDataPacket[]>(

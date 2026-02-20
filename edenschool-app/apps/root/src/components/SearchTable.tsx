@@ -17,16 +17,16 @@ export function SearchTable({ children }: { children: React.ReactNode }) {
 
   return (
     <div>
-      <div className="form-group">
+      <div className="eden-search">
+        <i className="fas fa-search"></i>
         <input
           type="text"
-          className="form-control"
           placeholder="검색..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
-      <div ref={containerRef}>
+      <div className="eden-card" ref={containerRef}>
         {children}
       </div>
     </div>

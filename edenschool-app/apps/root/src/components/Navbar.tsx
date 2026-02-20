@@ -6,80 +6,111 @@ export async function Navbar() {
 
   return (
     <>
-      <nav className="navbar navbar-expand-sm navbar-dark bg-dark">
-        <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-          <span className="p-2">전체메뉴</span>
-        </button>
-        <div className="collapse navbar-collapse" id="collapsibleNavbar">
-          <ul className="navbar-nav">
-            <li className="nav-item active">
-              <a className="nav-link" href="/">홈</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="/#high">고등부</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="/#middle">중등부</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="/board">게시판</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="/lecture">동영상강의</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="https://youtu.be/x0a4QVIBw28?si=lXpeHeJbYbFB06dV">수강후기</a>
-            </li>
-            <li className="nav-item active">
-              <a className="nav-link" href="https://blog.naver.com/edenschool/223955303630">교습비</a>
-            </li>
+      <nav className="eden-navbar">
+        <div className="eden-navbar-inner">
+          <a href="/" className="eden-navbar-brand">
+            <img src="/assets/img/logo.jpg" alt="이든배움" />
+            <span>이든배움국어학원</span>
+          </a>
+
+          <ul className="eden-navbar-menu">
+            <li><a href="/">홈</a></li>
+            <li><a href="/#high">고등부</a></li>
+            <li><a href="/#middle">중등부</a></li>
+            <li><a href="/class-info">수강반 안내</a></li>
+            <li><a href="/board">게시판</a></li>
+            <li><a href="/lecture">동영상강의</a></li>
+            <li><a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a></li>
+            <li><a href="https://youtu.be/x0a4QVIBw28?si=lXpeHeJbYbFB06dV">수강후기</a></li>
+            <li><a href="https://blog.naver.com/edenschool/223955303630">교습비</a></li>
           </ul>
-          <ul className="navbar-nav ml-auto">
+
+          <div className="eden-navbar-right">
             {user ? (
               <>
                 {user.code === 'O' && (
-                  <li className="nav-item active dropdown">
-                    <a className="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">관리자</a>
-                    <div className="dropdown-menu">
-                      <a className="dropdown-item" href="/admin-insert-lecture">동영상 강의추가</a>
-                      <a className="dropdown-item" href="/admin-lecture-info">동영상 관리</a>
-                      <a className="dropdown-item" href="/admin-new-student">학생 추가</a>
-                      <a className="dropdown-item" href="/admin-class-info">학생 관리</a>
-                      <a className="dropdown-item" href="/admin-send-sms">문자보내기</a>
+                  <div className="eden-dropdown">
+                    <button className="eden-dropdown-toggle">관리자</button>
+                    <div className="eden-dropdown-menu">
+                      <a href="/admin/insert-lecture">동영상 강의추가</a>
+                      <a href="/admin/lecture-info">동영상 관리</a>
+                      <a href="/admin/new-student">학생 추가</a>
+                      <a href="/admin/student-manage">학생 관리</a>
+                      <a href="/admin/send-sms">문자보내기</a>
                     </div>
-                  </li>
+                  </div>
                 )}
                 {(user.code === 'T' || user.code === 'O') && (
-                  <li className="nav-item active dropdown">
-                    <a className="nav-link dropdown-toggle" href="#" id="navbardrop2" data-toggle="dropdown">선생님</a>
-                    <div className="dropdown-menu">
-                      <a className="dropdown-item" href="">동영상보기</a>
+                  <div className="eden-dropdown">
+                    <button className="eden-dropdown-toggle">선생님</button>
+                    <div className="eden-dropdown-menu">
+                      <a href="/admin/teacher-lecture">동영상보기</a>
                     </div>
-                  </li>
+                  </div>
                 )}
-                <li className="nav-item active">
-                  <a className="nav-link" href="/myinfo"><i className="fas fa-users-cog"></i> 내정보</a>
-                </li>
-                <li className="nav-item active">
-                  <a className="nav-link" href="/logout"><i className="fas fa-sign-out-alt"></i> 로그아웃</a>
-                </li>
+                <a href="/myinfo"><i className="fas fa-users-cog"></i> 내정보</a>
+                <form action="/logout" method="post" style={{ display: 'inline', margin: 0 }}>
+                  <button type="submit"><i className="fas fa-sign-out-alt"></i> 로그아웃</button>
+                </form>
               </>
             ) : (
               <>
-                <li className="nav-item active">
-                  <a className="nav-link" href="/login"><i className="fas fa-sign-in-alt"></i> 로그인</a>
-                </li>
-                <li className="nav-item active">
-                  <a className="nav-link" href="/join">회원가입</a>
-                </li>
+                <a href="/login"><i className="fas fa-sign-in-alt"></i> 로그인</a>
+                <a href="/join">회원가입</a>
               </>
             )}
-          </ul>
+          </div>
+
+          <button
+            className="eden-navbar-toggle"
+            type="button"
+            data-toggle="eden-mobile"
+            aria-label="메뉴"
+          >
+            <i className="fas fa-bars"></i>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile drawer */}
+      <div className="eden-mobile-menu" id="edenMobileMenu">
+        <a href="/">홈</a>
+        <a href="/#high">고등부</a>
+        <a href="/#middle">중등부</a>
+        <a href="/class-info">수강반 안내</a>
+        <a href="/board">게시판</a>
+        <a href="/lecture">동영상강의</a>
+        <a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a>
+        <a href="https://youtu.be/x0a4QVIBw28?si=lXpeHeJbYbFB06dV">수강후기</a>
+        <a href="https://blog.naver.com/edenschool/223955303630">교습비</a>
+        <div className="eden-mobile-divider"></div>
+        {user ? (
+          <>
+            {user.code === 'O' && (
+              <>
+                <a href="/admin/insert-lecture"><i className="fas fa-plus"></i> 동영상 강의추가</a>
+                <a href="/admin/lecture-info"><i className="fas fa-list"></i> 동영상 관리</a>
+                <a href="/admin/new-student"><i className="fas fa-user-plus"></i> 학생 추가</a>
+                <a href="/admin/student-manage"><i className="fas fa-users"></i> 학생 관리</a>
+                <a href="/admin/send-sms"><i className="fas fa-sms"></i> 문자보내기</a>
+              </>
+            )}
+            {(user.code === 'T' || user.code === 'O') && (
+              <a href="/admin/teacher-lecture"><i className="fas fa-video"></i> 동영상보기</a>
+            )}
+            <div className="eden-mobile-divider"></div>
+            <a href="/myinfo"><i className="fas fa-users-cog"></i> 내정보</a>
+            <form action="/logout" method="post">
+              <button type="submit"><i className="fas fa-sign-out-alt"></i> 로그아웃</button>
+            </form>
+          </>
+        ) : (
+          <>
+            <a href="/login"><i className="fas fa-sign-in-alt"></i> 로그인</a>
+            <a href="/join">회원가입</a>
+          </>
+        )}
+      </div>
     </>
   );
 }

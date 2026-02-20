@@ -1,15 +1,30 @@
 import type { SessionOptions } from 'iron-session';
 
+const DEFAULT_TTL = Number(process.env.SESSION_TTL) || 60 * 60 * 3; // 3 hours
+const AUTO_LOGIN_TTL = 60 * 60 * 24 * 7; // 7 days
+
 export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: process.env.SESSION_COOKIE_NAME || 'edenschool-session',
-  ttl: Number(process.env.SESSION_TTL) || 60 * 60 * 3, // default 3 hours
+  ttl: DEFAULT_TTL,
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax' as const,
   },
 };
+
+export function getSessionOptions(autoLogin: boolean): SessionOptions {
+  if (!autoLogin) return sessionOptions;
+  return {
+    ...sessionOptions,
+    ttl: AUTO_LOGIN_TTL,
+    cookieOptions: {
+      ...sessionOptions.cookieOptions,
+      maxAge: AUTO_LOGIN_TTL,
+    },
+  };
+}
 
 export interface SessionData {
   user?: {

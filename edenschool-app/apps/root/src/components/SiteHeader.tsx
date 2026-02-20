@@ -1,9 +1,16 @@
-export function SiteHeader() {
+import { headers } from 'next/headers';
+
+export async function SiteHeader() {
+  const headersList = await headers();
+  const pathname = headersList.get('x-pathname') || '';
+
+  // 메인 페이지에서만 표시
+  if (pathname !== '/' && pathname !== '') return null;
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        html { font-size: 14px; }
-        .maintop { text-align: center; padding: 10px; }
+        .maintop { text-align: center; padding: 10px; background: #ffffff; }
         @media screen and (min-width:601px) {
           .maintitle { font-family: Black Han Sans; font-size: 2.5em; }
           .logo { width: 80px; }

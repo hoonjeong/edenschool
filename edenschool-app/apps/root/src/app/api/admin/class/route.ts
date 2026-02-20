@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
-import { insertClassInfo } from '@edenschool/common/queries/class';
+import { insertClassInfo, selectClassInfoListLive } from '@edenschool/common/queries/class';
+
+export const GET = withErrorHandler(async () => {
+  await requireAdminApiSession();
+  const list = await selectClassInfoListLive();
+  return NextResponse.json({ list });
+});
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();

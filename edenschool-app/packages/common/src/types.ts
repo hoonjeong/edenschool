@@ -129,18 +129,6 @@ export interface TestAnalResult {
   rate: number;
 }
 
-// TestAverInfo.java (ROOT)
-export interface TestAverInfo {
-  planId: number;
-  subject: string;
-  date: string;
-  count: number;
-  resultCount: number;
-  correctCount: number;
-  classAver: number;
-  studentAver: number;
-}
-
 // TestAnalInfo.java (Admin)
 export interface TestAnalInfo {
   studentId?: number;
@@ -226,18 +214,6 @@ export interface MyDream {
   insertTime?: string;
 }
 
-// SmsSendResult.java
-export interface SmsSendResult {
-  id: number;
-  phone: string;
-  message: string;
-  type: string;
-  resultCode?: string;
-  resultMessage?: string;
-  cmid?: string;
-  sendTime?: string;
-}
-
 // ClassStatus.java (Admin)
 export interface ClassStatus {
   id: number;
@@ -247,123 +223,6 @@ export interface ClassStatus {
   status: number;
   startTime?: string;
   endTime?: string;
-}
-
-// ClassStudentJoinInfo.java (Admin)
-export interface ClassStudentJoinInfo {
-  studentId: number;
-  studentName: string;
-  defaultClassId?: number;
-  defaultClassName?: string;
-  schoolClassId?: number;
-  schoolClassName?: string;
-  school?: string;
-  year?: number;
-  className?: string;
-  startTime?: string;
-}
-
-// Attendance.java (Admin)
-export interface Attendance {
-  id?: number;
-  studentId: number;
-  classId: number;
-  date: string;
-  day?: string;
-  result?: string;
-  memo?: string;
-  checkTime?: string;
-}
-
-// BillInfo.java (Admin)
-export interface BillInfo {
-  billMonth: string;
-  csid?: number;
-  studentName?: string;
-  className?: string;
-  studentId?: number;
-  bill: number;
-  pay: number;
-  payDate?: string;
-  payType?: string;
-}
-
-// Major.java
-export interface Major {
-  majorCd: string;
-  majorNm: string;
-  majorGb: string;
-  knowDtlSchDptNm?: string;
-  knowSchDptNm?: string;
-  empCurtState1Id?: string;
-  empCurtState2Id?: string;
-  knowDptId?: string;
-  knowDptNm?: string;
-  knowSchDptId?: string;
-  schDptIntroSum?: string;
-  aptdIntrstCont?: string;
-  relSchDptList?: string[];
-  mainSubjectList?: string;
-  schDptList?: Univ[];
-  relAdvanJobsList?: WorknetCarrer[];
-  advncFieldCont?: string;
-}
-
-// Univ.java
-export interface Univ {
-  univNm: string;
-  schDptNm: string;
-  univUrl: string;
-}
-
-// WorknetCarrer.java
-export interface WorknetCarrer {
-  jobGb: number;
-  jobClcd: string;
-  jobClcdNM: string;
-  jobCd: string;
-  jobNm: string;
-  jobLrclNm?: string;
-  jobMdclNm?: string;
-  jobSmclNm?: string;
-  jobSum?: string;
-  jobVideo?: string;
-  way?: string;
-  relJobList?: WorknetCarrer[];
-  majorList?: Major[];
-}
-
-// PostFileStatus.java
-export interface PostFileStatus {
-  fileId: number;
-  postId: number;
-  insertTime?: string;
-}
-
-// FileStatus.java (Admin)
-export interface FileStatus {
-  fileId: number;
-  lectureId: number;
-  insertTime?: string;
-}
-
-// SmsMemo.java (Admin)
-export interface SmsMemo {
-  teacherId: number;
-  memo: string;
-}
-
-// StudentAnalysis.java (Admin)
-export interface StudentAnalysis {
-  id?: number;
-  studentId: number;
-  code: string;
-  insertTime?: string;
-}
-
-// Teacher.java (Admin)
-export interface Teacher {
-  name: string;
 }
 
 // PrevTestMetaInfo.java (Admin)
@@ -391,14 +250,6 @@ export interface PrevTestFileInfo {
   insertTime?: string;
 }
 
-// PdfToHwp.java (Admin)
-export interface PdfToHwp {
-  id?: number;
-  fileId: number;
-  userId: number;
-  work?: number;
-}
-
 // SplitFileMetaInfo (쪼개기 파일)
 export interface SplitFileMetaInfo {
   id: number;
@@ -421,4 +272,91 @@ export interface SplitFileContent {
   fileName?: string;
   content?: Buffer | null;
   insertTime?: string;
+}
+
+// LectureProgress (수강 진도)
+export interface LectureProgress {
+  id: number;
+  userId: number;
+  lectureId: number;
+  watchedSeconds: number;
+  duration: number;
+  percent: number;
+  completed: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// LectureProgressWithStudent (관리자용)
+export interface LectureProgressWithStudent {
+  id: number;
+  userId: number;
+  lectureId: number;
+  watchedSeconds: number;
+  duration: number;
+  percent: number;
+  completed: number;
+  updatedAt?: string;
+  studentName?: string;
+  school?: string;
+  grade?: string;
+}
+
+// LectureViewLog (영상 시청 기록)
+export interface LectureViewLog {
+  id: number;
+  userId: number;
+  lectureId: number;
+  ip: string;
+  deviceType: string;
+  userAgent: string;
+  startTime?: string;
+  endTime?: string;
+  startSeconds: number;
+  endSeconds?: number;
+  duration?: number;
+}
+
+// QnaPost (질문 게시글)
+export interface QnaPost {
+  id: number;
+  subject: string;
+  contents: string;
+  userId: number;
+  metaDescription?: string;
+  readCount: number;
+  date?: string;
+  insertTime?: string;
+  updateTime?: string;
+  writer?: string;
+  commentCount?: number;
+}
+
+// QnaComment (질문 댓글)
+export interface QnaComment {
+  id: number;
+  text: string;
+  userId: number;
+  qnaPostId: number;
+  insertTime?: string;
+  date?: string;
+  writer?: string;
+}
+
+// LectureViewLogWithStudent (관리자용)
+export interface LectureViewLogWithStudent {
+  id: number;
+  userId: number;
+  lectureId: number;
+  ip: string;
+  deviceType: string;
+  startTime?: string;
+  endTime?: string;
+  startSeconds: number;
+  endSeconds?: number;
+  duration?: number;
+  studentName?: string;
+  school?: string;
+  grade?: string;
+  lectureSubject?: string;
 }

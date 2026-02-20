@@ -152,6 +152,22 @@
   text-decoration: none;
 }
 
+.admin-sidebar-footer-links .btn-link-logout {
+  background: none;
+  border: none;
+  color: var(--admin-sidebar-text);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.admin-sidebar-footer-links .btn-link-logout:hover {
+  background: var(--admin-sidebar-hover);
+  color: var(--admin-sidebar-text-active);
+}
+
 /* ===== Main Content Area ===== */
 .admin-main {
   flex: 1;
@@ -439,6 +455,27 @@
 
 .admin-auth-box .form-group {
   margin-bottom: 14px;
+}
+
+.admin-login-options {
+  display: flex;
+  gap: 16px;
+  margin: 2px 0 0;
+}
+
+.admin-login-options label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #64748b;
+  cursor: pointer;
+  margin: 0;
+}
+
+.admin-login-options input[type="checkbox"] {
+  accent-color: #3b82f6;
 }
 
 /* ===== Responsive: Mobile ===== */

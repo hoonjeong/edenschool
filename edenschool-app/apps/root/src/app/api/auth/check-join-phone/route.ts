@@ -3,8 +3,13 @@ import { selectLiveStudentByPhone } from '@edenschool/common/queries/user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { isValidPhone } from '@edenschool/common/validation';
 import { getSession } from '@/lib/session';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  // Rate limit: 5 SMS requests per 15 minutes per IP
+  const limited = checkRateLimit(req, 'check-join-phone', 5, 15 * 60 * 1000);
+  if (limited) return limited;
+
   const { phone, phoneType } = await req.json();
 
   if (!phone || !isValidPhone(phone)) {

@@ -1,0 +1,22 @@
+-- 질문 게시판 테이블
+CREATE TABLE IF NOT EXISTS qna_post (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  subject VARCHAR(200) NOT NULL,
+  contents MEDIUMTEXT NOT NULL,
+  user_id INT NOT NULL,
+  meta_description VARCHAR(300) DEFAULT '',
+  read_count INT NOT NULL DEFAULT 0,
+  insert_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 질문 댓글 테이블
+CREATE TABLE IF NOT EXISTS qna_comment (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  text TEXT NOT NULL,
+  user_id INT NOT NULL,
+  qna_post_id INT NOT NULL,
+  insert_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_qna_post_id (qna_post_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

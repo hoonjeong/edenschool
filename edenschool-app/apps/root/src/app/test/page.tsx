@@ -10,11 +10,14 @@ export default async function TestPage() {
   const list = await selectTestPlanByStudentId(session.user.studentId!);
 
   return (
-    <div className="container mt-4">
-      <h4>테스트</h4>
+    <div className="eden-container">
+      <div className="eden-page-header">
+        <h2>테스트</h2>
+        <p>테스트 목록입니다.</p>
+      </div>
       <SearchTable>
-        <table className="table table-hover table-sm">
-          <thead className="thead-dark">
+        <table className="eden-table">
+          <thead>
             <tr>
               <th>#</th>
               <th>테스트명</th>
@@ -26,17 +29,17 @@ export default async function TestPage() {
           </thead>
           <tbody>
             {list.map((item, i) => (
-              <tr key={item.id} style={{ cursor: 'pointer' }}>
-                <td>{list.length - i}</td>
+              <tr key={item.id}>
+                <td className="text-center">{list.length - i}</td>
                 <td><a href={`/test-view?id=${item.id}`}>{item.subject}</a></td>
-                <td>{item.date}</td>
-                <td>{item.count}</td>
-                <td>{item.resultCount ?? 0}</td>
-                <td>{item.correctCount ?? 0}</td>
+                <td className="text-center">{item.date}</td>
+                <td className="text-center">{item.count}</td>
+                <td className="text-center">{item.resultCount ?? 0}</td>
+                <td className="text-center">{item.correctCount ?? 0}</td>
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={6} className="text-center">테스트가 없습니다.</td></tr>
+              <tr className="eden-empty"><td colSpan={6}>테스트가 없습니다.</td></tr>
             )}
           </tbody>
         </table>

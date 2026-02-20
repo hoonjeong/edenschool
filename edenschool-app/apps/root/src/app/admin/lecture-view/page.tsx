@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
 import pool from '@edenschool/common/db';
 import { selectFileInfoListById } from '@edenschool/common/queries/file';
+import { selectLectureViewLogsByLectureId } from '@edenschool/common/queries/lecture-view-log';
 import QuestionForm from './QuestionForm';
 
 interface LectureRow {
@@ -65,6 +66,9 @@ export default async function LectureViewPage({
 
   // Fetch files
   const files = await selectFileInfoListById(lectureId);
+
+  // Fetch view logs
+  const viewLogs = await selectLectureViewLogsByLectureId(lectureId);
 
   // Fetch questions
   const [questionRows] = await pool.query(
@@ -184,6 +188,60 @@ export default async function LectureViewPage({
           </ul>
         </div>
       )}
+
+      {/* View Logs */}
+      <div className="mb-4">
+        <h5>영상 시청 기록 ({viewLogs.length})</h5>
+        {viewLogs.length === 0 ? (
+          <p className="text-muted">시청 기록이 없습니다.</p>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-bordered table-striped" style={{ fontSize: '0.88rem' }}>
+              <thead className="table-primary">
+                <tr>
+                  <th style={{ width: 50 }}>#</th>
+                  <th>이름</th>
+                  <th>학교</th>
+                  <th>학년</th>
+                  <th>시작시간</th>
+                  <th>종료시간</th>
+                  <th>시청시간</th>
+                  <th>영상구간</th>
+                  <th>기기</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {viewLogs.map((log, i) => {
+                  const formatSec = (sec?: number | null) => {
+                    if (sec == null) return '-';
+                    const m = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    return `${m}:${String(s).padStart(2, '0')}`;
+                  };
+                  const dur = log.duration;
+                  const durStr = dur == null ? '-' : dur < 60 ? `${dur}초` : `${Math.floor(dur / 60)}분 ${dur % 60 ? dur % 60 + '초' : ''}`.trim();
+                  const device = log.deviceType === 'pc' ? 'PC' : log.deviceType === 'mobile' ? '모바일' : log.deviceType === 'tablet' ? '태블릿' : '기타';
+                  return (
+                    <tr key={log.id}>
+                      <td className="text-center">{viewLogs.length - i}</td>
+                      <td>{log.studentName}</td>
+                      <td>{log.school}</td>
+                      <td>{log.grade}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{log.startTime || '-'}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{log.endTime || '-'}</td>
+                      <td>{durStr}</td>
+                      <td>{formatSec(log.startSeconds)} ~ {formatSec(log.endSeconds)}</td>
+                      <td>{device}</td>
+                      <td style={{ fontSize: '0.82rem' }}>{log.ip}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Questions */}
       <div className="mb-4">

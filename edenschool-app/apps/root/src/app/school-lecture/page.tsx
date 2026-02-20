@@ -10,11 +10,14 @@ export default async function SchoolLecturePage() {
   const list = await selectSchoolLectureList();
 
   return (
-    <div className="container mt-4">
-      <h4>내신 수업</h4>
+    <div className="eden-container">
+      <div className="eden-page-header">
+        <h2>내신 수업</h2>
+        <p>내신 수업 정보입니다.</p>
+      </div>
       <SearchTable>
-        <table className="table table-hover table-sm">
-          <thead className="thead-dark">
+        <table className="eden-table">
+          <thead>
             <tr>
               <th>#</th>
               <th>수업명</th>
@@ -26,15 +29,15 @@ export default async function SchoolLecturePage() {
           <tbody>
             {list.map((item, i) => (
               <tr key={item.id}>
-                <td>{i + 1}</td>
+                <td className="text-center">{i + 1}</td>
                 <td>{item.name}</td>
-                <td>{item.day}</td>
-                <td>{String(item.hour).padStart(2, '0')}:{String(item.minute).padStart(2, '0')}</td>
-                <td>{item.teacherOne}{item.teacherTwo ? `, ${item.teacherTwo}` : ''}</td>
+                <td className="text-center">{item.day}</td>
+                <td className="text-center">{String(item.hour).padStart(2, '0')}:{String(item.minute).padStart(2, '0')}</td>
+                <td className="text-center">{item.teacherOne}{item.teacherTwo ? `, ${item.teacherTwo}` : ''}</td>
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={5} className="text-center">수업 정보가 없습니다.</td></tr>
+              <tr className="eden-empty"><td colSpan={5}>수업 정보가 없습니다.</td></tr>
             )}
           </tbody>
         </table>

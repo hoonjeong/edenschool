@@ -11,29 +11,11 @@ export async function selectAdminUserInfoByEmail(email: string): Promise<AdminUs
   return (rows[0] as AdminUserInfo) || null;
 }
 
-// Admin: selectAdminUserInfoByLoginInput — original SQL SHA1 login (legacy)
-export async function selectAdminUserInfoByLoginInput(email: string, pw: string): Promise<AdminUserInfo | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, email, phone, code FROM admin_user_info WHERE email=? AND pw=SHA1(?)`,
-    [email, pw]
-  );
-  return (rows[0] as AdminUserInfo) || null;
-}
-
 // Admin: selectAdminUserInfoById
 export async function selectAdminUserInfoById(id: number): Promise<AdminUserInfo | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT name, email, phone FROM admin_user_info WHERE id=?`,
     [id]
-  );
-  return (rows[0] as AdminUserInfo) || null;
-}
-
-// Admin: selectAdminUserInfoByName
-export async function selectAdminUserInfoByName(name: string): Promise<AdminUserInfo | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, email, phone, code FROM admin_user_info WHERE name=?`,
-    [name]
   );
   return (rows[0] as AdminUserInfo) || null;
 }
@@ -122,15 +104,6 @@ export async function updatePasswordById(id: number, hashedPw: string): Promise<
   const [result] = await pool.query<ResultSetHeader>(
     `UPDATE admin_user_info SET pw=? WHERE id=?`,
     [hashedPw, id]
-  );
-  return result.affectedRows;
-}
-
-// Admin: updatePasswordByEmail — password must be pre-hashed by caller
-export async function updatePasswordByEmail(email: string, hashedPw: string): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `UPDATE admin_user_info SET pw=? WHERE email=?`,
-    [hashedPw, email]
   );
   return result.affectedRows;
 }

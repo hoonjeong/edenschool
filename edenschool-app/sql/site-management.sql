@@ -1,0 +1,40 @@
+-- 홈페이지 관리 테이블 DDL
+-- 실행 순서: 1. site_popup → 2. site_page → 3. class_display
+
+-- 1. 팝업 관리 (1행만 사용)
+CREATE TABLE IF NOT EXISTS site_popup (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  is_active TINYINT NOT NULL DEFAULT 0,
+  image_file_id INT DEFAULT NULL,
+  link_url VARCHAR(500) DEFAULT '',
+  start_date DATE DEFAULT NULL,
+  end_date DATE DEFAULT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT IGNORE INTO site_popup (id, is_active) VALUES (1, 0);
+
+-- 2. 메인페이지 HTML/CSS/GrapesJS JSON
+CREATE TABLE IF NOT EXISTS site_page (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  page_key VARCHAR(50) NOT NULL UNIQUE,
+  html MEDIUMTEXT DEFAULT NULL,
+  css MEDIUMTEXT DEFAULT NULL,
+  gjsdata MEDIUMTEXT DEFAULT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+INSERT IGNORE INTO site_page (id, page_key) VALUES (1, 'main');
+
+-- 3. 수강반 표시 관리
+CREATE TABLE IF NOT EXISTS class_display (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  class_id INT NOT NULL,
+  teacher_image_file_id INT DEFAULT NULL,
+  description TEXT DEFAULT NULL,
+  progress_info TEXT DEFAULT NULL,
+  clinic_info TEXT DEFAULT NULL,
+  introduction TEXT DEFAULT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT NOT NULL DEFAULT 1,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_class_id (class_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

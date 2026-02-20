@@ -3,6 +3,8 @@ import { getSession } from '@/lib/session';
 import { selectLectureById } from '@edenschool/common/queries/lecture';
 import { selectFileInfoListById } from '@edenschool/common/queries/file';
 import { selectQuestionList } from '@edenschool/common/queries/question';
+import { selectLectureProgress } from '@edenschool/common/queries/lecture-progress';
+import VimeoPlayer from './VimeoPlayer';
 
 export default async function LectureViewPage({
   searchParams,
@@ -19,85 +21,125 @@ export default async function LectureViewPage({
   const lecture = await selectLectureById(id);
   if (!lecture) redirect('/lecture');
 
-  const files = await selectFileInfoListById(id);
-  const questions = await selectQuestionList(id);
+  const [files, questions, progress] = await Promise.all([
+    selectFileInfoListById(id),
+    selectQuestionList(id),
+    selectLectureProgress(session.user.id, id),
+  ]);
+
+  const isVimeo = lecture.url && (lecture.url.includes('vimeo.com') || lecture.url.includes('player.vimeo.com'));
+  const initialSeconds = progress?.watchedSeconds || 0;
+  const progressPercent = progress?.percent || 0;
 
   return (
-    <div className="container mt-4">
-      <h4>{lecture.subject}</h4>
-
-      {lecture.url && (
-        <div className="mb-4">
-          <div className="embed-responsive embed-responsive-16by9" style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-            <iframe
-              src={lecture.url}
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
-
-      {lecture.description && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <h6 className="card-title">강의 설명</h6>
-            <div dangerouslySetInnerHTML={{ __html: lecture.description }} />
-          </div>
-        </div>
-      )}
-
-      {files.length > 0 && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <h6 className="card-title">첨부파일</h6>
-            <ul className="list-unstyled mb-0">
-              {files.map((file) => (
-                <li key={file.id}>
-                  <a href={`/api/file/download/${file.id}`} download>
-                    <i className="fas fa-download" /> {file.filename}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      <div className="card mb-4">
-        <div className="card-body">
-          <h6 className="card-title">질문 ({questions.length})</h6>
-          <form action="/api/question" method="POST" className="mb-3">
-            <input type="hidden" name="lectureId" value={id} />
-            <input type="hidden" name="userId" value={session.user.id} />
-            <div className="input-group">
-              <input type="text" name="text" className="form-control" placeholder="질문을 입력하세요" required />
-              <div className="input-group-append">
-                <button type="submit" className="btn btn-primary">등록</button>
+    <>
+      {/* 다크 영상 영역 */}
+      <div className="eden-video-wrapper">
+        <div className="eden-video-container">
+          {lecture.url && (
+            isVimeo ? (
+              <VimeoPlayer url={lecture.url} initialSeconds={initialSeconds} lectureId={id} />
+            ) : (
+              <div className="eden-video-player">
+                <iframe
+                  src={lecture.url}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
-            </div>
-          </form>
-          {questions.length > 0 ? (
-            <ul className="list-group">
-              {questions.map((q, i) => (
-                <li key={i} className="list-group-item">
-                  <div className="d-flex justify-content-between">
-                    <strong>{q.writer}</strong>
-                    <small className="text-muted">{q.date}</small>
-                  </div>
-                  <p className="mb-0 mt-1">{q.text}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted mb-0">질문이 없습니다.</p>
+            )
           )}
+          <h1 className="eden-video-title">{lecture.subject}</h1>
+          <div className="eden-video-meta">
+            {lecture.code === 'E' ? '특강' : '강의'}
+          </div>
         </div>
+        {isVimeo && (
+          <div className="eden-progress-bar">
+            <div className="eden-progress-track">
+              <div className="eden-progress-fill" id="eden-progress-fill" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
-      <a href="/lecture" className="btn btn-secondary">목록</a>
-    </div>
+      {/* 아래 콘텐츠 영역 - 1단 레이아웃 */}
+      <div className="eden-video-below">
+        {/* 선생님 말씀 */}
+        <div className="eden-card">
+          <div className="eden-card-header">
+            <i className="fas fa-chalkboard-teacher"></i> 선생님 말씀
+          </div>
+          <div className="eden-card-body">
+            {lecture.description ? (
+              <div dangerouslySetInnerHTML={{ __html: lecture.description }} />
+            ) : (
+              <div className="eden-empty" style={{ padding: '20px 0' }}>내용이 없습니다.</div>
+            )}
+          </div>
+        </div>
+
+        {/* 첨부파일 */}
+        <div className="eden-card">
+          <div className="eden-card-header">
+            <i className="fas fa-paperclip"></i> 첨부파일
+          </div>
+          <div className="eden-card-body">
+            {files.length > 0 ? (
+              files.map((file) => (
+                <div key={file.id} className="eden-file-item">
+                  <i className="fas fa-file-alt"></i>
+                  <a href={`/api/file/download/${file.id}`} download>
+                    {file.filename}
+                  </a>
+                </div>
+              ))
+            ) : (
+              <div className="eden-empty" style={{ padding: '20px 0' }}>첨부파일이 없습니다.</div>
+            )}
+          </div>
+        </div>
+
+        {/* 질문 */}
+        <div className="eden-card">
+          <div className="eden-card-header">
+            <i className="fas fa-comment-dots"></i> 질문 ({questions.length})
+          </div>
+          <div className="eden-card-body">
+            <form action="/api/question" method="POST">
+              <input type="hidden" name="lectureId" value={id} />
+              <input type="hidden" name="userId" value={session.user.id} />
+              <div className="eden-input-row">
+                <input type="text" name="text" placeholder="질문을 입력하세요" required />
+                <button type="submit" className="eden-btn eden-btn-primary">등록</button>
+              </div>
+              <p style={{ fontSize: 12, color: '#64748b', margin: '6px 0 0' }}>질문을 올리면 선생님에게 전달됩니다.</p>
+            </form>
+            {questions.length > 0 ? (
+              <div style={{ marginTop: 16 }}>
+                {questions.map((q, i) => (
+                  <div key={i} className="eden-comment">
+                    <div className="eden-comment-header">
+                      <span className="eden-comment-author">{q.writer}</span>
+                      <span className="eden-comment-date">{q.date}</span>
+                    </div>
+                    <p className="eden-comment-text">{q.text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="eden-empty" style={{ padding: '24px 0' }}>
+                질문이 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 강의 목록 버튼 */}
+        <a href="/lecture" className="eden-btn eden-btn-secondary" style={{ justifyContent: 'center', width: '100%' }}>
+          <i className="fas fa-list"></i> 강의 목록
+        </a>
+      </div>
+    </>
   );
 }

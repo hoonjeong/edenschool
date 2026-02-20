@@ -1,12 +1,27 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+
+function getCookie(name: string): string {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : '';
+}
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const referer = searchParams.get('referer') || '/admin';
   const error = searchParams.get('error');
+  const [savedEmail, setSavedEmail] = useState('');
+  const [saveEmailChecked, setSaveEmailChecked] = useState(false);
+
+  useEffect(() => {
+    const email = getCookie('saved-admin-email');
+    if (email) {
+      setSavedEmail(email);
+      setSaveEmailChecked(true);
+    }
+  }, []);
 
   return (
     <div className="admin-auth-box">
@@ -31,6 +46,8 @@ function LoginForm() {
             placeholder="이메일을 입력하세요"
             autoComplete="on"
             className="form-control"
+            defaultValue={savedEmail}
+            key={savedEmail}
           />
         </div>
         <div className="form-group">
@@ -41,6 +58,21 @@ function LoginForm() {
             placeholder="비밀번호를 입력하세요"
             className="form-control"
           />
+        </div>
+        <div className="admin-login-options">
+          <label>
+            <input
+              type="checkbox"
+              name="saveEmail"
+              checked={saveEmailChecked}
+              onChange={(e) => setSaveEmailChecked(e.target.checked)}
+            />
+            이메일 저장
+          </label>
+          <label>
+            <input type="checkbox" name="autoLogin" />
+            자동로그인
+          </label>
         </div>
         <input type="hidden" name="referer" value={referer} />
         <div className="form-group" style={{ marginTop: 20 }}>

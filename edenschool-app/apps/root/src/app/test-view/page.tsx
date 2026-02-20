@@ -30,54 +30,46 @@ export default async function TestViewPage({
   const submittedCount = results.filter((r) => r.resultAnswer !== null).length;
 
   return (
-    <div className="container mt-4">
-      <h4>{plan.subject}</h4>
-      <p className="text-muted">{plan.date}</p>
+    <div className="eden-container">
+      <div className="eden-page-header">
+        <h2>{plan.subject}</h2>
+        <p>{plan.date}</p>
+      </div>
 
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="card-title">내 정답</h6>
-              <p className="card-text h4">{correctCount} / {results.length}</p>
-            </div>
-          </div>
+      <div className="eden-stat-row">
+        <div className="eden-stat-card">
+          <div className="stat-label">내 정답</div>
+          <div className="stat-value">{correctCount} / {results.length}</div>
         </div>
-        <div className="col-md-4">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="card-title">반 평균</h6>
-              <p className="card-text h4">{classAver}</p>
-            </div>
-          </div>
+        <div className="eden-stat-card">
+          <div className="stat-label">반 평균</div>
+          <div className="stat-value">{classAver}</div>
         </div>
-        <div className="col-md-4">
-          <div className="card text-center">
-            <div className="card-body">
-              <h6 className="card-title">전체 평균</h6>
-              <p className="card-text h4">{totalAver}</p>
-            </div>
-          </div>
+        <div className="eden-stat-card">
+          <div className="stat-label">전체 평균</div>
+          <div className="stat-value">{totalAver}</div>
         </div>
       </div>
 
       {plan.fileId && (
-        <div className="mb-3">
-          <a href={`/api/file/download/${plan.fileId}`} className="btn btn-outline-primary btn-sm">
+        <div style={{ marginBottom: 16 }}>
+          <a href={`/api/file/download/${plan.fileId}`} className="eden-btn eden-btn-outline eden-btn-sm">
             <i className="fas fa-download" /> 시험지 다운로드
           </a>
         </div>
       )}
 
-      <div className="card mb-4">
-        <div className="card-body">
-          <h6 className="card-title">답안 ({submittedCount} / {results.length} 제출)</h6>
+      <div className="eden-card" style={{ marginBottom: 20 }}>
+        <div className="eden-card-header">
+          <i className="fas fa-clipboard-check"></i> 답안 ({submittedCount} / {results.length} 제출)
+        </div>
+        <div className="eden-card-body">
           <form action="/api/test/submit" method="POST">
             <input type="hidden" name="testInfoId" value={plan.testInfoId} />
             <input type="hidden" name="studentId" value={session.user.studentId} />
             <input type="hidden" name="planId" value={id} />
-            <table className="table table-bordered table-sm">
-              <thead className="thead-light">
+            <table className="eden-table">
+              <thead>
                 <tr>
                   <th>번호</th>
                   <th>정답</th>
@@ -91,14 +83,18 @@ export default async function TestViewPage({
                   const isCorrect = r.resultAnswer !== null && r.answer === r.resultAnswer;
                   const isSubmitted = r.resultAnswer !== null;
                   return (
-                    <tr key={r.num} className={isSubmitted ? (isCorrect ? 'table-success' : 'table-danger') : ''}>
-                      <td>{r.num}</td>
-                      <td>{isSubmitted ? r.answer : '-'}</td>
-                      <td>{isSubmitted ? r.resultAnswer : '-'}</td>
-                      <td>{isSubmitted ? (isCorrect ? 'O' : 'X') : '-'}</td>
-                      <td>
+                    <tr key={r.num} style={{ cursor: 'default', background: isSubmitted ? (isCorrect ? '#f0fdf4' : '#fef2f2') : undefined }}>
+                      <td className="text-center">{r.num}</td>
+                      <td className="text-center">{isSubmitted ? r.answer : '-'}</td>
+                      <td className="text-center">{isSubmitted ? r.resultAnswer : '-'}</td>
+                      <td className="text-center">
+                        {isSubmitted ? (
+                          isCorrect ? <span className="eden-badge eden-badge-success">O</span> : <span className="eden-badge eden-badge-danger">X</span>
+                        ) : '-'}
+                      </td>
+                      <td className="text-center">
                         {!isSubmitted && (
-                          <select name={`answer_${r.num}`} className="form-control form-control-sm" defaultValue="">
+                          <select name={`answer_${r.num}`} className="form-control form-control-sm" defaultValue="" style={{ width: 80, display: 'inline-block' }}>
                             <option value="">선택</option>
                             {[1, 2, 3, 4, 5].map((n) => (
                               <option key={n} value={n}>{n}</option>
@@ -112,13 +108,17 @@ export default async function TestViewPage({
               </tbody>
             </table>
             {submittedCount < results.length && (
-              <button type="submit" className="btn btn-primary">제출</button>
+              <div style={{ marginTop: 16 }}>
+                <button type="submit" className="eden-btn eden-btn-primary">제출</button>
+              </div>
             )}
           </form>
         </div>
       </div>
 
-      <a href="/test" className="btn btn-secondary">목록</a>
+      <a href="/test" className="eden-btn eden-btn-secondary">
+        <i className="fas fa-list"></i> 목록
+      </a>
     </div>
   );
 }

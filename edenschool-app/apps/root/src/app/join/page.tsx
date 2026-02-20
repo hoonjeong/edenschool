@@ -6,12 +6,14 @@ export default function JoinPage() {
   const [phone, setPhone] = useState('');
   const [phoneType, setPhoneType] = useState('S');
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'info' | 'danger'>('info');
   const [step, setStep] = useState<'phone' | 'verify'>('phone');
   const [authCode, setAuthCode] = useState('');
 
   async function handleSendSms() {
     if (!phone || phone.length < 10) {
       setMessage('올바른 전화번호를 입력해주세요.');
+      setMessageType('danger');
       return;
     }
     const res = await fetch('/api/auth/check-join-phone', {
@@ -22,15 +24,18 @@ export default function JoinPage() {
     const data = await res.json();
     if (data.error) {
       setMessage(data.error);
+      setMessageType('danger');
     } else {
       setStep('verify');
       setMessage('인증번호가 발송되었습니다.');
+      setMessageType('info');
     }
   }
 
   async function handleVerify() {
     if (!authCode) {
       setMessage('인증번호를 입력해주세요.');
+      setMessageType('danger');
       return;
     }
 
@@ -43,10 +48,10 @@ export default function JoinPage() {
 
     if (data.error) {
       setMessage(data.error);
+      setMessageType('danger');
       return;
     }
 
-    // Redirect to join-step2 with phone info
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = '/join-step2';
@@ -61,39 +66,50 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '500px', marginTop: '50px' }}>
-      <h3 className="text-center mb-4">회원가입</h3>
-      <p className="text-center text-muted">학원에 등록된 전화번호로 인증 후 가입할 수 있습니다.</p>
-
-      {message && <div className="alert alert-info">{message}</div>}
-
-      <div className="form-group">
-        <label>전화번호 유형</label>
-        <select className="form-control" value={phoneType} onChange={e => setPhoneType(e.target.value)}>
-          <option value="S">학생 전화번호</option>
-          <option value="P">학부모 전화번호</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>전화번호</label>
-        <input type="tel" className="form-control" placeholder="전화번호 (-없이)" value={phone} onChange={e => setPhone(e.target.value)} />
-      </div>
-
-      {step === 'phone' && (
-        <button className="btn btn-primary btn-block" onClick={handleSendSms}>인증번호 발송</button>
-      )}
-
-      {step === 'verify' && (
-        <>
-          <div className="form-group">
-            <label>인증번호</label>
-            <input type="text" className="form-control" placeholder="인증번호 입력" value={authCode} onChange={e => setAuthCode(e.target.value)} />
+    <div className="eden-auth-wrapper">
+      <div className="eden-auth-box">
+        <div className="eden-auth-header">
+          <div className="auth-icon">
+            <i className="fas fa-user-plus"></i>
           </div>
-          <button className="btn btn-success btn-block" onClick={handleVerify}>인증 확인</button>
-          <button className="btn btn-secondary btn-block mt-2" onClick={handleSendSms}>인증번호 재발송</button>
-        </>
-      )}
+          <h4>회원가입</h4>
+          <p>학원에 등록된 전화번호로 인증 후 가입할 수 있습니다.</p>
+        </div>
+
+        {message && <div className={`alert alert-${messageType}`}>{message}</div>}
+
+        <div className="form-group">
+          <label>전화번호 유형</label>
+          <select className="form-control" value={phoneType} onChange={e => setPhoneType(e.target.value)}>
+            <option value="S">학생 전화번호</option>
+            <option value="P">학부모 전화번호</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>전화번호</label>
+          <input type="tel" className="form-control" placeholder="전화번호 (-없이)" value={phone} onChange={e => setPhone(e.target.value)} />
+        </div>
+
+        {step === 'phone' && (
+          <button className="btn-auth" onClick={handleSendSms}>인증번호 발송</button>
+        )}
+
+        {step === 'verify' && (
+          <>
+            <div className="form-group">
+              <label>인증번호</label>
+              <input type="text" className="form-control" placeholder="인증번호 입력" value={authCode} onChange={e => setAuthCode(e.target.value)} />
+            </div>
+            <button className="btn-auth" onClick={handleVerify}>인증 확인</button>
+            <button className="btn-auth-secondary" onClick={handleSendSms}>인증번호 재발송</button>
+          </>
+        )}
+
+        <div className="auth-links">
+          <a href="/login">이미 계정이 있으신가요? 로그인</a>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,15 +1,48 @@
 import { selectPostInfoList } from '@edenschool/common/queries/post';
 import { SearchTable } from '@/components/SearchTable';
 
-export default async function BoardPage() {
-  const list = await selectPostInfoList('B');
+const CATEGORIES = [
+  { code: 'N', label: '공지사항' },
+  { code: 'S', label: '이든이야기' },
+  { code: 'C', label: '입시정보' },
+  { code: 'D', label: '입시자료' },
+  { code: 'R', label: '수강후기' },
+];
+
+export default async function BoardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const params = await searchParams;
+  const category = params.category || 'N';
+  const list = await selectPostInfoList('P', category);
 
   return (
-    <div className="container mt-4">
-      <h4>게시판</h4>
+    <div className="eden-container">
+      <div className="eden-page-header">
+        <h2>게시판</h2>
+      </div>
+
+      {/* 카테고리 탭 */}
+      <div className="eden-tabs">
+        {CATEGORIES.map((cat) => (
+          <a
+            key={cat.code}
+            href={`/board?category=${cat.code}`}
+            className={`eden-tab${category === cat.code ? ' active' : ''}`}
+          >
+            {cat.label}
+          </a>
+        ))}
+        <a href="/qna" className="eden-tab">
+          질문게시판
+        </a>
+      </div>
+
       <SearchTable>
-        <table className="table table-hover table-sm">
-          <thead className="thead-dark">
+        <table className="eden-table">
+          <thead>
             <tr>
               <th>#</th>
               <th>제목</th>
@@ -21,17 +54,17 @@ export default async function BoardPage() {
           </thead>
           <tbody>
             {list.map((item, i) => (
-              <tr key={item.id} style={{ cursor: 'pointer' }}>
-                <td>{list.length - i}</td>
+              <tr key={item.id}>
+                <td className="text-center">{list.length - i}</td>
                 <td><a href={`/post-view?id=${item.id}`}>{item.subject}</a></td>
-                <td>{item.writer ?? '-'}</td>
-                <td>{item.date}</td>
-                <td>{item.commentCount ?? 0}</td>
-                <td>{item.readCount}</td>
+                <td className="text-center">{item.writer ?? '-'}</td>
+                <td className="text-center">{item.date}</td>
+                <td className="text-center">{item.commentCount ?? 0}</td>
+                <td className="text-center">{item.readCount}</td>
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={6} className="text-center">게시글이 없습니다.</td></tr>
+              <tr className="eden-empty"><td colSpan={6}>게시글이 없습니다.</td></tr>
             )}
           </tbody>
         </table>

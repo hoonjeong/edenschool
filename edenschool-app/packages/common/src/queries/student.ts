@@ -11,15 +11,6 @@ export async function selectStudentById(studentId: number): Promise<Student | nu
   return (rows[0] as Student) || null;
 }
 
-// Admin: selectStudentInfoAll
-export async function selectStudentInfoAll(status: boolean): Promise<Student[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, school, grade, year, sphone, pphone, date_format(insert_date, "%Y-%m-%d") as date FROM student WHERE status=? ORDER BY name ASC`,
-    [status]
-  );
-  return rows as Student[];
-}
-
 // Admin: insertStudent
 export async function insertStudent(student: Omit<Student, 'id'>): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
@@ -34,15 +25,6 @@ export async function modifyStudent(student: Student): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
     `UPDATE student SET name=?, school=?, grade=?, year=?, sphone=?, pphone=?, address=?, specialty=?, memo=?, modify_date=now() WHERE id=?`,
     [student.name, student.school, student.grade, student.year, student.sphone, student.pphone, student.address, student.specialty, student.memo, student.id]
-  );
-  return result.affectedRows;
-}
-
-// Admin: deleteStudent
-export async function deleteStudent(studentId: number): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `DELETE FROM student WHERE id=?`,
-    [studentId]
   );
   return result.affectedRows;
 }
@@ -68,14 +50,6 @@ export async function selectNewStudentList(): Promise<Student[]> {
 export async function selectReStudentList(): Promise<Student[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT name, school, grade, year, date_format(modify_date, "%m/%d") as date FROM student WHERE status=1 AND insert_date!=modify_date AND modify_date > now() - INTERVAL 1 MONTH ORDER BY modify_date DESC`
-  );
-  return rows as Student[];
-}
-
-// Admin: selectExitStudentList
-export async function selectExitStudentList(): Promise<Student[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT name, school, year, id, date_format(modify_date, "%m/%d") as date FROM student WHERE status=0 ORDER BY name ASC`
   );
   return rows as Student[];
 }

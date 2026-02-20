@@ -93,6 +93,18 @@ export async function AdminSidebar() {
               <i className="fas fa-user-cog"></i> 선생님 관리
             </a>
 
+            {/* 홈페이지 관리 */}
+            <div className="admin-sidebar-section">홈페이지 관리</div>
+            <a href="/admin/site-popup" className="admin-sidebar-link">
+              <i className="fas fa-window-restore"></i> 팝업관리
+            </a>
+            <a href="/admin/site-design" className="admin-sidebar-link">
+              <i className="fas fa-paint-brush"></i> 메인디자인
+            </a>
+            <a href="/admin/class-display" className="admin-sidebar-link">
+              <i className="fas fa-th-large"></i> 수강반표시
+            </a>
+
             {/* 기타 */}
             <div className="admin-sidebar-section">기타</div>
             <a href="/admin/send-sms" className="admin-sidebar-link">
@@ -100,6 +112,9 @@ export async function AdminSidebar() {
             </a>
             <a href="/admin/statistics" className="admin-sidebar-link">
               <i className="fas fa-chart-pie"></i> 통계
+            </a>
+            <a href="/admin/lecture-view-log" className="admin-sidebar-link">
+              <i className="fas fa-play-circle"></i> 영상 시청 기록
             </a>
           </>
         )}
@@ -114,7 +129,9 @@ export async function AdminSidebar() {
             </div>
             <div className="admin-sidebar-footer-links">
               <a href="/admin/myinfo">내정보</a>
-              <a href="/admin/logout">로그아웃</a>
+              <form action="/admin/logout" method="post" style={{ display: 'inline' }}>
+                <button type="submit" className="btn-link-logout">로그아웃</button>
+              </form>
             </div>
           </>
         ) : (

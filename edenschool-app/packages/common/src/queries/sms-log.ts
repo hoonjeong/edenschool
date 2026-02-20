@@ -1,24 +1,6 @@
 import pool from '../db';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// ROOT + Admin: insertSmsSendResultNine
-export async function insertSmsSendResultNine(phone: string, message: string, type: string, resultMessage: string): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO sms_send_result_nine (phone, message, type, result_message, send_time) VALUES (?,?,?,?,now())`,
-    [phone, message, type, resultMessage]
-  );
-  return result.insertId;
-}
-
-// Admin: insertSmsSendResult
-export async function insertSmsSendResult(phone: string, message: string, type: string, resultCode: string, resultMessage: string, cmid: string): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO sms_send_result (phone, message, type, result_code, result_message, cmid, send_time) VALUES (?,?,?,?,?,?,now())`,
-    [phone, message, type, resultCode, resultMessage, cmid]
-  );
-  return result.insertId;
-}
-
 // Admin: selectSendHistory
 export async function selectSendHistory(num: string): Promise<Record<string, any>[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
@@ -81,14 +63,6 @@ export async function insertTemplate(teacherId: number, title: string, content: 
   return result.insertId;
 }
 
-export async function updateTemplate(id: number, teacherId: number, title: string, content: string): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `UPDATE sms_template SET title=?, content=?, update_time=now() WHERE id=? AND teacher_id=?`,
-    [title, content, id, teacherId]
-  );
-  return result.affectedRows;
-}
-
 export async function deleteTemplate(id: number, teacherId: number): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
     `DELETE FROM sms_template WHERE id=? AND teacher_id=?`,
@@ -106,17 +80,6 @@ export async function selectSendHistoryBatch(phones: string[]): Promise<Record<s
     phones
   );
   return rows;
-}
-
-// sms_send_result_renew: insert with sender ID
-export async function insertSmsSendResultRenew(
-  sendId: number, phone: string, message: string, type: string, resultMessage: string
-): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO sms_send_result_renew (send_id, phone, message, type, result_message, send_time) VALUES (?,?,?,?,?,now())`,
-    [sendId, phone, message, type, resultMessage]
-  );
-  return result.insertId;
 }
 
 // sms_send_result_renew: recent history by sender ID

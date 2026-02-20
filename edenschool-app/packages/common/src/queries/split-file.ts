@@ -131,20 +131,6 @@ export async function searchSplitFiles(
   };
 }
 
-export async function selectSplitFileDistinctSubjects(): Promise<string[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT DISTINCT subject FROM split_file_meta_info WHERE subject IS NOT NULL AND subject != '' ORDER BY subject ASC"
-  );
-  return rows.map((r) => r.subject as string);
-}
-
-export async function selectSplitFileDistinctPublishers(): Promise<string[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT DISTINCT publisher FROM split_file_meta_info WHERE publisher IS NOT NULL AND publisher != '' ORDER BY publisher ASC"
-  );
-  return rows.map((r) => r.publisher as string);
-}
-
 export async function selectSplitFileDistinctGrades(): Promise<string[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT DISTINCT grade FROM split_file_meta_info WHERE grade IS NOT NULL AND grade != '' ORDER BY grade ASC"

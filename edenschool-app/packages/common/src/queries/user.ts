@@ -11,24 +11,6 @@ export async function selectUserInfoByEmail(email: string) {
   return (rows[0] as UserInfo) || null;
 }
 
-// ROOT: selectUserInfoByLoginInput — original SQL SHA1 login (legacy)
-export async function selectUserInfoByLoginInput(email: string, pw: string) {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT u.id, u.email, u.student_id as studentId, s.name, u.code FROM user_info u, student s WHERE u.email=? AND u.pw=SHA1(?) AND s.id=u.student_id AND u.code="S"`,
-    [email, pw]
-  );
-  return (rows[0] as UserInfo) || null;
-}
-
-// ROOT: selectUserInfoByName
-export async function selectUserInfoByName(name: string) {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT u.id, u.email, u.student_id as studentId, s.name, u.code FROM user_info u, student s WHERE s.name=? AND u.student_id=s.id AND u.code="S"`,
-    [name]
-  );
-  return (rows[0] as UserInfo) || null;
-}
-
 // ROOT: checkUsedEmail
 export async function checkUsedEmail(studentId: number, email: string): Promise<number> {
   const [rows] = await pool.query<RowDataPacket[]>(
@@ -97,15 +79,6 @@ export async function updatePassByEmail(email: string, hashedPw: string): Promis
   await pool.query(`UPDATE user_info SET pw=? WHERE email=?`, [hashedPw, email]);
 }
 
-// ROOT: updatePassByPhone — password must be pre-hashed by caller
-export async function updatePassByPhone(phone: string, hashedPw: string, type: string): Promise<void> {
-  if (type === 'P') {
-    await pool.query(`UPDATE user_info SET pw=? WHERE pphone=?`, [hashedPw, phone]);
-  } else {
-    await pool.query(`UPDATE user_info SET pw=? WHERE sphone=?`, [hashedPw, phone]);
-  }
-}
-
 // ROOT: selectUserPhoneByEmail — get phone number for a user by email
 export async function selectUserPhoneByEmail(email: string): Promise<{ sphone: string; pphone: string } | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
@@ -149,20 +122,6 @@ export async function selectLiveStudentByPhone(phone: string, type: string): Pro
     : `SELECT * FROM student WHERE sphone=? AND status=1 LIMIT 1`;
   const [rows] = await pool.query<RowDataPacket[]>(sql, [phone]);
   return (rows[0] as Student) || null;
-}
-
-// ROOT: selectUserInfoBySid
-export async function selectUserInfoBySid(sid: number): Promise<UserInfo | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM user_info WHERE student_id=? LIMIT 1`,
-    [sid]
-  );
-  return (rows[0] as UserInfo) || null;
-}
-
-// ROOT: updateRejoinUser
-export async function updateRejoinUser(id: number): Promise<void> {
-  await pool.query(`UPDATE user_info SET code="S" WHERE id=?`, [id]);
 }
 
 // Admin: updateUserInfoPwByStudentId — password must be pre-hashed by caller

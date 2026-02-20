@@ -19,16 +19,31 @@ export interface AdminSessionData {
   };
 }
 
+const DEFAULT_ADMIN_TTL = Number(process.env.ADMIN_SESSION_TTL) || 60 * 60 * 3;
+const AUTO_LOGIN_TTL = 60 * 60 * 24 * 7; // 7 days
+
 export const adminSessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: process.env.ADMIN_SESSION_COOKIE_NAME || 'edenschool-admin-session',
-  ttl: Number(process.env.ADMIN_SESSION_TTL) || 60 * 60 * 3,
+  ttl: DEFAULT_ADMIN_TTL,
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'lax' as const,
   },
 };
+
+export function getAdminSessionOptions(autoLogin: boolean): SessionOptions {
+  if (!autoLogin) return adminSessionOptions;
+  return {
+    ...adminSessionOptions,
+    ttl: AUTO_LOGIN_TTL,
+    cookieOptions: {
+      ...adminSessionOptions.cookieOptions,
+      maxAge: AUTO_LOGIN_TTL,
+    },
+  };
+}
 
 export async function getAdminSession() {
   const cookieStore = await cookies();

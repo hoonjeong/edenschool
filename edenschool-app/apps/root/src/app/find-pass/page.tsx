@@ -24,17 +24,33 @@ export default function FindPassPage() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', marginTop: '50px' }}>
-      <h3 className="text-center mb-4">비밀번호 찾기</h3>
-      {result && <div className="alert alert-success">{result}</div>}
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>이메일</label>
-          <input type="email" className="form-control" placeholder="가입한 이메일" value={email} onChange={e => setEmail(e.target.value)} required />
+    <div className="eden-auth-wrapper">
+      <div className="eden-auth-box">
+        <div className="eden-auth-header">
+          <div className="auth-icon">
+            <i className="fas fa-key"></i>
+          </div>
+          <h4>비밀번호 찾기</h4>
+          <p>가입한 이메일로 임시 비밀번호를 받을 수 있습니다.</p>
         </div>
-        <button type="submit" className="btn btn-primary btn-block">비밀번호 찾기</button>
-      </form>
+
+        {result && <div className="alert alert-success">{result}</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>이메일</label>
+            <input type="email" className="form-control" placeholder="가입한 이메일" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+          <button type="submit" className="btn-auth">비밀번호 찾기</button>
+        </form>
+
+        <div className="auth-links">
+          <a href="/login">로그인</a>
+          <span className="divider">|</span>
+          <a href="/find-email">이메일 찾기</a>
+        </div>
+      </div>
     </div>
   );
 }

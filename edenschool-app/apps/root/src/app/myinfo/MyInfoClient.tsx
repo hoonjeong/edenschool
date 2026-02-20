@@ -21,7 +21,7 @@ export function MyInfoClient({ userInfo, classList, userId }: Props) {
   const [newPw2, setNewPw2] = useState('');
   const [pwMessage, setPwMessage] = useState('');
 
-  if (!userInfo) return <div className="container mt-5">정보를 불러올 수 없습니다.</div>;
+  if (!userInfo) return <div className="eden-container"><div className="eden-empty"><i className="fas fa-exclamation-circle"></i>정보를 불러올 수 없습니다.</div></div>;
 
   async function handleSave() {
     const res = await fetch('/api/user/change-info', {
@@ -61,62 +61,83 @@ export function MyInfoClient({ userInfo, classList, userId }: Props) {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '600px', marginTop: '30px' }}>
-      <h3 className="text-center mb-4">내 정보</h3>
-      {message && <div className="alert alert-info">{message}</div>}
+    <div className="eden-container" style={{ maxWidth: 700 }}>
+      <div className="eden-page-header">
+        <h2>내 정보</h2>
+      </div>
 
-      <table className="table table-bordered">
-        <tbody>
-          <tr><th>이름</th><td>{userInfo.name}</td></tr>
-          <tr><th>학년</th><td>{userInfo.grade}{userInfo.year}</td></tr>
-          <tr><th>학교</th><td>{userInfo.school}</td></tr>
-          <tr><th>반</th><td>{classList.join(', ') || '-'}</td></tr>
-          <tr>
-            <th>이메일</th>
-            <td>{editing ? <input className="form-control" value={email} onChange={e => setEmail(e.target.value)} /> : email}</td>
-          </tr>
-          <tr>
-            <th>학생 전화</th>
-            <td>{editing ? <input className="form-control" value={sphone} onChange={e => setSphone(e.target.value)} /> : sphone}</td>
-          </tr>
-          <tr>
-            <th>학부모 전화</th>
-            <td>{editing ? <input className="form-control" value={pphone} onChange={e => setPphone(e.target.value)} /> : pphone}</td>
-          </tr>
-        </tbody>
-      </table>
+      {message && <div className="alert alert-info" style={{ borderRadius: 8, fontSize: 14 }}>{message}</div>}
 
-      {!editing ? (
-        <button className="btn btn-primary" onClick={() => setEditing(true)}>정보 수정</button>
-      ) : (
-        <div>
-          <button className="btn btn-success mr-2" onClick={handleSave}>저장</button>
-          <button className="btn btn-secondary" onClick={() => setEditing(false)}>취소</button>
+      <div className="eden-card" style={{ marginBottom: 20 }}>
+        <div className="eden-card-header">
+          <i className="fas fa-user"></i> 기본 정보
         </div>
-      )}
-
-      <hr />
-      {pwMessage && <div className="alert alert-info">{pwMessage}</div>}
-      {!changingPw ? (
-        <button className="btn btn-warning" onClick={() => setChangingPw(true)}>비밀번호 변경</button>
-      ) : (
-        <div>
-          <div className="form-group">
-            <label>현재 비밀번호</label>
-            <input type="password" className="form-control" value={oldPw} onChange={e => setOldPw(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>새 비밀번호</label>
-            <input type="password" className="form-control" value={newPw} onChange={e => setNewPw(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>새 비밀번호 확인</label>
-            <input type="password" className="form-control" value={newPw2} onChange={e => setNewPw2(e.target.value)} />
-          </div>
-          <button className="btn btn-success mr-2" onClick={handleChangePw}>변경</button>
-          <button className="btn btn-secondary" onClick={() => setChangingPw(false)}>취소</button>
+        <table className="eden-info-table">
+          <tbody>
+            <tr><th>이름</th><td>{userInfo.name}</td></tr>
+            <tr><th>학년</th><td>{userInfo.grade}{userInfo.year}</td></tr>
+            <tr><th>학교</th><td>{userInfo.school}</td></tr>
+            <tr><th>반</th><td>{classList.join(', ') || '-'}</td></tr>
+            <tr>
+              <th>이메일</th>
+              <td>{editing ? <input className="form-control" value={email} onChange={e => setEmail(e.target.value)} /> : email}</td>
+            </tr>
+            <tr>
+              <th>학생 전화</th>
+              <td>{editing ? <input className="form-control" value={sphone} onChange={e => setSphone(e.target.value)} /> : sphone}</td>
+            </tr>
+            <tr>
+              <th>학부모 전화</th>
+              <td>{editing ? <input className="form-control" value={pphone} onChange={e => setPphone(e.target.value)} /> : pphone}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ padding: '16px 20px', display: 'flex', gap: 8 }}>
+          {!editing ? (
+            <button className="eden-btn eden-btn-primary" onClick={() => setEditing(true)}>
+              <i className="fas fa-edit"></i> 정보 수정
+            </button>
+          ) : (
+            <>
+              <button className="eden-btn eden-btn-success" onClick={handleSave}>저장</button>
+              <button className="eden-btn eden-btn-secondary" onClick={() => setEditing(false)}>취소</button>
+            </>
+          )}
         </div>
-      )}
+      </div>
+
+      <div className="eden-card">
+        <div className="eden-card-header">
+          <i className="fas fa-lock"></i> 비밀번호 변경
+        </div>
+        <div className="eden-card-body">
+          {pwMessage && <div className="alert alert-info" style={{ borderRadius: 8, fontSize: 14 }}>{pwMessage}</div>}
+          {!changingPw ? (
+            <button className="eden-btn eden-btn-warning" onClick={() => setChangingPw(true)}>
+              <i className="fas fa-key"></i> 비밀번호 변경
+            </button>
+          ) : (
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>현재 비밀번호</label>
+                <input type="password" className="form-control" style={{ maxWidth: 400, borderRadius: 6 }} value={oldPw} onChange={e => setOldPw(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>새 비밀번호</label>
+                <input type="password" className="form-control" style={{ maxWidth: 400, borderRadius: 6 }} value={newPw} onChange={e => setNewPw(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>새 비밀번호 확인</label>
+                <input type="password" className="form-control" style={{ maxWidth: 400, borderRadius: 6 }} value={newPw2} onChange={e => setNewPw2(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="eden-btn eden-btn-success" onClick={handleChangePw}>변경</button>
+                <button className="eden-btn eden-btn-secondary" onClick={() => setChangingPw(false)}>취소</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

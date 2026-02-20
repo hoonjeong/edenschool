@@ -1,11 +1,13 @@
 import mysql from 'mysql2/promise';
-import type { PoolConnection } from 'mysql2/promise';
+import type { Pool, PoolConnection } from 'mysql2/promise';
 
 if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD) {
   throw new Error('Database configuration missing. Set DB_HOST, DB_USER, and DB_PASSWORD environment variables.');
 }
 
-const pool = mysql.createPool({
+const globalForDb = globalThis as unknown as { __dbPool?: Pool };
+
+const pool: Pool = globalForDb.__dbPool ?? mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 3306,
   database: process.env.DB_NAME || 'edenschool',
@@ -13,9 +15,13 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   charset: 'utf8',
   waitForConnections: true,
-  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 20,
+  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
   queueLimit: 0,
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForDb.__dbPool = pool;
+}
 
 export default pool;
 

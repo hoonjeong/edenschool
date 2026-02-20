@@ -10,11 +10,14 @@ export default async function FreeLecturePage() {
   const list = await selectLectureListByCode('F');
 
   return (
-    <div className="container mt-4">
-      <h4>무료 강의</h4>
+    <div className="eden-container">
+      <div className="eden-page-header">
+        <h2>무료 강의</h2>
+        <p>무료로 제공되는 강의 목록입니다.</p>
+      </div>
       <SearchTable>
-        <table className="table table-hover table-sm">
-          <thead className="thead-dark">
+        <table className="eden-table">
+          <thead>
             <tr>
               <th>#</th>
               <th>강의명</th>
@@ -24,15 +27,15 @@ export default async function FreeLecturePage() {
           </thead>
           <tbody>
             {list.map((item, i) => (
-              <tr key={item.id} style={{ cursor: 'pointer' }}>
-                <td>{list.length - i}</td>
+              <tr key={item.id}>
+                <td className="text-center">{list.length - i}</td>
                 <td><a href={`/lecture-view?id=${item.id}`}>{item.subject}</a></td>
-                <td>{item.teacher}</td>
-                <td>{item.lectureDate}</td>
+                <td className="text-center">{item.teacher}</td>
+                <td className="text-center">{item.lectureDate}</td>
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={4} className="text-center">강의가 없습니다.</td></tr>
+              <tr className="eden-empty"><td colSpan={4}>강의가 없습니다.</td></tr>
             )}
           </tbody>
         </table>
