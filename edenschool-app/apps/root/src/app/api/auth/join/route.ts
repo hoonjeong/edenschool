@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { selectStudentByPhone, insertUser } from '@edenschool/common/queries/user';
@@ -18,19 +19,19 @@ export async function POST(req: NextRequest) {
   const pphone = (formData.get('pphone') as string) || '';
 
   if (!email || !pw || !isValidEmail(email) || !isValidPassword(pw)) {
-    return NextResponse.redirect(new URL('/join?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
 
   // Find student by phone numbers
   const student = await selectStudentByPhone(sphone, pphone);
   if (!student) {
-    return NextResponse.redirect(new URL('/join?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
 
   const hashedPw = await hashPassword(pw);
   const userId = await insertUser(email, hashedPw, sphone, pphone, 'S', student.id);
 
-  const response = NextResponse.redirect(new URL('/', req.url));
+  const response = NextResponse.redirect(buildUrl('/', req));
   const session = await getIronSession<SessionData>(req, response, sessionOptions);
   session.user = {
     id: userId,

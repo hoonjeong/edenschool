@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { selectAdminUserInfoByEmail } from '@edenschool/common/queries/admin-user';
@@ -19,18 +20,18 @@ export async function POST(req: NextRequest) {
     const autoLogin = formData.get('autoLogin') === 'on';
 
     if (!email || !pw) {
-      return NextResponse.redirect(new URL('/admin/login?error=1', req.url));
+      return NextResponse.redirect(buildUrl('/admin/login?error=1', req));
     }
 
     // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
     const user = await selectAdminUserInfoByEmail(email);
     if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
-      return NextResponse.redirect(new URL('/admin/login?error=1', req.url));
+      return NextResponse.redirect(buildUrl('/admin/login?error=1', req));
     }
 
     const defaultPage = user.code === 'O' ? '/admin' : '/admin/student-manage';
     const dest = referer && referer !== '/admin' ? referer : defaultPage;
-    const response = NextResponse.redirect(new URL(dest, req.url));
+    const response = NextResponse.redirect(buildUrl(dest, req));
 
     // Save email cookie
     if (saveEmail) {
@@ -59,6 +60,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.redirect(new URL('/admin/login?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/admin/login?error=1', req));
   }
 }

@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
@@ -10,7 +11,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const id = Number(formData.get('id'));
 
   if (!id) {
-    return NextResponse.redirect(new URL('/admin/class-manager', req.url));
+    return NextResponse.redirect(buildUrl('/admin/class-manager', req));
   }
 
   try {
@@ -21,5 +22,5 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   const referer = req.headers.get('referer') || '';
   const dest = referer.includes('class-manager') ? '/admin/class-manager' : `/admin/class-info?id=${id}`;
-  return NextResponse.redirect(new URL(dest, req.url));
+  return NextResponse.redirect(buildUrl(dest, req));
 });

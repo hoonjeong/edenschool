@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { selectAdminUserIdByPhone, updateAdminUserInfo, selectAdminUserByPhone } from '@edenschool/common/queries/admin-user';
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     const pw1 = formData.get('pw1') as string;
 
     if (!email || !phone || !pw1 || !isValidEmail(email) || !isValidPassword(pw1)) {
-      return NextResponse.redirect(new URL('/admin/join?error=1', req.url));
+      return NextResponse.redirect(buildUrl('/admin/join?error=1', req));
     }
 
     const normalizedPhone = normalizePhone(phone);
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Check if phone exists in admin_user_info
     const adminId = await selectAdminUserIdByPhone(normalizedPhone);
     if (adminId === -1) {
-      return NextResponse.redirect(new URL('/admin/join?error=phone', req.url));
+      return NextResponse.redirect(buildUrl('/admin/join?error=phone', req));
     }
 
     // Update the admin user with email and hashed password
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Fetch updated user info for session
     const user = await selectAdminUserByPhone(normalizedPhone);
 
-    const response = NextResponse.redirect(new URL('/admin/', req.url));
+    const response = NextResponse.redirect(buildUrl('/admin/', req));
 
     if (user) {
       const session = await getIronSession<AdminSessionData>(req, response, adminSessionOptions);
@@ -52,6 +53,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error('Join error:', error);
-    return NextResponse.redirect(new URL('/admin/join?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/admin/join?error=1', req));
   }
 }

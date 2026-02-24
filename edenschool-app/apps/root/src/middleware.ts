@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import type { SessionData } from '@edenschool/common/auth';
@@ -36,7 +37,7 @@ export async function middleware(req: NextRequest) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     const session = await getIronSession<AdminSessionData>(req, res, adminSessionOptions);
     if (!session.user) {
-      return NextResponse.redirect(new URL('/admin/login', req.url));
+      return NextResponse.redirect(buildUrl('/admin/login', req));
     }
     return res;
   }
@@ -52,7 +53,7 @@ export async function middleware(req: NextRequest) {
     const res = NextResponse.next({ request: { headers: requestHeaders } });
     const session = await getIronSession<SessionData>(req, res, sessionOptions);
     if (!session.user) {
-      return NextResponse.redirect(new URL(`/login?referer=${encodeURIComponent(path + req.nextUrl.search)}`, req.url));
+      return NextResponse.redirect(buildUrl(`/login?referer=${encodeURIComponent(path + req.nextUrl.search)}`, req));
     }
     return res;
   }

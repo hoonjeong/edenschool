@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { selectUserInfoByEmail } from '@edenschool/common/queries/user';
@@ -19,16 +20,16 @@ export async function POST(req: NextRequest) {
   const autoLogin = formData.get('autoLogin') === 'on';
 
   if (!email || !pw) {
-    return NextResponse.redirect(new URL('/login?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/login?error=1', req));
   }
 
   // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
   const user = await selectUserInfoByEmail(email);
   if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
-    return NextResponse.redirect(new URL('/login?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/login?error=1', req));
   }
 
-  const response = NextResponse.redirect(new URL(referer || '/', req.url));
+  const response = NextResponse.redirect(buildUrl(referer || '/', req));
 
   // Save email cookie
   if (saveEmail) {

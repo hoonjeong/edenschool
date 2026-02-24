@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
@@ -31,5 +32,5 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     await updateUserInfoPwByStudentId(Number(id), hashedPw);
   }
 
-  return NextResponse.redirect(new URL(`/admin/student-info?id=${id}`, req.url));
+  return NextResponse.redirect(buildUrl(`/admin/student-info?id=${id}`, req));
 });

@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
@@ -11,7 +12,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const classId = formData.get('classId');
 
   if (!csId) {
-    return NextResponse.redirect(new URL('/admin/class-manager', req.url));
+    return NextResponse.redirect(buildUrl('/admin/class-manager', req));
   }
 
   try {
@@ -20,5 +21,5 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     console.error('End student error:', error);
   }
 
-  return NextResponse.redirect(new URL(`/admin/class-info?id=${classId}`, req.url));
+  return NextResponse.redirect(buildUrl(`/admin/class-info?id=${classId}`, req));
 });

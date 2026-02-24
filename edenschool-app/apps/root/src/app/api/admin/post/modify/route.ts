@@ -1,3 +1,4 @@
+import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
@@ -17,7 +18,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const description = formData.get('description') as string;
 
     if (!id) {
-      return NextResponse.redirect(new URL('/admin/post?error=1', req.url));
+      return NextResponse.redirect(buildUrl('/admin/post?error=1', req));
     }
 
     // Java original: ActionModifyController - dao.updatePost(post)
@@ -31,9 +32,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       metaDescription: description,
     });
 
-    return NextResponse.redirect(new URL(`/admin/post-view?id=${id}`, req.url));
+    return NextResponse.redirect(buildUrl(`/admin/post-view?id=${id}`, req));
   } catch (error) {
     console.error('Modify post error:', error);
-    return NextResponse.redirect(new URL('/admin/post?error=1', req.url));
+    return NextResponse.redirect(buildUrl('/admin/post?error=1', req));
   }
 });
