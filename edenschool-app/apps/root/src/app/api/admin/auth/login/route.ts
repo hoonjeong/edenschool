@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(buildUrl('/admin/login?error=1', req));
     }
 
-    const defaultPage = user.code === 'O' ? '/admin' : '/admin/student-manage';
+    const defaultPage = user.code === 'O' ? '/admin/statistics' : '/admin/student-manage';
     const dest = referer && referer !== '/admin' ? referer : defaultPage;
     const response = NextResponse.redirect(buildUrl(dest, req));
 
