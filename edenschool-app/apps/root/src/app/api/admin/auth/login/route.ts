@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
       response.cookies.set('saved-admin-email', email, {
         maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
-        httpOnly: false,
-        sameSite: 'lax',
+        httpOnly: true,
+        sameSite: 'strict',
         secure: process.env.NODE_ENV === 'production',
       });
     } else {

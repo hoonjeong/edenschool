@@ -4,9 +4,13 @@ import { selectAdminUserIdByPhone, updateAdminUserInfo, selectAdminUserByPhone }
 import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword, normalizePhone } from '@edenschool/common/validation';
 import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = checkRateLimit(req, 'admin-join', 5, 15 * 60 * 1000);
+    if (limited) return limited;
+
     const formData = await req.formData();
     const email = formData.get('email') as string;
     const phone = formData.get('phone') as string;

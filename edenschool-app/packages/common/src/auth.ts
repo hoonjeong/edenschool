@@ -1,7 +1,7 @@
 import type { SessionOptions } from 'iron-session';
 
 const DEFAULT_TTL = Number(process.env.SESSION_TTL) || 60 * 60 * 3; // 3 hours
-const AUTO_LOGIN_TTL = 60 * 60 * 24 * 7; // 7 days
+const AUTO_LOGIN_TTL = 60 * 60 * 24 * 3; // 3 days
 
 export const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
@@ -10,7 +10,7 @@ export const sessionOptions: SessionOptions = {
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
   },
 };
 

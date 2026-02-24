@@ -5,12 +5,13 @@ import { insertQuestion } from '@edenschool/common/queries/question';
 import { selectSpecialLectureModifyById } from '@edenschool/common/queries/lecture';
 import { sendSms } from '@edenschool/common/sms';
 
-const NOTIFY_PHONE = '010-9363-6362';
-
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireApiSession();
 
   const { text, lectureId } = await req.json();
+  if (!text || typeof text !== 'string' || text.length > 5000) {
+    return NextResponse.json({ error: '질문은 5000자 이내로 입력해주세요.' }, { status: 400 });
+  }
   const id = await insertQuestion(text, session.user.id, lectureId);
 
   // 질문 등록 시 SMS 알림 발송
@@ -19,8 +20,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     if (lecture) {
       const teacher = lecture.teacher || '담당';
       const lectureDate = lecture.lectureDate || '';
-      const msg = `${teacher} 선생님 ${lectureDate} 영상에 질문댓글이 달렸습니다. 확인해주세요.`;
-      await sendSms('SMS', NOTIFY_PHONE, msg);
+      const notifyPhone = process.env.NOTIFY_PHONE;
+      if (notifyPhone) {
+        const msg = `${teacher} 선생님 ${lectureDate} 영상에 질문댓글이 달렸습니다. 확인해주세요.`;
+        await sendSms('SMS', notifyPhone, msg);
+      }
     }
   } catch (e) {
     console.error('질문 알림 SMS 발송 실패:', e);

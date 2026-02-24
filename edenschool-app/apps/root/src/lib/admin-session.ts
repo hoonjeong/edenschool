@@ -20,7 +20,7 @@ export interface AdminSessionData {
 }
 
 const DEFAULT_ADMIN_TTL = Number(process.env.ADMIN_SESSION_TTL) || 60 * 60 * 3;
-const AUTO_LOGIN_TTL = 60 * 60 * 24 * 7; // 7 days
+const AUTO_LOGIN_TTL = 60 * 60 * 24 * 3; // 3 days
 
 export const adminSessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
@@ -29,7 +29,7 @@ export const adminSessionOptions: SessionOptions = {
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
   },
 };
 

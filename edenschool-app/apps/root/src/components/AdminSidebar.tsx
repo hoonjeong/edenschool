@@ -98,12 +98,6 @@ export async function AdminSidebar() {
             <a href="/admin/site-popup" className="admin-sidebar-link">
               <i className="fas fa-window-restore"></i> 팝업관리
             </a>
-            <a href="/admin/site-design" className="admin-sidebar-link">
-              <i className="fas fa-paint-brush"></i> 메인디자인
-            </a>
-            <a href="/admin/class-display" className="admin-sidebar-link">
-              <i className="fas fa-th-large"></i> 수강반표시
-            </a>
 
             {/* 기타 */}
             <div className="admin-sidebar-section">기타</div>
@@ -116,6 +110,15 @@ export async function AdminSidebar() {
             <a href="/admin/lecture-view-log" className="admin-sidebar-link">
               <i className="fas fa-play-circle"></i> 영상 시청 기록
             </a>
+
+            {/* 개발중 */}
+            <div className="admin-sidebar-section">개발중</div>
+            <span className="admin-sidebar-link disabled">
+              <i className="fas fa-paint-brush"></i> 메인디자인
+            </span>
+            <span className="admin-sidebar-link disabled">
+              <i className="fas fa-th-large"></i> 수강반표시
+            </span>
           </>
         )}
       </nav>

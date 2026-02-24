@@ -17,7 +17,6 @@ export async function Navbar() {
             <li><a href="/">홈</a></li>
             <li><a href="/#high">고등부</a></li>
             <li><a href="/#middle">중등부</a></li>
-            <li><a href="/class-info">수강반 안내</a></li>
             <li><a href="/board">게시판</a></li>
             <li><a href="/lecture">동영상강의</a></li>
             <li><a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a></li>
@@ -77,7 +76,6 @@ export async function Navbar() {
         <a href="/">홈</a>
         <a href="/#high">고등부</a>
         <a href="/#middle">중등부</a>
-        <a href="/class-info">수강반 안내</a>
         <a href="/board">게시판</a>
         <a href="/lecture">동영상강의</a>
         <a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a>

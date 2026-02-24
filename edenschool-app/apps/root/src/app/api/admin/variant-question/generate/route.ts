@@ -32,6 +32,14 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  const totalSize = texts.reduce((sum, t) => sum + (t.text?.length || 0), 0);
+  if (totalSize > 100 * 1024) {
+    return new Response(JSON.stringify({ error: '입력 텍스트 합산 크기가 100KB를 초과합니다.' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // 모든 텍스트를 합쳐서 하나의 프롬프트로 생성
   const combinedText = texts
     .map((t) => `=== ${t.fileName} ===\n${t.text}`)

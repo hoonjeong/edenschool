@@ -11,7 +11,7 @@ export function withErrorHandler(handler: HandlerFn): HandlerFn {
       if (error instanceof ApiUnauthorizedError) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      console.error('API error:', error);
+      console.error('API error:', error instanceof Error ? error.message : 'Unknown error');
       return NextResponse.json({ error: '오류가 발생했습니다.' }, { status: 500 });
     }
   };

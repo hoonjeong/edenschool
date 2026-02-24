@@ -31,17 +31,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {children}
         {!isAdmin && <SessionHeartbeatWrapper />}
         <BootstrapClient />
-        {!isAdmin && (
-          <script dangerouslySetInnerHTML={{ __html: `
-            document.addEventListener('click', function(e) {
-              var toggle = e.target.closest('[data-toggle="eden-mobile"]');
-              if (toggle) {
-                var menu = document.getElementById('edenMobileMenu');
-                if (menu) menu.classList.toggle('show');
-              }
-            });
-          `}} />
-        )}
       </body>
     </html>
   );

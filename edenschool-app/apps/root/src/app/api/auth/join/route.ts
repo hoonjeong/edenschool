@@ -5,8 +5,12 @@ import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword } from '@edenschool/common/validation';
 import { sessionOptions } from '@edenschool/common/auth';
 import type { SessionData } from '@edenschool/common/auth';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, 'join', 5, 15 * 60 * 1000);
+  if (limited) return limited;
+
   const formData = await req.formData();
   const email = formData.get('email') as string;
   const pw = formData.get('pw') as string;

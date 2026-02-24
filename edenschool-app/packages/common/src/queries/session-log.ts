@@ -8,8 +8,3 @@ export async function upsertSessionLog(userId: number, ip: string, userAgent: st
     [userId, ip, userAgent.substring(0, 512)]
   );
 }
-
-// 오래된 세션 로그 정리 (24시간 초과)
-export async function deleteOldSessionLogs(): Promise<void> {
-  await pool.query(`DELETE FROM session_log WHERE last_active < DATE_SUB(NOW(), INTERVAL 24 HOUR)`);
-}
