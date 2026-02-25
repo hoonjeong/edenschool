@@ -28,7 +28,7 @@ export default function HomePage() {
           playsInline
           preload="auto"
         >
-          <source src="/api/video/back.mov" type="video/quicktime" />
+          <source src="/api/video/back.mp4" type="video/mp4" />
         </video>
         <div className="about-hero-overlay-top" />
         <div className="about-hero-overlay-bottom" />
@@ -233,7 +233,7 @@ export default function HomePage() {
               playsInline
               preload="metadata"
             >
-              <source src="/api/video/introduce.mov" type="video/quicktime" />
+              <source src="/api/video/introduce.mp4" type="video/mp4" />
               브라우저가 비디오 재생을 지원하지 않습니다.
             </video>
           </div>
