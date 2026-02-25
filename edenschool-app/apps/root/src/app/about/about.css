@@ -257,8 +257,8 @@ body.eden-about-page {
 
 .about-feature-card p {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.9;
+  font-size: 20px;
+  line-height: 2.0;
   color: #374151;
 }
 
@@ -301,7 +301,6 @@ body.eden-about-page {
 .about-video-section-inner {
   max-width: 900px;
   margin: 0 auto;
-  text-align: center;
 }
 
 .about-video-section h2 {
@@ -345,9 +344,10 @@ body.eden-about-page {
 .about-closing .about-signature {
 
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: #1e293b;
   margin-top: 48px;
+  text-align: right;
 }
 
 /* ===== About Page: Scroll Animations ===== */

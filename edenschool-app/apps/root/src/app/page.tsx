@@ -159,7 +159,7 @@ export default function HomePage() {
 
           <p>
             이 결정을 내리는 것이 쉽지는 않았습니다.
-            당시에 학원의 소문을 듣고, 인천이나 시흥, 소래에서도 학생들이 오고 있는 상황이었기 때문입니다.
+            당시에 학원의 소문을 듣고, 인천이나 시흥, 안산에서도 학생들이 오고 있는 상황이었기 때문입니다.
           </p>
 
           <p>
@@ -170,7 +170,7 @@ export default function HomePage() {
 
           <div className="about-feature-card">
             <p>
-              <strong>상원고 전임 김보름 선생님</strong>은 상원고 1, 2, 3학년만 전담하며 관리하십니다.
+              상원고 전임 김보름 선생님은 상원고 1, 2, 3학년만 전담하며 관리하십니다.
               상원고에 대한 전문성을 쌓기 위해 노력하며,
               정규수업 외에도 매주 진행되는 1:1 클리닉으로,
               학생 한 명 한 명을 개별관리하기 위해 노력해주십니다.
@@ -217,7 +217,7 @@ export default function HomePage() {
             늘 노력하는 이든배움국어학원이 되겠습니다.
           </p>
 
-          <p className="about-signature">대표원장 서효정 드림</p>
+          <p className="about-signature">- 대표원장 서효정 드림</p>
         </div>
       </section>
 
