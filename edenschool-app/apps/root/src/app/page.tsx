@@ -233,8 +233,8 @@ export default function HomePage() {
               playsInline
               preload="metadata"
             >
+              <source src="/api/video/서효정 대표 원장님.mp4" type="video/mp4" />
               <source src="/api/video/서효정 대표 원장님.mov" type="video/quicktime" />
-              <source src="/api/video/서효정 대표 원장님.mov" type="video/mp4" />
               브라우저가 비디오 재생을 지원하지 않습니다.
             </video>
           </div>
