@@ -95,15 +95,6 @@ export default function ResultTable({
               ? '다운로드 중...'
               : `선택한 ${selectedIds.size}개 파일 다운로드`}
           </button>
-          <button
-            className="btn btn-info btn-sm ml-2"
-            onClick={() => {
-              const idStr = Array.from(selectedIds).join(',');
-              router.push(`/admin/variant-question?ids=${idStr}&source=split-file`);
-            }}
-          >
-            변형문제 생성
-          </button>
         </div>
       )}
 
