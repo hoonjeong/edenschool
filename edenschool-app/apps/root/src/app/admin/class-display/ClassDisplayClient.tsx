@@ -1,18 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import {
+  type ScheduleItem,
+  type SchoolSchedule,
+  SECTIONS,
+  SECTION_LABELS,
+  parseScheduleData,
+  serializeScheduleData,
+  getPhotoSrc,
+} from '@/lib/teacher-display-utils';
 
 /* ===== 타입 ===== */
-interface ScheduleItem {
-  grade: string;
-  time: string;
-}
-
-interface SchoolSchedule {
-  name: string;
-  schedule: ScheduleItem[];
-}
-
 interface TeacherItem {
   id?: number;
   section: string;
@@ -27,16 +26,6 @@ interface TeacherItem {
   is_active: number;
 }
 
-const SECTIONS = [
-  { key: 'HIGH_SCHOOL', label: '고등부' },
-  { key: 'MIDDLE_SCHOOL', label: '중등부' },
-  { key: 'SUNEUNG', label: '수능올인반' },
-  { key: 'ELEMENTARY', label: '초등부' },
-  { key: 'STAFF', label: '운영진' },
-] as const;
-
-const SECTION_LABELS: Record<string, string> = Object.fromEntries(SECTIONS.map(s => [s.key, s.label]));
-
 function emptyItem(section: string): TeacherItem {
   return {
     section,
@@ -50,33 +39,6 @@ function emptyItem(section: string): TeacherItem {
     sort_order: 0,
     is_active: 1,
   };
-}
-
-/* ===== 스케줄 파싱 ===== */
-function parseScheduleData(raw: string | null): { schedule: ScheduleItem[]; schools: SchoolSchedule[] } {
-  if (!raw) return { schedule: [], schools: [] };
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return { schedule: parsed, schools: [] };
-    }
-    if (parsed.schools) {
-      return { schedule: [], schools: parsed.schools };
-    }
-    return { schedule: [], schools: [] };
-  } catch {
-    return { schedule: [], schools: [] };
-  }
-}
-
-function serializeScheduleData(schedule: ScheduleItem[], schools: SchoolSchedule[]): string | null {
-  if (schools.length > 0) {
-    return JSON.stringify({ schools });
-  }
-  if (schedule.length > 0) {
-    return JSON.stringify(schedule);
-  }
-  return null;
 }
 
 /* ===== 스케줄 편집 컴포넌트 ===== */
@@ -280,9 +242,7 @@ function EditForm({
     onSave({ ...form, schedule_data: scheduleData });
   };
 
-  const photoSrc = form.photo_file_id
-    ? `/api/file/image/${form.photo_file_id}`
-    : form.photo_url || null;
+  const photoSrc = getPhotoSrc(form) || null;
 
   return (
     <div className="card mb-3">
@@ -410,9 +370,7 @@ function TeacherCard({
   onDelete: () => void;
 }) {
   const parsed = parseScheduleData(item.schedule_data);
-  const photoSrc = item.photo_file_id
-    ? `/api/file/image/${item.photo_file_id}`
-    : item.photo_url || null;
+  const photoSrc = getPhotoSrc(item) || null;
 
   return (
     <div className="card mb-2" style={{ opacity: item.is_active ? 1 : 0.5 }}>

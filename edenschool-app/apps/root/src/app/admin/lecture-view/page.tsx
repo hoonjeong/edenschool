@@ -80,8 +80,8 @@ export default async function LectureViewPage({
   );
   const questions = questionRows as QuestionRow[];
 
-  // Extract Vimeo embed URL
-  const vimeoUrl = lecture.url || '';
+  // Extract Vimeo embed URL (only allow http/https)
+  const vimeoUrl = lecture.url && /^https?:\/\//.test(lecture.url) ? lecture.url : '';
 
   return (
     <div>

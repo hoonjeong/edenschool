@@ -1,3 +1,8 @@
+/* ===== About Page: 전역 폰트 ===== */
+body.eden-about-page {
+
+}
+
 /* ===== About Page: Hero Section ===== */
 .about-hero {
   position: relative;
@@ -50,7 +55,7 @@
 }
 
 .about-hero-content h1 {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 44px;
   font-weight: 700;
   margin: 0 0 16px;
@@ -60,7 +65,7 @@
 }
 
 .about-hero-content p {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 28px;
   font-weight: 300;
   opacity: 0.95;
@@ -95,7 +100,7 @@
 /* ===== About Page: Label Badge ===== */
 .about-label {
   display: inline-block;
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -130,7 +135,7 @@
 
 /* ===== About Page: Typography ===== */
 .about-section h2 {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 28px;
   font-weight: 700;
   color: #1e293b;
@@ -143,7 +148,7 @@
 }
 
 .about-section p {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 20px;
   line-height: 2.0;
   color: #374151;
@@ -157,7 +162,7 @@
 
 /* ===== About Page: Quote ===== */
 .about-quote {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 20px;
   font-weight: 600;
   color: #1e293b;
@@ -195,21 +200,13 @@
 }
 
 .about-highlight {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 22px;
   font-weight: 700;
   color: var(--eden-primary);
   text-align: center;
   margin: 40px 0;
   line-height: 1.6;
-}
-
-.about-divider {
-  width: 60px;
-  height: 3px;
-  background: var(--eden-primary);
-  margin: 0 auto 40px;
-  border-radius: 2px;
 }
 
 /* ===== About Page: Stat Cards ===== */
@@ -230,7 +227,7 @@
 }
 
 .about-stat-number {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 36px;
   font-weight: 800;
   color: var(--eden-primary);
@@ -239,7 +236,7 @@
 }
 
 .about-stat-label {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 14px;
   font-weight: 500;
   color: #64748b;
@@ -279,7 +276,7 @@
   border-radius: 8px;
   padding: 16px 12px;
   text-align: center;
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 15px;
   font-weight: 600;
   color: #1e293b;
@@ -308,7 +305,7 @@
 }
 
 .about-video-section h2 {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 28px;
   font-weight: 700;
   color: #1e293b;
@@ -317,7 +314,7 @@
 
 .about-video-section p {
   color: #64748b;
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 16px;
   margin: 0 0 40px;
 }
@@ -334,9 +331,19 @@
   display: block;
 }
 
+/* ===== About Page: Footer ===== */
+.about-footer {
+  width: 100%;
+  background-color: #333333;
+  color: white;
+  text-align: center;
+  font-size: 12pt;
+  padding: 16px;
+}
+
 /* ===== About Page: Closing Section ===== */
 .about-closing .about-signature {
-  font-family: 'Pretendard', sans-serif;
+
   font-size: 18px;
   font-weight: 600;
   color: #1e293b;

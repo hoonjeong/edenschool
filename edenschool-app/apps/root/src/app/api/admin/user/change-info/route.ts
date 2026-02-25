@@ -5,10 +5,15 @@ import { countAdminUserByEmailExceptMe, countAdminUserByPhoneExceptMe, updateEma
 import { normalizePhone, isValidEmail } from '@edenschool/common/validation';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  const session = await requireAdminApiSession();
 
   const body = await req.json();
   const id = body.id;
+
+  // Only allow changing own info
+  if (id !== session.user.id) {
+    return new NextResponse('UNAUTHORIZED', { status: 403 });
+  }
   const phone = normalizePhone(body.phone || '');
   const email = body.email;
 

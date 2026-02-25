@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
-import { selectLectureById } from '@edenschool/common/queries/lecture';
+import { selectLectureById, isLectureAccessibleByStudent } from '@edenschool/common/queries/lecture';
 import { selectFileInfoListById } from '@edenschool/common/queries/file';
 import { selectQuestionList } from '@edenschool/common/queries/question';
 import { selectLectureProgress } from '@edenschool/common/queries/lecture-progress';
 import VimeoPlayer from './VimeoPlayer';
+import { sanitizeAdminHtml } from '@/lib/sanitize';
 
 export default async function LectureViewPage({
   searchParams,
@@ -21,6 +22,12 @@ export default async function LectureViewPage({
   const lecture = await selectLectureById(id);
   if (!lecture) redirect('/lecture');
 
+  // 수강 등록 확인
+  if (session.user.studentId) {
+    const accessible = await isLectureAccessibleByStudent(id, session.user.studentId);
+    if (!accessible) redirect('/lecture');
+  }
+
   const [files, questions, progress] = await Promise.all([
     selectFileInfoListById(id),
     selectQuestionList(id),
@@ -28,6 +35,7 @@ export default async function LectureViewPage({
   ]);
 
   const isVimeo = lecture.url && (lecture.url.includes('vimeo.com') || lecture.url.includes('player.vimeo.com'));
+  const isSafeUrl = lecture.url && /^https?:\/\//.test(lecture.url);
   const initialSeconds = progress?.watchedSeconds || 0;
   const progressPercent = progress?.percent || 0;
 
@@ -36,7 +44,7 @@ export default async function LectureViewPage({
       {/* 다크 영상 영역 */}
       <div className="eden-video-wrapper">
         <div className="eden-video-container">
-          {lecture.url && (
+          {lecture.url && isSafeUrl && (
             isVimeo ? (
               <VimeoPlayer url={lecture.url} initialSeconds={initialSeconds} lectureId={id} />
             ) : (
@@ -72,7 +80,7 @@ export default async function LectureViewPage({
           </div>
           <div className="eden-card-body">
             {lecture.description ? (
-              <div dangerouslySetInnerHTML={{ __html: lecture.description }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(lecture.description) }} />
             ) : (
               <div className="eden-empty" style={{ padding: '20px 0' }}>내용이 없습니다.</div>
             )}

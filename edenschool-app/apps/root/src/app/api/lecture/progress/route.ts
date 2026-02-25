@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { selectLectureProgress, upsertLectureProgress } from '@edenschool/common/queries/lecture-progress';
+import { isLectureAccessibleByStudent } from '@edenschool/common/queries/lecture';
 
 // 학생: 진도 조회
 export async function GET(req: NextRequest) {
@@ -32,13 +33,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
+  const numLectureId = Number(lectureId);
+  const numWatched = Number(watchedSeconds);
+  const numDuration = Number(duration);
+  const numPercent = Number(percent);
+  const numCompleted = Number(completed) || 0;
+
+  if (!Number.isInteger(numLectureId) || numLectureId <= 0) {
+    return NextResponse.json({ error: 'Invalid lectureId' }, { status: 400 });
+  }
+  if (session.user.studentId) {
+    const accessible = await isLectureAccessibleByStudent(numLectureId, session.user.studentId);
+    if (!accessible) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+  if (isNaN(numWatched) || numWatched < 0 || isNaN(numDuration) || numDuration < 0) {
+    return NextResponse.json({ error: 'Invalid time values' }, { status: 400 });
+  }
+  if (isNaN(numPercent) || numPercent < 0 || numPercent > 100) {
+    return NextResponse.json({ error: 'Invalid percent' }, { status: 400 });
+  }
+
   await upsertLectureProgress(
     session.user.id,
-    lectureId,
-    watchedSeconds,
-    duration,
-    percent,
-    completed || 0
+    numLectureId,
+    numWatched,
+    numDuration,
+    numPercent,
+    numCompleted
   );
 
   return NextResponse.json({ success: true });

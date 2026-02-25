@@ -14,6 +14,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ error: 'ids는 비어있지 않은 배열이어야 합니다.' }, { status: 400 });
   }
 
+  if (ids.length > 50) {
+    return NextResponse.json({ error: '한 번에 최대 50개까지 다운로드 가능합니다.' }, { status: 400 });
+  }
+
   const files = await selectPrevTestFileInfoByInfoIds(ids);
 
   if (files.length === 0) {
@@ -48,6 +52,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename*=UTF-8''${encodedFileName}`,
       'Content-Length': String(zipBuffer.length),
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 });

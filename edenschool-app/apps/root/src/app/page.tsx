@@ -7,7 +7,7 @@ const SCHOOLS = [
 ];
 
 const FOOTER = (
-  <div className="footer" style={{ width: '100%', backgroundColor: '#333333', color: 'white', textAlign: 'center', fontSize: '12pt', padding: 16 }}>
+  <div className="about-footer">
     이든배움진학지도보습학원 교육청등록 제5569호 사업자번호 130-92-61827 경기 부천시 소향로 29 (상동, 그린프라자) 503호, 504호 &copy; 이든배움진학지도보습학원 edenschool.kr <br />
     이든배움국어상동2관입시학원 교육청등록 제6380호<br />이든배움국어상동3관입시학원 교육청등록 제6646호<br />이든국어독서교육원논술학원 교육청등록 제6673호<br />이든배움국어상동5관입시학원 교육청등록 제6739호
   </div>
@@ -28,7 +28,7 @@ export default function HomePage() {
           playsInline
           preload="auto"
         >
-          <source src="/api/video/배경영상.mp4" type="video/mp4" />
+          <source src="/api/video/back.mov" type="video/quicktime" />
         </video>
         <div className="about-hero-overlay-top" />
         <div className="about-hero-overlay-bottom" />
@@ -233,8 +233,7 @@ export default function HomePage() {
               playsInline
               preload="metadata"
             >
-              <source src="/api/video/서효정 대표 원장님.mp4" type="video/mp4" />
-              <source src="/api/video/서효정 대표 원장님.mov" type="video/quicktime" />
+              <source src="/api/video/introduce.mov" type="video/quicktime" />
               브라우저가 비디오 재생을 지원하지 않습니다.
             </video>
           </div>

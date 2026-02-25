@@ -72,6 +72,31 @@ export async function deletePostFileStatusByFileId(fileId: number): Promise<numb
   return result.affectedRows;
 }
 
+// ROOT: isFilePublicImage (teacher_display photo)
+export async function isFilePublicImage(fileId: number): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT 1 FROM teacher_display WHERE photo_file_id=? AND is_active=1 LIMIT 1`,
+    [fileId]
+  );
+  return rows.length > 0;
+}
+
+// ROOT: isFileAccessibleByUser (post file or enrolled lecture file)
+export async function isFileAccessibleByUser(fileId: number, userId: number): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT 1 FROM post_file_status WHERE file_id=?
+     UNION
+     SELECT 1 FROM file_status fs
+       JOIN lecture l ON l.id=fs.lecture_id
+       JOIN class_status cs ON cs.class_id=l.class_id
+       JOIN user_info u ON u.student_id=cs.student_id
+     WHERE fs.file_id=? AND u.id=? AND cs.status=1
+     LIMIT 1`,
+    [fileId, fileId, userId]
+  );
+  return rows.length > 0;
+}
+
 // Admin: deleteFileInfoById
 export async function deleteFileInfoById(fileId: number): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(

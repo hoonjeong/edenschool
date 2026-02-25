@@ -3,6 +3,7 @@ import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectPostById, insertPost, updatePost } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById, insertPostFileStatus } from '@edenschool/common/queries/file';
+import { sanitizeAdminHtml } from '@/lib/sanitize';
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
@@ -37,7 +38,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const formData = await req.formData();
     const id = formData.get('id') as string | null;
     const subject = formData.get('subject') as string;
-    const contents = formData.get('contents') as string;
+    const contents = sanitizeAdminHtml(formData.get('contents') as string || '');
     const code = formData.get('code') as string;
     const category = formData.get('category') as string;
     const keyword = formData.get('keyword') as string;
@@ -45,6 +46,13 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const fileIds = formData.getAll('file_id[]') as string[];
 
     if (id) {
+      // 선생님은 본인 게시글만 수정 가능
+      if (session.user.code !== 'O') {
+        const existing = await selectPostById(Number(id));
+        if (!existing || existing.userId !== session.user.id) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
       // Update existing post (edit mode)
       await updatePost({
         id: Number(id),

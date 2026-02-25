@@ -8,9 +8,11 @@ export const sessionOptions: SessionOptions = {
   cookieName: process.env.SESSION_COOKIE_NAME || 'edenschool-session',
   ttl: DEFAULT_TTL,
   cookieOptions: {
-    secure: process.env.COOKIE_SECURE === 'true',
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,
+    path: '/',
+    maxAge: DEFAULT_TTL,
   },
 };
 

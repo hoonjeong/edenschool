@@ -1,4 +1,4 @@
-import { buildUrl } from '@/lib/url';
+import { buildUrl, safeRedirectPath } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { selectUserInfoByEmail } from '@edenschool/common/queries/user';
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const email = formData.get('email') as string;
   const pw = formData.get('pw') as string;
-  const referer = (formData.get('referer') as string) || '/';
+  const referer = safeRedirectPath(formData.get('referer') as string, '/');
   const saveEmail = formData.get('saveEmail') === 'on';
   const autoLogin = formData.get('autoLogin') === 'on';
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import pool from '@edenschool/common/db';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
+import { validateUploadedFile } from '@/lib/upload-validation';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import {
   insertPrevTestMetaInfo,
@@ -50,6 +51,8 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     // Insert prev_test_file_info if file provided (matches DataMapper: insertPrevTestFileInfo)
     if (file) {
+      const validationError = validateUploadedFile(file);
+      if (validationError) return validationError;
       const fileName = file.name;
       const buffer = Buffer.from(await file.arrayBuffer());
 

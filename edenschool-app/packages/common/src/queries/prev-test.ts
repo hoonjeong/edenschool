@@ -20,7 +20,7 @@ export async function insertPrevTestFileInfo(infoId: number, content: Buffer, fi
 
 export async function selectPrevTestMetaInfoAll(): Promise<PrevTestMetaInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, region, school_type as schoolType, school_name as schoolName, year, grade, term, test_type as testType, section, publisher, file_type as fileType, insert_time as insertTime FROM prev_test_meta_info ORDER BY id DESC`
+    `SELECT id, region, school_type as schoolType, school_name as schoolName, year, grade, term, test_type as testType, section, publisher, file_type as fileType, insert_time as insertTime FROM prev_test_meta_info ORDER BY id DESC LIMIT 5000`
   );
   return rows as PrevTestMetaInfo[];
 }

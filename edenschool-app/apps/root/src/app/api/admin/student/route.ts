@@ -1,14 +1,14 @@
 import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/api-handler';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { insertStudent } from '@edenschool/common/queries/student';
 import { insertStudentAnalysis } from '@edenschool/common/queries/admin-user';
 import { normalizePhone } from '@edenschool/common/validation';
 import { withTransaction } from '@edenschool/common/db';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   const formData = await req.formData();
   const name = formData.get('name') as string;

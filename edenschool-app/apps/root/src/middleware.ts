@@ -12,6 +12,12 @@ const publicPaths = ['/', '/login', '/join', '/join-step2', '/find-email', '/fin
 // Admin public paths (no auth required)
 const adminPublicPaths = ['/admin/login', '/admin/join', '/admin/find-admin-email', '/admin/find-admin-pass'];
 
+function withSecurityHeaders(res: NextResponse): NextResponse {
+  res.headers.set('X-Frame-Options', 'DENY');
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  return res;
+}
+
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
@@ -21,7 +27,7 @@ export async function middleware(req: NextRequest) {
 
   // Allow static files
   if (path.startsWith('/_next') || path.startsWith('/assets')) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   }
 
   // === Admin routes ===
@@ -31,7 +37,7 @@ export async function middleware(req: NextRequest) {
       adminPublicPaths.some(p => path === p || path.startsWith(p + '/')) ||
       path.startsWith('/api/admin/auth')
     ) {
-      return NextResponse.next({ request: { headers: requestHeaders } });
+      return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
     }
 
     const res = NextResponse.next({ request: { headers: requestHeaders } });
@@ -39,13 +45,13 @@ export async function middleware(req: NextRequest) {
     if (!session.user) {
       return NextResponse.redirect(buildUrl('/admin/login', req));
     }
-    return res;
+    return withSecurityHeaders(res);
   }
 
   // === Student routes ===
   // Allow public paths
   if (publicPaths.some(p => path === p || path.startsWith(p + '/'))) {
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   }
 
   // Check if path is protected
@@ -55,10 +61,10 @@ export async function middleware(req: NextRequest) {
     if (!session.user) {
       return NextResponse.redirect(buildUrl(`/login?referer=${encodeURIComponent(path + req.nextUrl.search)}`, req));
     }
-    return res;
+    return withSecurityHeaders(res);
   }
 
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
 }
 
 export const config = {

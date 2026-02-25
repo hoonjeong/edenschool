@@ -2,7 +2,7 @@ import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { SessionOptions } from 'iron-session';
-import { ApiUnauthorizedError } from './session';
+import { ApiUnauthorizedError, ApiForbiddenError } from './session';
 
 export interface AdminSessionData {
   user?: {
@@ -27,9 +27,11 @@ export const adminSessionOptions: SessionOptions = {
   cookieName: process.env.ADMIN_SESSION_COOKIE_NAME || 'edenschool-admin-session',
   ttl: DEFAULT_ADMIN_TTL,
   cookieOptions: {
-    secure: process.env.COOKIE_SECURE === 'true',
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,
+    path: '/',
+    maxAge: DEFAULT_ADMIN_TTL,
   },
 };
 
@@ -63,4 +65,13 @@ export async function requireAdminApiSession() {
     throw new ApiUnauthorizedError();
   }
   return session as typeof session & { user: NonNullable<AdminSessionData['user']> };
+}
+
+/** 원장(code='O') 전용 API — 선생님(code='T')은 403 */
+export async function requireOwnerApiSession() {
+  const session = await requireAdminApiSession();
+  if (session.user.code !== 'O') {
+    throw new ApiForbiddenError();
+  }
+  return session;
 }

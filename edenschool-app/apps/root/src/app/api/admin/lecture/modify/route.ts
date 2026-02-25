@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectClassIdByName } from '@edenschool/common/queries/class';
-import { modifyLecture } from '@edenschool/common/queries/lecture';
+import { modifyLecture, selectLectureTeacherById } from '@edenschool/common/queries/lecture';
 import { insertFileStatus } from '@edenschool/common/queries/file';
 
 // Matches original: ActionModifyLectureController -> modifyLecture + insertFileStatus
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  const session = await requireAdminApiSession();
 
   try {
     const body = await req.json();
@@ -15,6 +15,14 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Missing lecture id' }, { status: 400 });
+    }
+
+    // 선생님은 본인 강의만 수정 가능
+    if (session.user.code !== 'O') {
+      const currentTeacher = await selectLectureTeacherById(Number(id));
+      if (currentTeacher !== session.user.name) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Original: selectClassIdByName - resolve class_id from first class name

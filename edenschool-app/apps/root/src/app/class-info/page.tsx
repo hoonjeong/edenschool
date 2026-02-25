@@ -1,5 +1,6 @@
 import './class-info.css';
 import { selectTeacherDisplayListActive, type TeacherDisplay } from '@edenschool/common/queries/site-config';
+import { type ScheduleItem, type SchoolSchedule, parseScheduleData, getPhotoSrc } from '@/lib/teacher-display-utils';
 
 export const metadata = {
   title: '수업안내 | 이든배움국어학원',
@@ -7,17 +8,6 @@ export const metadata = {
 };
 
 export const dynamic = 'force-dynamic';
-
-/* ===== 타입 ===== */
-interface ScheduleItem {
-  grade: string;
-  time: string;
-}
-
-interface SchoolSchedule {
-  name: string;
-  schedule: ScheduleItem[];
-}
 
 interface Teacher {
   branch?: string;
@@ -46,23 +36,6 @@ interface StaffMember {
 }
 
 /* ===== DB → 정적 타입 변환 ===== */
-function parseScheduleData(raw: string | null): { schedule: ScheduleItem[]; schools: SchoolSchedule[] } {
-  if (!raw) return { schedule: [], schools: [] };
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return { schedule: parsed, schools: [] };
-    if (parsed.schools) return { schedule: [], schools: parsed.schools };
-    return { schedule: [], schools: [] };
-  } catch {
-    return { schedule: [], schools: [] };
-  }
-}
-
-function getPhotoSrc(item: TeacherDisplay): string {
-  if (item.photo_file_id) return `/api/file/image/${item.photo_file_id}`;
-  return item.photo_url || '';
-}
-
 function toTeacher(item: TeacherDisplay): Teacher {
   const { schedule, schools } = parseScheduleData(item.schedule_data);
   return {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireAdminApiSession, requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectSitePopup, updateSitePopup } from '@edenschool/common/queries/site-config';
 
@@ -10,7 +10,7 @@ export const GET = withErrorHandler(async () => {
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
   const body = await req.json();
   const { is_active, image_file_id, link_url, start_date, end_date } = body;
   await updateSitePopup({

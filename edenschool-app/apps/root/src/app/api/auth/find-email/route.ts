@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { selectEmailByPhone } from '@edenschool/common/queries/user';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 function getMaskedEmail(email: string): string {
   const match = email.match(/^(\S+)@(\S+\.\S+)$/);
@@ -16,6 +17,9 @@ function getMaskedEmail(email: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, 'find-email', 10, 15 * 60 * 1000);
+  if (limited) return limited;
+
   const { phone, phoneType } = await req.json();
   const email = await selectEmailByPhone(phone, phoneType);
   if (email) {

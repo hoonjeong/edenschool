@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { selectLiveStudentByPhone } from '@edenschool/common/queries/user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Generate 6-digit auth code
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = String(randomInt(100000, 1000000));
   const smsPrefix = process.env.SMS_PREFIX || '[이든배움국어학원]';
   const message = `${smsPrefix}\n인증번호를 확인해주세요. [${code}]`;
 

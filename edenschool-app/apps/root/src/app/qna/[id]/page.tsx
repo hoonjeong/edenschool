@@ -85,7 +85,7 @@ export default async function QnaDetailPage({ params }: PageProps) {
     <div className="eden-container">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
       <div className="eden-card" style={{ marginBottom: 20 }}>

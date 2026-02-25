@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { countAdminUserByPhone } from '@edenschool/common/queries/admin-user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate 6-digit verification code
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = String(randomInt(100000, 1000000));
 
     // Send SMS with verification code
     const callNum = process.env.SMS_DEFAULT_CALLNUM;

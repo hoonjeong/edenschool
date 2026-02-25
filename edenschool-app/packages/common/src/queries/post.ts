@@ -4,13 +4,13 @@ import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 // ROOT: selectPostInfoList
 export async function selectPostInfoList(code: string, category?: string): Promise<PostInfo[]> {
-  let sql = `SELECT p.id, p.subject, p.contents, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;
+  let sql = `SELECT p.id, p.subject, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;
   const params: any[] = [code];
   if (category) {
     sql += ` AND category=?`;
     params.push(category);
   }
-  sql += ` ORDER BY id DESC`;
+  sql += ` ORDER BY id DESC LIMIT 500`;
   const [rows] = await pool.query<RowDataPacket[]>(sql, params);
   return rows as PostInfo[];
 }
@@ -42,6 +42,15 @@ export async function insertComment(text: string, userId: number, postId: number
   return result.insertId;
 }
 
+// ROOT: selectCommentById
+export async function selectCommentById(id: number): Promise<{ id: number; userId: number } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, user_id as userId FROM comment WHERE id=?`,
+    [id]
+  );
+  return (rows[0] as { id: number; userId: number }) || null;
+}
+
 // ROOT: deleteComment
 export async function deleteComment(id: number): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
@@ -59,7 +68,7 @@ export async function updatePostReadCount(id: number): Promise<void> {
 // Admin: selectPostList
 export async function selectPostList(): Promise<PostInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT p.id, p.subject, p.contents, p.code, p.category, p.read_count as readCount, date_format(p.insert_time, "%m/%d") as date, u.name as writer FROM post_info p, admin_user_info u WHERE u.id=p.user_id ORDER BY p.id DESC`
+    `SELECT p.id, p.subject, p.code, p.category, p.read_count as readCount, date_format(p.insert_time, "%m/%d") as date, u.name as writer FROM post_info p, admin_user_info u WHERE u.id=p.user_id ORDER BY p.id DESC LIMIT 500`
   );
   return rows as PostInfo[];
 }
@@ -67,7 +76,7 @@ export async function selectPostList(): Promise<PostInfo[]> {
 // Admin: selectPostListByCode
 export async function selectPostListByCode(code: string): Promise<PostInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT p.id, p.subject, p.contents, p.code, p.category, p.read_count as readCount, date_format(p.insert_time, "%m/%d") as date, u.name as writer FROM post_info p, admin_user_info u WHERE p.code=? AND u.id=p.user_id ORDER BY p.id DESC`,
+    `SELECT p.id, p.subject, p.code, p.category, p.read_count as readCount, date_format(p.insert_time, "%m/%d") as date, u.name as writer FROM post_info p, admin_user_info u WHERE p.code=? AND u.id=p.user_id ORDER BY p.id DESC LIMIT 500`,
     [code]
   );
   return rows as PostInfo[];
@@ -76,7 +85,7 @@ export async function selectPostListByCode(code: string): Promise<PostInfo[]> {
 // Admin: selectPostById
 export async function selectPostById(id: number): Promise<PostInfo | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, subject, contents, category, code, meta_keyword as metaKeyword, meta_description as metaDescription FROM post_info WHERE id=?`,
+    `SELECT id, subject, contents, category, code, user_id as userId, meta_keyword as metaKeyword, meta_description as metaDescription FROM post_info WHERE id=?`,
     [id]
   );
   return (rows[0] as PostInfo) || null;

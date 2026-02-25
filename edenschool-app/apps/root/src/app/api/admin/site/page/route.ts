@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireAdminApiSession, requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectSitePage, upsertSitePage } from '@edenschool/common/queries/site-config';
 
@@ -12,7 +12,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
   const body = await req.json();
   const { page_key, blocks } = body;
   // blocks JSON을 gjsdata 컬럼에 저장, html/css는 빈 문자열

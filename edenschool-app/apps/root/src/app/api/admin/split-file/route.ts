@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
+import { validateUploadedFile } from '@/lib/upload-validation';
 import {
   insertSplitFileMetaInfo,
   insertSplitFileContent,
@@ -40,6 +41,8 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     });
 
     if (file) {
+      const validationError = validateUploadedFile(file);
+      if (validationError) return validationError;
       const buffer = Buffer.from(await file.arrayBuffer());
       await insertSplitFileContent(metaId, buffer, file.name);
     }
@@ -68,13 +71,14 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     }
 
     // Search mode
-    const keyword = searchParams.get('keyword') || '';
-    const grade = searchParams.get('grade')?.split(',').filter(Boolean) || [];
-    const subject = searchParams.get('subject')?.split(',').filter(Boolean) || [];
-    const publisher = searchParams.get('publisher')?.split(',').filter(Boolean) || [];
-    const page = Number(searchParams.get('page')) || 1;
+    const keyword = (searchParams.get('keyword') || '').slice(0, 100);
+    const grade = searchParams.get('grade')?.split(',').filter(Boolean).slice(0, 10) || [];
+    const subject = searchParams.get('subject')?.split(',').filter(Boolean).slice(0, 10) || [];
+    const publisher = searchParams.get('publisher')?.split(',').filter(Boolean).slice(0, 10) || [];
+    const page = Math.max(1, Number(searchParams.get('page')) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(searchParams.get('pageSize')) || 50));
 
-    const result = await searchSplitFiles({ keyword, grade, subject, publisher, page });
+    const result = await searchSplitFiles({ keyword, grade, subject, publisher, page, pageSize });
     return NextResponse.json(result);
   } catch (error) {
     console.error('Get split file error:', error);

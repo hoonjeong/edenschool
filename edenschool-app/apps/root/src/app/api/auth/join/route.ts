@@ -6,6 +6,7 @@ import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword } from '@edenschool/common/validation';
 import { sessionOptions } from '@edenschool/common/auth';
 import type { SessionData } from '@edenschool/common/auth';
+import { getSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
@@ -22,11 +23,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
 
+  // Verify phone verification was completed
+  const verifySession = await getSession();
+  const verification = verifySession.phoneVerification;
+  if (!verification || !verification.studentId || Date.now() > verification.expiresAt) {
+    return NextResponse.redirect(buildUrl('/join?error=1', req));
+  }
+
   // Find student by phone numbers
   const student = await selectStudentByPhone(sphone, pphone);
   if (!student) {
     return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
+
+  // Verify the phone-verified student matches
+  if (verification.studentId !== student.id) {
+    return NextResponse.redirect(buildUrl('/join?error=1', req));
+  }
+
+  // Clear verification after use
+  delete verifySession.phoneVerification;
+  await verifySession.save();
 
   const hashedPw = await hashPassword(pw);
   const userId = await insertUser(email, hashedPw, sphone, pphone, 'S', student.id);

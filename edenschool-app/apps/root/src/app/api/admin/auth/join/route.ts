@@ -4,7 +4,7 @@ import { getIronSession } from 'iron-session';
 import { selectAdminUserIdByPhone, updateAdminUserInfo, selectAdminUserByPhone } from '@edenschool/common/queries/admin-user';
 import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword, normalizePhone } from '@edenschool/common/validation';
-import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
+import { adminSessionOptions, getAdminSession, type AdminSessionData } from '@/lib/admin-session';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
@@ -22,6 +22,17 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedPhone = normalizePhone(phone);
+
+    // Verify phone verification was completed
+    const verifySession = await getAdminSession();
+    const verification = verifySession.phoneVerification;
+    if (!verification || verification.phone !== normalizedPhone || Date.now() > verification.expiresAt) {
+      return NextResponse.redirect(buildUrl('/admin/join?error=1', req));
+    }
+
+    // Clear verification after use
+    delete verifySession.phoneVerification;
+    await verifySession.save();
 
     // Check if phone exists in admin_user_info
     const adminId = await selectAdminUserIdByPhone(normalizedPhone);

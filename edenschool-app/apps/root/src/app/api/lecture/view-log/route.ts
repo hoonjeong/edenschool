@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { insertLectureViewLog, updateLectureViewLog } from '@edenschool/common/queries/lecture-view-log';
+import { isLectureAccessibleByStudent } from '@edenschool/common/queries/lecture';
 
 function detectDeviceType(ua: string): string {
   if (/iPad|Tablet|PlayBook/i.test(ua)) return 'tablet';
@@ -36,6 +37,12 @@ export async function POST(req: NextRequest) {
   const { lectureId, startSeconds } = body;
   if (!lectureId) {
     return NextResponse.json({ error: 'Missing lectureId' }, { status: 400 });
+  }
+  if (session.user.studentId) {
+    const accessible = await isLectureAccessibleByStudent(Number(lectureId), session.user.studentId);
+    if (!accessible) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   const deviceType = detectDeviceType(userAgent);

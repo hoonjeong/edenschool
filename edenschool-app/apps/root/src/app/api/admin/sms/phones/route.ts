@@ -11,6 +11,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json([]);
     }
+    if (ids.length > 50) {
+      return NextResponse.json({ error: '한 번에 최대 50개 반까지 조회 가능합니다.' }, { status: 400 });
+    }
 
     const rows = await selectPhoneByClassIds(ids);
 

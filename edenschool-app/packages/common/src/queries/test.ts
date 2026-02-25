@@ -19,7 +19,7 @@ export async function selectTestPlanByStudentId(studentId: number): Promise<Test
 // ROOT: selectTestPlanById
 export async function selectTestPlanById(id: number): Promise<TestPlan | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT tp.id, tp.test_info_id as testInfoId, tp.subject, tp.date, ti.file_id as fileId FROM test_plan tp, test_info ti WHERE tp.id=? AND ti.id=tp.test_info_id`,
+    `SELECT tp.id, tp.test_info_id as testInfoId, tp.class_id as classId, tp.subject, tp.date, ti.file_id as fileId FROM test_plan tp, test_info ti WHERE tp.id=? AND ti.id=tp.test_info_id`,
     [id]
   );
   return (rows[0] as TestPlan) || null;

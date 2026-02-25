@@ -13,6 +13,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const beforepw = body.beforepw;
   const newpw = body.newpw;
 
+  // Only allow changing own password
+  if (id !== session.user.id) {
+    return new NextResponse('FAIL', { status: 403 });
+  }
+
   if (!beforepw || !newpw) {
     return new NextResponse('FAIL');
   }

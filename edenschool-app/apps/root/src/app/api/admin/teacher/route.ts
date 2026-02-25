@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import {
   selectTeacherUserList,
@@ -11,7 +11,7 @@ import {
 
 // GET: 선생님 목록 또는 단건 조회
 export const GET = withErrorHandler(async (req: NextRequest) => {
-  const session = await requireAdminApiSession();
+  const session = await requireOwnerApiSession();
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
@@ -32,7 +32,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
 // POST: 선생님 추가
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   try {
     const body = await req.json();
@@ -52,7 +52,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
 // PUT: 선생님 수정
 export const PUT = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   try {
     const body = await req.json();
@@ -72,7 +72,7 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
 
 // DELETE: 선생님 삭제
 export const DELETE = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   try {
     const { searchParams } = new URL(req.url);

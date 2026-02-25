@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/api-handler';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { endClassStatus } from '@edenschool/common/queries/class';
 import { updateStudentStatus } from '@edenschool/common/queries/student';
 import { updateUserStatus } from '@edenschool/common/queries/user';
@@ -8,7 +8,7 @@ import { insertStudentAnalysis } from '@edenschool/common/queries/admin-user';
 import { withTransaction } from '@edenschool/common/db';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   const body = await req.json();
   const student_id = body.student_id as string;

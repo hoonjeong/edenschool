@@ -1,11 +1,11 @@
 import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { deleteClass } from '@edenschool/common/queries/class';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   const formData = await req.formData();
   const id = Number(formData.get('id'));

@@ -28,6 +28,15 @@ export async function insertDream(userId: number, name: string, id1: string, id2
   );
 }
 
+// ROOT: selectDreamById
+export async function selectDreamById(id: number): Promise<{ id: number; userId: number } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, user_id as userId FROM my_dream WHERE id=?`,
+    [id]
+  );
+  return (rows[0] as { id: number; userId: number }) || null;
+}
+
 // ROOT: deleteDream
 export async function deleteDream(id: number): Promise<void> {
   await pool.query(`DELETE FROM my_dream WHERE id=?`, [id]);

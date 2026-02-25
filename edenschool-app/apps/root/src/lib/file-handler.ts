@@ -1,16 +1,34 @@
 import { NextResponse } from 'next/server';
-import { selectFileInfoById } from '@edenschool/common/queries/file';
+import { selectFileInfoById, isFilePublicImage, isFileAccessibleByUser } from '@edenschool/common/queries/file';
 import { getSession } from './session';
 import { getAdminSession } from './admin-session';
 
 export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'): Promise<NextResponse> {
-  // Auth check: require either student or admin session
   const [session, adminSession] = await Promise.all([
     getSession(),
     getAdminSession(),
   ]);
-  if (!session.user && !adminSession.user) {
+  const isAdmin = !!adminSession.user;
+  const isStudent = !!session.user;
+
+  // Image mode: allow public access for teacher photos
+  if (mode === 'image' && !isAdmin && !isStudent) {
+    const isPublic = await isFilePublicImage(id);
+    if (!isPublic) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  } else if (!isAdmin && !isStudent) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Access control: admin has full access, student must have permission
+  if (isStudent && !isAdmin) {
+    const accessible = await isFileAccessibleByUser(id, session.user!.id);
+    // Image mode: also allow teacher photos
+    const isPublicPhoto = mode === 'image' && await isFilePublicImage(id);
+    if (!accessible && !isPublicPhoto) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   const file = await selectFileInfoById(id);
@@ -26,6 +44,7 @@ export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'):
         'Content-Type': 'application/octet-stream',
         'Content-Disposition': `attachment; filename="${encodeURIComponent(file.filename)}"`,
         'Content-Length': String(file.filedata.length),
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   }
@@ -35,6 +54,7 @@ export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'):
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `inline; filename="${encodeURIComponent(file.filename)}"`,
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   }
@@ -50,6 +70,7 @@ export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'):
     headers: {
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

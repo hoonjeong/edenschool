@@ -1,14 +1,14 @@
 import { buildUrl } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/api-handler';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { modifyStudent } from '@edenschool/common/queries/student';
 import { updateUserInfoPwByStudentId } from '@edenschool/common/queries/user';
 import { hashPassword } from '@edenschool/common/password';
-import { normalizePhone } from '@edenschool/common/validation';
+import { normalizePhone, isValidPassword } from '@edenschool/common/validation';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   const formData = await req.formData();
   const id = formData.get('id') as string;
@@ -26,8 +26,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   // Update student table
   await modifyStudent({ id: Number(id), name, school, grade, year: Number(year), sphone, pphone, address, specialty, memo });
 
-  // If password provided, update user_info pw too
+  // If password provided, validate and update user_info pw too
   if (pw) {
+    if (!isValidPassword(pw)) {
+      return NextResponse.json({ error: '비밀번호 형식이 올바르지 않습니다.' }, { status: 400 });
+    }
     const hashedPw = await hashPassword(pw);
     await updateUserInfoPwByStudentId(Number(id), hashedPw);
   }

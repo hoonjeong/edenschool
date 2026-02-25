@@ -38,6 +38,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
         'Content-Disposition': `attachment; filename*=UTF-8''${encodedFileName}`,
         'Content-Length': String(content.length),
         'Content-Transfer-Encoding': 'binary',
+        'X-Content-Type-Options': 'nosniff',
         'Pragma': 'no-cache',
         'Expires': '-1',
       },

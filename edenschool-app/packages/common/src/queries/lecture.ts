@@ -23,7 +23,7 @@ export async function selectSpecialLectureListByStudentId(studentId: number): Pr
 // ROOT: selectLectureListByCode
 export async function selectLectureListByCode(code: string): Promise<Lecture[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT subject, id, teacher, lecture_date as lectureDate FROM lecture WHERE code=? ORDER BY id DESC`,
+    `SELECT subject, id, teacher, lecture_date as lectureDate FROM lecture WHERE code=? ORDER BY id DESC LIMIT 500`,
     [code]
   );
   return rows as Lecture[];
@@ -38,6 +38,38 @@ export async function selectLectureById(id: number): Promise<Lecture | null> {
   return (rows[0] as Lecture) || null;
 }
 
+/** 강의의 담당 선생님 이름 조회 (소유권 검증용) */
+export async function selectLectureTeacherById(id: number): Promise<string | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT teacher FROM lecture WHERE id=?`,
+    [id]
+  );
+  return rows[0]?.teacher || null;
+}
+
+/** 학생이 해당 강의에 접근 가능한지 확인 (수강 등록 또는 공개 강의) */
+export async function isLectureAccessibleByStudent(lectureId: number, studentId: number): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT 1 FROM lecture l WHERE l.id=? AND (
+      l.code IN ('F','S')
+      OR EXISTS (
+        SELECT 1 FROM class_status s
+        WHERE s.student_id=? AND l.class_id=s.class_id
+          AND l.insert_time>s.start_time
+          AND IF(s.end_time IS NULL, NOW(), s.end_time)>l.insert_time
+      )
+      OR (l.code='E' AND EXISTS (
+        SELECT 1 FROM class_status s
+        WHERE s.student_id=?
+          AND l.insert_time>(s.start_time - INTERVAL 1 MONTH)
+          AND IF(s.end_time IS NULL, NOW(), s.end_time)>l.insert_time
+      ))
+    ) LIMIT 1`,
+    [lectureId, studentId, studentId]
+  );
+  return rows.length > 0;
+}
+
 // Admin: selectLectureList
 export async function selectLectureList(): Promise<Lecture[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
@@ -49,7 +81,7 @@ export async function selectLectureList(): Promise<Lecture[]> {
 // Admin: selectLectureListByAdminName
 export async function selectLectureListByAdminName(name: string): Promise<Lecture[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT subject, id, teacher, lecture_date as lectureDate FROM lecture WHERE teacher=? ORDER BY id DESC`,
+    `SELECT subject, id, teacher, lecture_date as lectureDate FROM lecture WHERE teacher=? ORDER BY id DESC LIMIT 300`,
     [name]
   );
   return rows as Lecture[];

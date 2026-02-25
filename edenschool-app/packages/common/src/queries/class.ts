@@ -10,6 +10,15 @@ export async function selectSchoolLectureList(): Promise<ClassInfo[]> {
   return rows as ClassInfo[];
 }
 
+/** 학생이 해당 반에 수강 등록되어 있는지 확인 */
+export async function isStudentEnrolledInClass(studentId: number, classId: number): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT 1 FROM class_status WHERE student_id=? AND class_id=? AND status=1 LIMIT 1`,
+    [studentId, classId]
+  );
+  return rows.length > 0;
+}
+
 // Admin: selectClassInfoAll
 export async function selectClassInfoAll(): Promise<ClassInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(

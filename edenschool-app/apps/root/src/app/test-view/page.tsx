@@ -6,6 +6,7 @@ import {
   selectTestAver,
   selectTestClassAver,
 } from '@edenschool/common/queries/test';
+import { isStudentEnrolledInClass } from '@edenschool/common/queries/class';
 
 export default async function TestViewPage({
   searchParams,
@@ -21,6 +22,12 @@ export default async function TestViewPage({
 
   const plan = await selectTestPlanById(id);
   if (!plan) redirect('/test');
+
+  // 수강 등록 확인
+  if (session.user.studentId && plan.classId) {
+    const enrolled = await isStudentEnrolledInClass(session.user.studentId, plan.classId);
+    if (!enrolled) redirect('/test');
+  }
 
   const results = await selectStudentTestResultById(session.user.studentId!, plan.testInfoId);
   const totalAver = await selectTestAver(plan.testInfoId);

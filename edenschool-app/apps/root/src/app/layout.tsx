@@ -17,7 +17,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isAdmin = pathname.startsWith('/admin');
-  const isAbout = pathname === '/' || pathname === '/about';
+  const isAbout = pathname === '/';
 
   const bodyClasses = [
     !isAdmin ? 'eden-body' : '',

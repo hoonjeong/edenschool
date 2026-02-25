@@ -31,6 +31,24 @@ export function sanitizeUserHtml(html: string): string {
   });
 }
 
+/** 관리자 작성 콘텐츠용 HTML 살균 (img/iframe 허용, script/event handler 차단) */
+export function sanitizeAdminHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      'img', 'iframe', 'h1', 'h2',
+      'span', 'div', 'sub', 'sup',
+    ]),
+    allowedAttributes: {
+      '*': ['style', 'class'],
+      'a': ['href', 'target', 'rel'],
+      'img': ['src', 'alt', 'width', 'height'],
+      'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen'],
+    },
+    allowedIframeHostnames: ['www.youtube.com', 'youtube.com', 'player.vimeo.com'],
+    allowedSchemes: ['http', 'https', 'mailto'],
+  });
+}
+
 /** HTML 태그 제거 → 순수 텍스트 추출 */
 export function stripHtml(html: string): string {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })

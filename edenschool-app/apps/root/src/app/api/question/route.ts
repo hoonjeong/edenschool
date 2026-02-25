@@ -9,10 +9,13 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireApiSession();
 
   const { text, lectureId } = await req.json();
+  if (!lectureId || !Number.isInteger(Number(lectureId))) {
+    return NextResponse.json({ error: 'Invalid lectureId' }, { status: 400 });
+  }
   if (!text || typeof text !== 'string' || text.length > 5000) {
     return NextResponse.json({ error: '질문은 5000자 이내로 입력해주세요.' }, { status: 400 });
   }
-  const id = await insertQuestion(text, session.user.id, lectureId);
+  const id = await insertQuestion(text, session.user.id, Number(lectureId));
 
   // 질문 등록 시 SMS 알림 발송
   try {

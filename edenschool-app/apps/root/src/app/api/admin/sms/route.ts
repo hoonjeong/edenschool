@@ -24,6 +24,9 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (phones) {
     const phoneList = phones.split(',').map((p) => p.trim()).filter(Boolean);
     if (phoneList.length === 0) return NextResponse.json({ history: [] });
+    if (phoneList.length > 200) {
+      return NextResponse.json({ error: '조회 가능한 최대 전화번호 수를 초과했습니다.' }, { status: 400 });
+    }
     const rows = await selectSendHistoryBatch(phoneList);
     return NextResponse.json({ history: rows });
   }
@@ -45,6 +48,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   if (!numbers || !Array.isArray(numbers) || numbers.length === 0 || !message) {
     return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
+  }
+
+  if (numbers.length > 100) {
+    return NextResponse.json({ ok: false, error: '한 번에 최대 100명까지 발송 가능합니다.' }, { status: 400 });
   }
 
   // Get the academy phone number for this teacher

@@ -20,6 +20,7 @@ export const GET = withErrorHandler(async (req: NextRequest, { params }: { param
         'Content-Type': 'application/octet-stream',
         'Content-Disposition': `attachment; filename="${encodeURIComponent(file.filename)}"`,
         'Content-Length': String(file.filedata.length),
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {
