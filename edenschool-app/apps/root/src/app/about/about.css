@@ -31,7 +31,7 @@ body.eden-about-page {
   left: 0;
   right: 0;
   height: 20%;
-  background: linear-gradient(to bottom, #ffffff, transparent);
+  background: linear-gradient(to bottom, var(--eden-bg, #f5f6fa), transparent);
   z-index: 1;
 }
 
@@ -42,7 +42,7 @@ body.eden-about-page {
   left: 0;
   right: 0;
   height: 25%;
-  background: linear-gradient(to bottom, transparent, #ffffff);
+  background: linear-gradient(to bottom, transparent, var(--eden-bg, #f5f6fa));
   z-index: 1;
 }
 
