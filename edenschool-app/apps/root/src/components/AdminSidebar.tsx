@@ -25,7 +25,7 @@ export async function AdminSidebar() {
         {/* 기출문제 메뉴 (모두) */}
         <div className="admin-sidebar-section">기출문제</div>
         <a href="/admin/prev-test-dashboard?region=부천" className="admin-sidebar-link">
-          <i className="fas fa-chart-bar"></i> 부천지역기출
+          <i className="fas fa-chart-bar"></i> 부천지역 기출
         </a>
         <a href="/admin/prev-test-dashboard?region=타지역" className="admin-sidebar-link">
           <i className="fas fa-chart-bar"></i> 타학교 기출
@@ -39,13 +39,13 @@ export async function AdminSidebar() {
             {/* 기출관리 */}
             <div className="admin-sidebar-section">기출관리</div>
             <a href="/admin/prev-test-add?region=부천" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 부천기출관리
+              <i className="fas fa-plus-circle"></i> 부천지역 기출
             </a>
             <a href="/admin/prev-test-add?region=타지역" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 타지역 기출관리
+              <i className="fas fa-plus-circle"></i> 타지역 기출
             </a>
             <a href="/admin/split-file-add" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 쪼개기 파일 관리
+              <i className="fas fa-plus-circle"></i> 쪼개기 파일
             </a>
 
             {/* 게시글 */}

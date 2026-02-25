@@ -12,8 +12,8 @@ interface FileInfo {
 // 과목명 판별용 키워드
 const KNOWN_SECTIONS = [
   '국어', '국어1', '국어2', '문법', '문학', '독서',
-  '화법과 작문', '독서와 문법', '화작', '언매', '고전',
-  '언어와 매체', '독서와문법',
+  '독서와 문법', '화작', '언매', '고전', '독서와문법',
+  '모고', '수능특강',
 ];
 
 /**
@@ -691,10 +691,12 @@ function PrevTestAddContent() {
               />
               <datalist id="section-list">
                 <option value="국어" />
-                <option value="국어1" />
-                <option value="국어2" />
-                <option value="문법" />
                 <option value="문학" />
+                <option value="문법" />
+                <option value="독서" />
+                <option value="화작" />
+                <option value="모고" />
+                <option value="수능특강" />
                 <option value="언매" />
                 <option value="고전" />
               </datalist>

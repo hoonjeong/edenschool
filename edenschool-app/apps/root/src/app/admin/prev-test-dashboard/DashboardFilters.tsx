@@ -3,9 +3,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 
+const FIXED_SECTIONS = ['국어', '문학', '문법', '독서', '화작', '모고', '수능특강', '언매'];
+
 interface Props {
   years: number[];
-  sections: string[];
   publishers: string[];
   schools: string[];
   region: string;
@@ -13,7 +14,6 @@ interface Props {
 
 export default function DashboardFilters({
   years,
-  sections,
   publishers,
   schools,
   region,
@@ -116,7 +116,7 @@ export default function DashboardFilters({
           />
           전체
         </label>
-        {sections.map((s) => {
+        {FIXED_SECTIONS.map((s) => {
           const checked = selectedSections.includes(s);
           return (
             <label

@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
 import pool from '@edenschool/common/db';
 import { selectPrevTestSchoolName } from '@edenschool/common/queries/prev-test';
@@ -60,8 +59,9 @@ export default async function PrevTestDashboardPage({
     queryParams.push(...selectedYears.map(Number));
   }
   if (selectedSections.length > 0) {
-    query += ` AND ptm.section IN (${selectedSections.map(() => '?').join(',')})`;
-    queryParams.push(...selectedSections);
+    const likeConds = selectedSections.map(() => 'ptm.section LIKE ?');
+    query += ` AND (${likeConds.join(' OR ')})`;
+    queryParams.push(...selectedSections.map(s => `%${s}%`));
   }
   if (selectedPublishers.length > 0) {
     query += ` AND ptm.publisher IN (${selectedPublishers.map(() => '?').join(',')})`;
@@ -96,12 +96,6 @@ export default async function PrevTestDashboardPage({
   );
   const schools = schoolRows.map((r) => r.school_name as string);
 
-  const [sectionRows] = await pool.query<RowDataPacket[]>(
-    "SELECT DISTINCT section FROM prev_test_meta_info WHERE region=? AND section IS NOT NULL AND section != '' ORDER BY section ASC",
-    [region]
-  );
-  const sections = sectionRows.map((r) => r.section as string);
-
   const [publisherRows] = await pool.query<RowDataPacket[]>(
     "SELECT DISTINCT publisher FROM prev_test_meta_info WHERE region=? AND publisher IS NOT NULL AND publisher != '' ORDER BY publisher ASC",
     [region]
@@ -115,17 +109,10 @@ export default async function PrevTestDashboardPage({
     <div>
       <h4 className="mb-3">{region === '부천' ? '부천지역 기출' : '타학교 기출'}</h4>
 
-      <div className="mb-3">
-        <Link href={`/admin/prev-test-add?region=${region}`} className="btn btn-primary btn-sm mr-2">
-          기출문제 추가
-        </Link>
-      </div>
-
       {/* 필터 (Client Component) */}
       <Suspense fallback={null}>
         <DashboardFilters
           years={years}
-          sections={sections}
           publishers={publishers}
           schools={schools}
           region={region}
