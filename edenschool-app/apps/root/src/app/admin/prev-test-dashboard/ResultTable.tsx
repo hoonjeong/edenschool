@@ -87,15 +87,6 @@ export default function ResultTable({ testList }: { testList: PrevTestRow[] }) {
               ? '다운로드 중...'
               : `선택한 ${selectedIds.size}개 파일 다운로드`}
           </button>
-          <button
-            className="btn btn-info btn-sm ml-2"
-            onClick={() => {
-              const idStr = Array.from(selectedIds).join(',');
-              router.push(`/admin/variant-question?ids=${idStr}&source=prev-test`);
-            }}
-          >
-            변형문제 생성
-          </button>
         </div>
       )}
 
