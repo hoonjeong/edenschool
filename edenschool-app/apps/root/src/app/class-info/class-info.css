@@ -217,13 +217,13 @@
 
   .ci-card-photo {
     flex: none;
-    height: 300px;
+    height: 360px;
   }
 
   .ci-card-photo img {
     min-height: auto;
-    height: 300px;
-    object-position: top;
+    height: 360px;
+    object-position: center 30%;
   }
 
   .ci-card-body {
@@ -282,12 +282,12 @@
   }
 
   .ci-card-photo {
-    height: 260px;
+    height: 320px;
   }
 
   .ci-card-photo img {
-    height: 260px;
-    object-position: top;
+    height: 320px;
+    object-position: center 30%;
   }
 
   .ci-card-title {
