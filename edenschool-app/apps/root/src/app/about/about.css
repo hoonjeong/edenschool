@@ -1,0 +1,479 @@
+/* ===== About Page: Hero Section ===== */
+.about-hero {
+  position: relative;
+  width: 100%;
+  height: 66vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.about-hero-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  z-index: 0;
+}
+
+/* 상단 그라데이션: 흰색 네비바와 영상 자연스럽게 연결 */
+.about-hero-overlay-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20%;
+  background: linear-gradient(to bottom, #ffffff, transparent);
+  z-index: 1;
+}
+
+/* 하단 그라데이션: 콘텐츠로 자연스럽게 연결 */
+.about-hero-overlay-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25%;
+  background: linear-gradient(to bottom, transparent, #ffffff);
+  z-index: 1;
+}
+
+.about-hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #ffffff;
+  animation: aboutFadeIn 1.5s ease-out;
+}
+
+.about-hero-content h1 {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  margin: 0 0 16px;
+  letter-spacing: -0.5px;
+  line-height: 1.3;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+.about-hero-content p {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 28px;
+  font-weight: 300;
+  opacity: 0.95;
+  margin: 0 0 48px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+}
+
+.about-scroll-indicator {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  animation: aboutBounce 2s infinite;
+}
+
+.about-scroll-indicator i {
+  font-size: 20px;
+}
+
+@keyframes aboutFadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes aboutBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* ===== About Page: Label Badge ===== */
+.about-label {
+  display: inline-block;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--eden-primary);
+  background: var(--eden-primary-light);
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+/* ===== About Page: Content Sections ===== */
+.about-section {
+  padding: 80px 24px;
+}
+
+.about-section-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-section-gray {
+  background: #f8f9fa;
+}
+
+.about-section-gradient {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.about-section-closing-gradient {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 50%, #ffffff 100%);
+}
+
+/* ===== About Page: Typography ===== */
+.about-section h2 {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 40px;
+  line-height: 1.4;
+}
+
+.about-section h2 .accent {
+  color: var(--eden-primary);
+}
+
+.about-section p {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 20px;
+  line-height: 2.0;
+  color: #374151;
+  margin: 0 0 24px;
+  word-break: keep-all;
+}
+
+.about-section p:last-child {
+  margin-bottom: 0;
+}
+
+/* ===== About Page: Quote ===== */
+.about-quote {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  padding: 40px 32px;
+  margin: 0 0 40px;
+  background: #f8fafc;
+  border-radius: 16px;
+  line-height: 1.8;
+  position: relative;
+}
+
+.about-quote::before {
+  content: '\201C';
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  font-size: 48px;
+  color: var(--eden-primary);
+  opacity: 0.3;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.about-quote::after {
+  content: '\201D';
+  position: absolute;
+  bottom: 16px;
+  right: 24px;
+  font-size: 48px;
+  color: var(--eden-primary);
+  opacity: 0.3;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.about-highlight {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--eden-primary);
+  text-align: center;
+  margin: 40px 0;
+  line-height: 1.6;
+}
+
+.about-divider {
+  width: 60px;
+  height: 3px;
+  background: var(--eden-primary);
+  margin: 0 auto 40px;
+  border-radius: 2px;
+}
+
+/* ===== About Page: Stat Cards ===== */
+.about-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.about-stat-card {
+  text-align: center;
+  padding: 32px 16px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+}
+
+.about-stat-number {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--eden-primary);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.about-stat-label {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* ===== About Page: Feature Card ===== */
+.about-feature-card {
+  background: #f8fafc;
+  border-left: 4px solid var(--eden-primary);
+  border-radius: 0 12px 12px 0;
+  padding: 24px 28px;
+  margin: 32px 0;
+}
+
+.about-feature-card strong {
+  color: var(--eden-primary);
+}
+
+.about-feature-card p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.9;
+  color: #374151;
+}
+
+/* ===== About Page: School Grid ===== */
+.about-school-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 40px 0;
+}
+
+.about-school-item {
+  background: #ffffff;
+  border: 1px solid var(--eden-border);
+  border-radius: 8px;
+  padding: 16px 12px;
+  text-align: center;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.about-school-item:hover {
+  background: var(--eden-primary);
+  color: #ffffff;
+  border-color: var(--eden-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== About Page: Video Section (밝은 배경) ===== */
+.about-video-section {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 50%, #ffffff 100%);
+  padding: 80px 24px;
+}
+
+.about-video-section-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.about-video-section h2 {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.about-video-section p {
+  color: #64748b;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  margin: 0 0 40px;
+}
+
+.about-video-player {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+}
+
+.about-video-player video {
+  width: 100%;
+  display: block;
+}
+
+/* ===== About Page: Closing Section ===== */
+.about-closing .about-signature {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 48px;
+}
+
+/* ===== About Page: Scroll Animations ===== */
+[data-animate] {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+[data-animate].visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== About Page: 흰색 Navbar (고정, 기본 스타일 유지) ===== */
+body.eden-about-page .eden-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-bottom: 1px solid var(--eden-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 100;
+}
+
+/* ===== About Page: Responsive ===== */
+@media (max-width: 768px) {
+  .about-hero {
+    height: 56vh;
+  }
+
+  .about-hero-content h1 {
+    font-size: 30px;
+  }
+
+  .about-hero-content p {
+    font-size: 22px;
+  }
+
+  .about-section {
+    padding: 56px 20px;
+  }
+
+  .about-section h2 {
+    font-size: 22px;
+    margin-bottom: 28px;
+  }
+
+  .about-quote {
+    font-size: 17px;
+    padding: 32px 24px;
+  }
+
+  .about-quote::before {
+    font-size: 36px;
+    top: 12px;
+    left: 16px;
+  }
+
+  .about-highlight {
+    font-size: 18px;
+  }
+
+  .about-stat-row {
+    gap: 12px;
+  }
+
+  .about-stat-card {
+    padding: 24px 12px;
+  }
+
+  .about-stat-number {
+    font-size: 28px;
+  }
+
+  .about-stat-label {
+    font-size: 12px;
+  }
+
+  .about-school-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .about-school-item {
+    font-size: 13px;
+    padding: 12px 8px;
+  }
+
+  .about-video-section {
+    padding: 56px 20px;
+  }
+
+  .about-video-section h2 {
+    font-size: 22px;
+  }
+
+  body.eden-about-page .eden-mobile-menu {
+    top: var(--eden-navbar-height);
+  }
+}
+
+@media (max-width: 480px) {
+  .about-hero {
+    height: 50vh;
+  }
+
+  .about-hero-content h1 {
+    font-size: 26px;
+  }
+
+  .about-stat-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .about-stat-card {
+    padding: 20px 16px;
+  }
+
+  .about-school-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-section p {
+    font-size: 15px;
+  }
+
+  .about-feature-card {
+    padding: 20px 20px;
+  }
+}

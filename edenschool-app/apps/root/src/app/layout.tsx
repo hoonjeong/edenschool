@@ -17,15 +17,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isAdmin = pathname.startsWith('/admin');
+  const isAbout = pathname === '/' || pathname === '/about';
+
+  const bodyClasses = [
+    !isAdmin ? 'eden-body' : '',
+    isAbout ? 'eden-about-page' : '',
+  ].filter(Boolean).join(' ') || undefined;
 
   return (
     <html lang="ko">
       <head>
         <link href="https://fonts.googleapis.com/css?family=Black+Han+Sans:400" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css?family=Nanum+Gothic:400" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" rel="stylesheet" />
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossOrigin="anonymous" />
       </head>
-      <body className={!isAdmin ? 'eden-body' : undefined}>
+      <body className={bodyClasses}>
         {!isAdmin && <Navbar />}
         {!isAdmin && <PopupModal />}
         {children}

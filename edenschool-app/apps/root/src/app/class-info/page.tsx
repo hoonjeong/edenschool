@@ -1,91 +1,280 @@
-import { selectClassDisplayListActive } from '@edenschool/common/queries/site-config';
+import './class-info.css';
+import { selectTeacherDisplayListActive, type TeacherDisplay } from '@edenschool/common/queries/site-config';
 
-export default async function ClassInfoPage() {
-  let items: any[] = [];
+export const metadata = {
+  title: '수업안내 | 이든배움국어학원',
+  description: '이든배움국어학원 학교별 수업 시간표 및 선생님 소개',
+};
+
+export const dynamic = 'force-dynamic';
+
+/* ===== 타입 ===== */
+interface ScheduleItem {
+  grade: string;
+  time: string;
+}
+
+interface SchoolSchedule {
+  name: string;
+  schedule: ScheduleItem[];
+}
+
+interface Teacher {
+  branch?: string;
+  school: string;
+  name: string;
+  photo: string;
+  schedule: ScheduleItem[];
+  schools?: SchoolSchedule[];
+}
+
+interface SuneungTeacher {
+  name: string;
+  photo: string;
+  time: string;
+}
+
+interface ElementaryTeacher {
+  name: string;
+  photo: string;
+}
+
+interface StaffMember {
+  name: string;
+  role: string;
+  photo: string;
+}
+
+/* ===== DB → 정적 타입 변환 ===== */
+function parseScheduleData(raw: string | null): { schedule: ScheduleItem[]; schools: SchoolSchedule[] } {
+  if (!raw) return { schedule: [], schools: [] };
   try {
-    items = await selectClassDisplayListActive();
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return { schedule: parsed, schools: [] };
+    if (parsed.schools) return { schedule: [], schools: parsed.schools };
+    return { schedule: [], schools: [] };
   } catch {
-    // DB not ready
+    return { schedule: [], schools: [] };
   }
+}
+
+function getPhotoSrc(item: TeacherDisplay): string {
+  if (item.photo_file_id) return `/api/file/image/${item.photo_file_id}`;
+  return item.photo_url || '';
+}
+
+function toTeacher(item: TeacherDisplay): Teacher {
+  const { schedule, schools } = parseScheduleData(item.schedule_data);
+  return {
+    branch: item.branch || undefined,
+    school: item.school || '',
+    name: item.name,
+    photo: getPhotoSrc(item),
+    schedule,
+    schools: schools.length > 0 ? schools : undefined,
+  };
+}
+
+function toSuneungTeacher(item: TeacherDisplay): SuneungTeacher {
+  const { schedule } = parseScheduleData(item.schedule_data);
+  return {
+    name: item.name,
+    photo: getPhotoSrc(item),
+    time: schedule[0]?.time || '',
+  };
+}
+
+function toElementaryTeacher(item: TeacherDisplay): ElementaryTeacher {
+  return { name: item.name, photo: getPhotoSrc(item) };
+}
+
+function toStaffMember(item: TeacherDisplay): StaffMember {
+  return { name: item.name, role: item.role || '', photo: getPhotoSrc(item) };
+}
+
+/* ===== 정적 폴백 데이터 ===== */
+const FALLBACK_HIGH: Teacher[] = [
+  { branch: '이든배움국어상동2관', school: '상원고', name: '김보름 선생님', photo: '/assets/teachers/김보름.jpg', schedule: [{ grade: '고1', time: '토 19:00~22:00 / 일 19:00~22:00' }, { grade: '고2', time: '토 10:00~13:00 / 토 16:00~19:00' }, { grade: '고3', time: '일 10:00~13:00 / 일 15:00~18:00' }] },
+  { branch: '이든배움국어상동3관', school: '상동고', name: '이창완 선생님', photo: '/assets/teachers/이창완.jpg', schedule: [{ grade: '고1', time: '토 18:00~21:00' }, { grade: '고2', time: '일 19:00~22:00' }, { grade: '고3', time: '일 10:00~13:00' }] },
+  { branch: '이든배움국어본관', school: '송내고', name: '이우용 선생님', photo: '/assets/teachers/이우용.jpg', schedule: [{ grade: '고1', time: '일 16:00~19:00' }, { grade: '고2', time: '토 16:00~19:00' }, { grade: '고3', time: '토 19:00~22:00' }] },
+  { branch: '이든배움국어본관', school: '부명고', name: '박옥선 선생님', photo: '/assets/teachers/박옥선.jpg', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 18:30~21:30 / 일 14:30~17:30' }, { grade: '고3', time: '토 13:00~16:00 / 일 19:00~22:00' }] },
+  { branch: '이든배움국어본관', school: '정명고', name: '박정영 선생님', photo: '/assets/teachers/박정영.jpg', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 15:00~18:00 / 일 10:00~13:00' }, { grade: '고3', time: '금 19:00~22:00 / 토 19:00~22:00' }] },
+  { branch: '이든배움국어상동3관', school: '상일고', name: '권지영 선생님', photo: '/assets/teachers/권지영.jpg', schedule: [{ grade: '고1', time: '토 16:00~19:00' }, { grade: '고2', time: '토 19:00~22:00' }, { grade: '고3', time: '토 12:00~15:00 / 토 16:00~19:00' }] },
+  { branch: '이든배움국어상동5관', school: '중원·중흥고', name: '김소솜 선생님', photo: '/assets/teachers/김소솜.jpg', schedule: [], schools: [{ name: '중원고', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 16:00~19:00' }, { grade: '고3', time: '일 19:00~22:00' }] }, { name: '중흥고', schedule: [{ grade: '고1', time: '일 14:00~17:00' }, { grade: '고2', time: '일 10:00~13:00' }, { grade: '고3', time: '일 19:00~22:00' }] }] },
+  { branch: '이든배움국어본관', school: '계남고', name: '백슬기 선생님', photo: '/assets/teachers/백슬기.jpg', schedule: [{ grade: '고1', time: '토 14:00~17:00' }, { grade: '고3', time: '토 10:00~13:00' }] },
+  { branch: '이든배움국어상동3관', school: '소명여고·상동중', name: '박서연 선생님', photo: '/assets/teachers/박서연.jpg', schedule: [], schools: [{ name: '소명여고', schedule: [{ grade: '고1', time: '일 18:00~21:00' }] }, { name: '상동중', schedule: [{ grade: '1학년', time: '토 16:00~18:30' }, { grade: '2학년', time: '토 12:30~15:30' }, { grade: '3학년', time: '일 14:00~17:00' }] }] },
+];
+const FALLBACK_MIDDLE: Teacher[] = [
+  { branch: '이든배움국어본관', school: '상일중', name: '김태경 선생님', photo: '/assets/teachers/김태경.jpg', schedule: [{ grade: '1학년', time: '토 14:00~16:30' }, { grade: '2학년', time: '토 10:00~13:00 / 일 17:00~20:00' }, { grade: '3학년', time: '토 17:00~20:00 / 일 14:00~17:00' }] },
+  { branch: '이든배움국어상동5관', school: '석천중', name: '심미숙 선생님', photo: '/assets/teachers/심미숙.jpg', schedule: [{ grade: '1학년', time: '토 14:00~16:30' }, { grade: '2학년', time: '일 17:00~20:00' }, { grade: '3학년', time: '토 10:00~13:00' }] },
+];
+const FALLBACK_SUNEUNG: SuneungTeacher[] = [
+  { name: '라영서 선생님', photo: '/assets/teachers/라영서.jpg', time: '일 14:00~17:00' },
+  { name: '박정영 선생님', photo: '/assets/teachers/박정영.jpg', time: '일 18:00~21:00' },
+  { name: '이우용 선생님', photo: '/assets/teachers/이우용.jpg', time: '일 19:00~22:00' },
+  { name: '이창완 선생님', photo: '/assets/teachers/이창완.jpg', time: '토 14:00~17:00' },
+];
+const FALLBACK_ELEMENTARY: ElementaryTeacher[] = [
+  { name: '서미정 원장님', photo: '/assets/teachers/서미정.png' },
+  { name: '강지하 선생님', photo: '/assets/teachers/강지하.jpg' },
+  { name: '민지연 선생님', photo: '/assets/teachers/민지연.jpg' },
+];
+const FALLBACK_STAFF: StaffMember[] = [
+  { name: '서효정', role: '대표원장', photo: '/assets/teachers/서효정.jpg' },
+  { name: '정훈', role: '부원장', photo: '/assets/teachers/정훈.jpg' },
+  { name: '김진옥', role: '상담실장', photo: '/assets/teachers/김진옥.jpg' },
+  { name: '장소연', role: '운영실장', photo: '/assets/teachers/장소연.jpg' },
+  { name: '권나연', role: '운영실장', photo: '/assets/teachers/권나연.jpg' },
+];
+
+/* ===== 컴포넌트 ===== */
+function ScheduleList({ items }: { items: ScheduleItem[] }) {
+  return (
+    <div className="ci-schedule">
+      {items.map((s, i) => (
+        <div className="ci-schedule-row" key={`${s.grade}-${i}`}>
+          <span className="ci-schedule-grade">{s.grade}</span>
+          <span className="ci-schedule-time">{s.time}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TeacherCard({ teacher, index }: { teacher: Teacher; index: number }) {
+  const isReverse = index % 2 === 1;
+  const hasMultiSchool = teacher.schools && teacher.schools.length > 0;
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        .class-info-container { max-width: 1100px; margin: 0 auto; padding: 32px 16px; }
-        .class-info-title { text-align: center; font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 32px; }
-        .class-info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
-        .class-info-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.2s; }
-        .class-info-card:hover { transform: translateY(-2px); }
-        .class-info-card-header { background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 20px; }
-        .class-info-card-header h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
-        .class-info-card-header .class-time { font-size: 14px; opacity: 0.9; }
-        .class-info-card-body { padding: 20px; }
-        .class-info-card-body .teacher-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #e2e8f0; margin-bottom: 12px; }
-        .class-info-section { margin-bottom: 16px; }
-        .class-info-section-title { font-size: 13px; font-weight: 600; color: #3b82f6; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .class-info-section-content { font-size: 14px; color: #475569; line-height: 1.6; white-space: pre-wrap; }
-        .class-info-empty { text-align: center; padding: 60px 16px; color: #94a3b8; font-size: 16px; }
-      `}} />
+    <div className={`ci-card${isReverse ? ' ci-card-reverse' : ''}`}>
+      <div className="ci-card-photo">
+        <img src={teacher.photo} alt={teacher.name} />
+      </div>
+      <div className="ci-card-body">
+        {teacher.branch && (
+          <span className="ci-card-branch">{teacher.branch}</span>
+        )}
+        <h3 className="ci-card-title">
+          {teacher.school} 전임 {teacher.name}
+        </h3>
+        {hasMultiSchool ? (
+          <div className="ci-schedule-split">
+            {teacher.schools!.map((s) => (
+              <div className="ci-schedule-col" key={s.name}>
+                <div className="ci-schedule-col-title">{s.name}</div>
+                <ScheduleList items={s.schedule} />
+              </div>
+            ))}
+          </div>
+        ) : teacher.schedule.length > 0 ? (
+          <ScheduleList items={teacher.schedule} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
-      <div className="class-info-container">
-        <h1 className="class-info-title">수강반 안내</h1>
+/* ===== 데이터 로드 ===== */
+async function loadData() {
+  try {
+    const dbItems = await selectTeacherDisplayListActive();
+    if (dbItems.length === 0) return null;
 
-        {items.length === 0 ? (
-          <div className="class-info-empty">등록된 수강반 정보가 없습니다.</div>
-        ) : (
-          <div className="class-info-grid">
-            {items.map((item) => (
-              <div key={item.id} className="class-info-card">
-                <div className="class-info-card-header">
-                  <h3>{item.class_name || `수강반 #${item.class_id}`}</h3>
-                  {item.class_day && (
-                    <div className="class-time">
-                      {item.class_day} {item.class_hour}:{item.class_minute === '0' ? '00' : item.class_minute}
-                    </div>
-                  )}
-                </div>
-                <div className="class-info-card-body">
-                  {item.teacher_image_file_id && (
-                    <img
-                      src={`/api/file/image/${item.teacher_image_file_id}`}
-                      alt="선생님"
-                      className="teacher-img"
-                    />
-                  )}
+    const highSchool = dbItems.filter(t => t.section === 'HIGH_SCHOOL').map(toTeacher);
+    const middleSchool = dbItems.filter(t => t.section === 'MIDDLE_SCHOOL').map(toTeacher);
+    const suneung = dbItems.filter(t => t.section === 'SUNEUNG').map(toSuneungTeacher);
+    const elementary = dbItems.filter(t => t.section === 'ELEMENTARY').map(toElementaryTeacher);
+    const staff = dbItems.filter(t => t.section === 'STAFF').map(toStaffMember);
 
-                  {item.description && (
-                    <div className="class-info-section">
-                      <div className="class-info-section-title">수강반 정보</div>
-                      <div className="class-info-section-content">{item.description}</div>
-                    </div>
-                  )}
+    return { highSchool, middleSchool, suneung, elementary, staff };
+  } catch {
+    return null;
+  }
+}
 
-                  {item.progress_info && (
-                    <div className="class-info-section">
-                      <div className="class-info-section-title">수업 진도 현황</div>
-                      <div className="class-info-section-content">{item.progress_info}</div>
-                    </div>
-                  )}
+export default async function ClassInfoPage() {
+  const data = await loadData();
 
-                  {item.clinic_info && (
-                    <div className="class-info-section">
-                      <div className="class-info-section-title">클리닉 수업 진도 현황</div>
-                      <div className="class-info-section-content">{item.clinic_info}</div>
-                    </div>
-                  )}
+  const highSchool = data?.highSchool ?? FALLBACK_HIGH;
+  const middleSchool = data?.middleSchool ?? FALLBACK_MIDDLE;
+  const suneung = data?.suneung ?? FALLBACK_SUNEUNG;
+  const elementary = data?.elementary ?? FALLBACK_ELEMENTARY;
+  const staff = data?.staff ?? FALLBACK_STAFF;
 
-                  {item.introduction && (
-                    <div className="class-info-section">
-                      <div className="class-info-section-title">반 소개</div>
-                      <div className="class-info-section-content">{item.introduction}</div>
-                    </div>
-                  )}
+  return (
+    <div className="ci-page">
+      {/* 고등부 */}
+      <section className="ci-section">
+        <div className="ci-section-inner">
+          <h2 className="ci-section-title">고등부</h2>
+          {highSchool.map((teacher, i) => (
+            <TeacherCard key={teacher.name} teacher={teacher} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* 중등부 */}
+      <section className="ci-section ci-section-gray">
+        <div className="ci-section-inner">
+          <h2 className="ci-section-title">중등부</h2>
+          {middleSchool.map((teacher, i) => (
+            <TeacherCard key={teacher.name} teacher={teacher} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* 수능올인반 */}
+      <section className="ci-section">
+        <div className="ci-section-inner">
+          <h2 className="ci-section-title">수능올인반</h2>
+          <div className="ci-grid">
+            {suneung.map((t) => (
+              <div className="ci-grid-card" key={t.name}>
+                <img className="ci-grid-card-photo" src={t.photo} alt={t.name} />
+                <div className="ci-grid-card-info">
+                  <p className="ci-grid-card-name">{t.name}</p>
+                  <p className="ci-grid-card-time">{t.time}</p>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      </section>
+
+      {/* 초등부 */}
+      <section className="ci-section ci-section-gray">
+        <div className="ci-section-inner">
+          <h2 className="ci-section-title">초등부</h2>
+          <div className="ci-grid ci-grid-3">
+            {elementary.map((t) => (
+              <div className="ci-grid-card" key={t.name}>
+                <img className="ci-grid-card-photo" src={t.photo} alt={t.name} />
+                <div className="ci-grid-card-info">
+                  <p className="ci-grid-card-name">{t.name}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 운영진 */}
+      <section className="ci-section ci-section-light">
+        <div className="ci-section-inner">
+          <h2 className="ci-section-title">운영진</h2>
+          <div className="ci-grid ci-grid-5">
+            {staff.map((s) => (
+              <div className="ci-grid-card" key={s.name}>
+                <img className="ci-grid-card-photo" src={s.photo} alt={s.name} />
+                <div className="ci-grid-card-info">
+                  <p className="ci-grid-card-name">{s.name}</p>
+                  <p className="ci-grid-card-role">{s.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

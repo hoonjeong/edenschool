@@ -20,13 +20,15 @@ export async function POST(req: NextRequest) {
   const autoLogin = formData.get('autoLogin') === 'on';
 
   if (!email || !pw) {
-    return NextResponse.redirect(buildUrl('/login?error=1', req));
+    const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
+    return NextResponse.redirect(buildUrl(errorUrl, req));
   }
 
   // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
   const user = await selectUserInfoByEmail(email);
   if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
-    return NextResponse.redirect(buildUrl('/login?error=1', req));
+    const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
+    return NextResponse.redirect(buildUrl(errorUrl, req));
   }
 
   const response = NextResponse.redirect(buildUrl(referer || '/', req));

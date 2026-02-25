@@ -163,3 +163,76 @@ export async function updateClassDisplay(id: number, data: {
 export async function deleteClassDisplay(id: number): Promise<void> {
   await pool.query(`DELETE FROM class_display WHERE id=?`, [id]);
 }
+
+// ────────────────────── teacher_display ──────────────────────
+
+export interface TeacherDisplay {
+  id: number;
+  section: string;
+  branch: string | null;
+  school: string | null;
+  name: string;
+  role: string | null;
+  photo_url: string | null;
+  photo_file_id: number | null;
+  schedule_data: string | null;
+  sort_order: number;
+  is_active: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function selectTeacherDisplayList(): Promise<TeacherDisplay[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT * FROM teacher_display ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF'), sort_order ASC, id ASC`
+  );
+  return rows as TeacherDisplay[];
+}
+
+export async function selectTeacherDisplayListActive(): Promise<TeacherDisplay[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT * FROM teacher_display WHERE is_active=1 ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF'), sort_order ASC, id ASC`
+  );
+  return rows as TeacherDisplay[];
+}
+
+export async function insertTeacherDisplay(data: {
+  section: string;
+  branch?: string | null;
+  school?: string | null;
+  name: string;
+  role?: string | null;
+  photo_url?: string | null;
+  photo_file_id?: number | null;
+  schedule_data?: string | null;
+  sort_order: number;
+  is_active: number;
+}): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO teacher_display (section, branch, school, name, role, photo_url, photo_file_id, schedule_data, sort_order, is_active) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    [data.section, data.branch || null, data.school || null, data.name, data.role || null, data.photo_url || null, data.photo_file_id || null, data.schedule_data || null, data.sort_order, data.is_active]
+  );
+  return result.insertId;
+}
+
+export async function updateTeacherDisplay(id: number, data: {
+  section: string;
+  branch?: string | null;
+  school?: string | null;
+  name: string;
+  role?: string | null;
+  photo_url?: string | null;
+  photo_file_id?: number | null;
+  schedule_data?: string | null;
+  sort_order: number;
+  is_active: number;
+}): Promise<void> {
+  await pool.query(
+    `UPDATE teacher_display SET section=?, branch=?, school=?, name=?, role=?, photo_url=?, photo_file_id=?, schedule_data=?, sort_order=?, is_active=? WHERE id=?`,
+    [data.section, data.branch || null, data.school || null, data.name, data.role || null, data.photo_url || null, data.photo_file_id || null, data.schedule_data || null, data.sort_order, data.is_active, id]
+  );
+}
+
+export async function deleteTeacherDisplay(id: number): Promise<void> {
+  await pool.query(`DELETE FROM teacher_display WHERE id=?`, [id]);
+}
