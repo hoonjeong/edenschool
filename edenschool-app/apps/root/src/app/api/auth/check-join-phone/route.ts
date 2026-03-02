@@ -32,5 +32,5 @@ export async function POST(req: NextRequest) {
 
   setVerification('user', phone, code, student.id);
 
-  return NextResponse.json({ success: true, studentId: student.id });
+  return NextResponse.json({ success: true });
 }

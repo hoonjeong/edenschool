@@ -8,7 +8,6 @@ import type { SessionData } from '@edenschool/common/auth';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
-  // Rate limit: 10 attempts per 15 minutes per IP
   const limited = checkRateLimit(req, 'login', 10, 60 * 1000);
   if (limited) return limited;
 
@@ -40,7 +39,7 @@ export async function POST(req: NextRequest) {
       path: '/',
       httpOnly: true,
       sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE === 'true',
     });
   } else {
     response.cookies.delete('saved-email');

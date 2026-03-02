@@ -21,7 +21,7 @@ export default function AdminJoinPage() {
   const [phoneMsgType, setPhoneMsgType] = useState<'success' | 'danger'>('success');
   const [showPhoneMsg, setShowPhoneMsg] = useState(false);
 
-  const pwRegex = /^.*(?=.{6})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
+  const pwRegex = /^.*(?=.{8})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
   const pw1Valid = pw1 !== '' && pwRegex.test(pw1);
   const pw2Valid = pw2 !== '' && pw1 === pw2;
   const showPw1Msg = pw1 !== '';
@@ -106,7 +106,7 @@ export default function AdminJoinPage() {
       const res = await fetch('/api/admin/auth/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: checkNumberInput }),
+        body: JSON.stringify({ code: checkNumberInput.trim(), phone }),
       });
       const data = await res.text();
 
@@ -114,14 +114,18 @@ export default function AdminJoinPage() {
         setPhoneCheck(true);
         setPhoneMsgType('success');
         setPhoneMsg('핸드폰 인증이 완료되었습니다.');
-      } else if (data === 'EXPIRED') {
+      } else if (data === 'WRONG') {
         setPhoneCheck(false);
         setPhoneMsgType('danger');
-        setPhoneMsg('인증번호가 만료되었습니다. 다시 요청해주세요.');
+        setPhoneMsg('인증번호가 일치하지 않습니다. 다시 입력해주세요.');
+      } else if (data === 'NO_REQUEST') {
+        setPhoneCheck(false);
+        setPhoneMsgType('danger');
+        setPhoneMsg('인증 요청 내역이 없습니다. 인증번호를 다시 요청해주세요.');
       } else {
         setPhoneCheck(false);
         setPhoneMsgType('danger');
-        setPhoneMsg('인증번호가 다릅니다. 다시 입력해주세요.');
+        setPhoneMsg('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
       setShowPhoneMsg(true);
     } catch {
@@ -144,7 +148,7 @@ export default function AdminJoinPage() {
     }
     if (!pw1Valid) {
       e.preventDefault();
-      alert('비밀번호는 영문과 숫자를 포함하여 6글자 이상이어야 합니다.');
+      alert('비밀번호는 영문과 숫자를 포함하여 8글자 이상이어야 합니다.');
       return;
     }
     if (!pw2Valid) {
@@ -238,7 +242,7 @@ export default function AdminJoinPage() {
           <input
             name="pw1"
             type="password"
-            placeholder="영문+숫자 6자 이상"
+            placeholder="영문+숫자 8자 이상"
             className="form-control"
             value={pw1}
             onChange={(e) => setPw1(e.target.value)}
@@ -248,7 +252,7 @@ export default function AdminJoinPage() {
           <div className="alert alert-success">사용가능한 비밀번호입니다.</div>
         )}
         {showPw1Msg && !pw1Valid && (
-          <div className="alert alert-danger">영문과 숫자를 포함하여 6글자 이상이어야 합니다.</div>
+          <div className="alert alert-danger">영문과 숫자를 포함하여 8글자 이상이어야 합니다.</div>
         )}
 
         {/* Password confirm */}
