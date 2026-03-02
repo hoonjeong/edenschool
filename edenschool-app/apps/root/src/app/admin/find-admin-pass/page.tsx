@@ -76,8 +76,14 @@ export default function FindAdminPassPage() {
       const res = await fetch('/api/admin/auth/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: checkNumberInput }),
+        body: JSON.stringify({ code: checkNumberInput.trim() }),
       });
+      if (res.status === 429) {
+        setMsgType('danger');
+        setMsg('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+        setShowMsg(true);
+        return;
+      }
       const data = await res.text();
 
       if (data === 'OK') {
