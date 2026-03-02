@@ -1,10 +1,9 @@
 import { randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getIronSession } from 'iron-session';
 import { countAdminUserByPhone } from '@edenschool/common/queries/admin-user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { normalizePhone, isValidPhone } from '@edenschool/common/validation';
-import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
+import { setVerification } from '@/lib/verification-store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,10 +19,8 @@ export async function POST(req: NextRequest) {
       return new NextResponse('FAIL');
     }
 
-    // Generate 6-digit verification code
     const code = String(randomInt(100000, 1000000));
 
-    // Send SMS with verification code
     const callNum = process.env.SMS_DEFAULT_CALLNUM;
     if (!callNum) {
       console.error('SMS_DEFAULT_CALLNUM not configured');
@@ -37,17 +34,9 @@ export async function POST(req: NextRequest) {
       return new NextResponse('SMS_FAIL');
     }
 
-    // Store verification code in session using req/response pattern (reliable cookie handling)
-    const response = new NextResponse('OK');
-    const session = await getIronSession<AdminSessionData>(req, response, adminSessionOptions);
-    session.phoneVerification = {
-      code,
-      phone,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
-    };
-    await session.save();
+    setVerification('admin', phone, code);
 
-    return response;
+    return new NextResponse('OK');
   } catch (error) {
     console.error('Check phone error:', error);
     return new NextResponse('FAIL', { status: 500 });

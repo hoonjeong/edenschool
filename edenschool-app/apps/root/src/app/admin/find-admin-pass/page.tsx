@@ -76,7 +76,7 @@ export default function FindAdminPassPage() {
       const res = await fetch('/api/admin/auth/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: checkNumberInput.trim() }),
+        body: JSON.stringify({ code: checkNumberInput.trim(), phone }),
       });
       if (res.status === 429) {
         setMsgType('danger');

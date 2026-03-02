@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getIronSession } from 'iron-session';
 import { updatePasswordByPhone } from '@edenschool/common/queries/admin-user';
 import { hashPassword } from '@edenschool/common/password';
 import { normalizePhone, isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
-import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
+import { getVerification, deleteVerification } from '@/lib/verification-store';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,11 +14,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '필수 입력값이 누락되었습니다.' });
     }
 
-    // Use req/response pattern for reliable session cookie handling
-    const response = NextResponse.json({ success: true });
-    const session = await getIronSession<AdminSessionData>(req, response, adminSessionOptions);
-    const verification = session.phoneVerification;
-    if (!verification || verification.phone !== phone || Date.now() > verification.expiresAt || !verification.verified) {
+    const entry = getVerification('admin', phone);
+    if (!entry || !entry.verified) {
       return NextResponse.json({ error: '전화번호 인증이 필요합니다.' });
     }
 
@@ -34,11 +30,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '해당하는 계정이 없습니다.' });
     }
 
-    // Clear phone verification after successful password reset
-    delete session.phoneVerification;
-    await session.save();
+    deleteVerification('admin', phone);
 
-    return response;
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Reset password error:', error);
     return NextResponse.json({ error: '오류가 발생했습니다.' }, { status: 500 });

@@ -63,7 +63,7 @@ export default function FindAdminEmailPage() {
       const res = await fetch('/api/admin/auth/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: checkNumberInput.trim() }),
+        body: JSON.stringify({ code: checkNumberInput.trim(), phone }),
       });
       const data = await res.text();
 
