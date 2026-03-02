@@ -29,7 +29,7 @@ export const adminSessionOptions: SessionOptions = {
   cookieName: process.env.ADMIN_SESSION_COOKIE_NAME || 'edenschool-admin-session',
   ttl: DEFAULT_ADMIN_TTL,
   cookieOptions: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.COOKIE_SECURE === 'true',
     httpOnly: true,
     sameSite: 'strict' as const,
     path: '/',

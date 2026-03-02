@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { selectAdminEmailByPhone } from '@edenschool/common/queries/admin-user';
 import { normalizePhone } from '@edenschool/common/validation';
+import { getVerification, deleteVerification } from '@/lib/verification-store';
 
 function getMaskedEmail(email: string): string {
   const match = email.match(/^(\S+)@(\S+\.\S+)$/);
@@ -21,7 +22,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const phone = normalizePhone(body.phone as string);
 
+    const entry = getVerification('admin', phone);
+    if (!entry || !entry.verified) {
+      return new NextResponse('전화번호 인증이 필요합니다.');
+    }
+
     const email = await selectAdminEmailByPhone(phone);
+
+    deleteVerification('admin', phone);
 
     if (!email) {
       return new NextResponse('등록된 이메일이 없습니다.');
