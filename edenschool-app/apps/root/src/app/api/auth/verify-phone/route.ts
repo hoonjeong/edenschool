@@ -27,9 +27,20 @@ export async function POST(req: NextRequest) {
   }
 
   if (code !== verification.code) {
+    // Track failed attempts — invalidate code after 5 failures
+    verification.attempts = (verification.attempts || 0) + 1;
+    if (verification.attempts >= 5) {
+      delete session.phoneVerification;
+    }
+    await session.save();
     return NextResponse.json({ error: '인증번호가 일치하지 않습니다.' });
   }
 
-  // Verification successful — keep phoneVerification in session for join-step2
+  // Verification successful — mark as verified
+  session.phoneVerification = {
+    ...verification,
+    verified: true,
+  };
+  await session.save();
   return NextResponse.json({ success: true, studentId: verification.studentId });
 }

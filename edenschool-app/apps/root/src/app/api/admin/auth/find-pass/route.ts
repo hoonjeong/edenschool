@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     // Verify phone authentication was completed
     const session = await getAdminSession();
     const verification = session.phoneVerification;
-    if (!verification || verification.phone !== phone || Date.now() > verification.expiresAt) {
+    if (!verification || verification.phone !== phone || Date.now() > verification.expiresAt || !verification.verified) {
       return NextResponse.json({ error: '전화번호 인증이 필요합니다.' });
     }
 

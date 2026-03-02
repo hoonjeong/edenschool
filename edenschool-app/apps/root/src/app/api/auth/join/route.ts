@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   // Verify phone verification was completed
   const verifySession = await getSession();
   const verification = verifySession.phoneVerification;
-  if (!verification || !verification.studentId || Date.now() > verification.expiresAt) {
+  if (!verification || !verification.studentId || Date.now() > verification.expiresAt || !verification.verified) {
     return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
 

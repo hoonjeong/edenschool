@@ -28,10 +28,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (code !== verification.code) {
+      // Track failed attempts — invalidate code after 5 failures
+      verification.attempts = (verification.attempts || 0) + 1;
+      if (verification.attempts >= 5) {
+        delete session.phoneVerification;
+      }
+      await session.save();
       return new NextResponse('WRONG');
     }
 
-    // Verification successful
+    // Verification successful — mark as verified
+    session.phoneVerification = {
+      ...verification,
+      verified: true,
+    };
+    await session.save();
     return new NextResponse('OK');
   } catch (error) {
     console.error('Verify phone error:', error);

@@ -15,6 +15,10 @@ export default function FindPassPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
+    if (res.status === 429) {
+      setError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
     const data = await res.json();
     if (data.success) {
       setResult('임시 비밀번호가 SMS로 발송되었습니다.');

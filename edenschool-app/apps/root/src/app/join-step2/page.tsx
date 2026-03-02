@@ -32,7 +32,7 @@ function JoinStep2Form() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!emailChecked) { setMessage('이메일 중복확인을 해주세요.'); setMessageType('danger'); return; }
-    if (pw.length < 6) { setMessage('비밀번호는 6자 이상이어야 합니다.'); setMessageType('danger'); return; }
+    if (pw.length < 8) { setMessage('비밀번호는 8자 이상이어야 합니다.'); setMessageType('danger'); return; }
     if (!/[a-zA-Z]/.test(pw) || !/[0-9]/.test(pw)) { setMessage('비밀번호는 영문과 숫자를 포함해야 합니다.'); setMessageType('danger'); return; }
     if (pw !== pw2) { setMessage('비밀번호가 일치하지 않습니다.'); setMessageType('danger'); return; }
 
@@ -65,7 +65,7 @@ function JoinStep2Form() {
           </div>
           <div className="form-group">
             <label>비밀번호</label>
-            <input type="password" name="pw" className="form-control" placeholder="영문+숫자 6자 이상" value={pw} onChange={e => setPw(e.target.value)} required />
+            <input type="password" name="pw" className="form-control" placeholder="영문+숫자 8자 이상" value={pw} onChange={e => setPw(e.target.value)} required />
           </div>
           <div className="form-group">
             <label>비밀번호 확인</label>

@@ -16,6 +16,8 @@ export interface AdminSessionData {
     code: string;
     phone: string;
     expiresAt: number;
+    verified?: boolean;
+    attempts?: number;
   };
 }
 

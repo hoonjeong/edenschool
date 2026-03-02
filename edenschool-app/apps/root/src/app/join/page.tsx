@@ -21,6 +21,11 @@ export default function JoinPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, phoneType }),
     });
+    if (res.status === 429) {
+      setMessage('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      setMessageType('danger');
+      return;
+    }
     const data = await res.json();
     if (data.error) {
       setMessage(data.error);
@@ -44,6 +49,11 @@ export default function JoinPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: authCode }),
     });
+    if (res.status === 429) {
+      setMessage('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      setMessageType('danger');
+      return;
+    }
     const data = await res.json();
 
     if (data.error) {

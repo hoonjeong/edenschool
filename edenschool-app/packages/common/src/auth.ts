@@ -42,5 +42,7 @@ export interface SessionData {
     studentId?: number;
     phone: string;
     expiresAt: number;
+    verified?: boolean;
+    attempts?: number;
   };
 }
