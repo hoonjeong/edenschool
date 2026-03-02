@@ -138,7 +138,7 @@ export async function selectAcaPhoneByTeacherId(teacherId: number): Promise<stri
 // Admin: selectTeacherList
 export async function selectTeacherList(): Promise<{ name: string }[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT name FROM teacher ORDER BY name ASC`
+    `SELECT name FROM admin_user_info WHERE code='T' ORDER BY name ASC`
   );
   return rows as { name: string }[];
 }

@@ -16,3 +16,17 @@ export function isValidPhone(phone: string): boolean {
 export function normalizePhone(phone: string): string {
   return phone.replace(/-/g, '');
 }
+
+export function getMaskedEmail(email: string): string {
+  const match = email.match(/^(\S+)@(\S+\.\S+)$/);
+  if (!match) return email;
+  const id = match[1];
+  const domain = match[2];
+  if (id.length < 3) {
+    return '*'.repeat(id.length) + '@' + domain;
+  } else if (id.length === 3) {
+    return id.slice(0, 1) + '**@' + domain;
+  } else {
+    return id.slice(0, id.length - 3) + '***@' + domain;
+  }
+}

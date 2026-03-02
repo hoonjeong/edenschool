@@ -1,29 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { normalizePhone } from '@edenschool/common/validation';
-import { getVerification, markVerified, incrementAttempts } from '@/lib/verification-store';
+import { handleVerifyPhone } from '@/lib/auth-handlers';
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, phone: rawPhone } = await req.json();
+    const { code, phone } = await req.json();
+    const result = handleVerifyPhone('admin', phone, code);
 
-    if (!code || !rawPhone) {
-      return new NextResponse('EMPTY');
+    switch (result.status) {
+      case 'empty':
+        return new NextResponse('EMPTY');
+      case 'no_request':
+        return new NextResponse('NO_REQUEST');
+      case 'wrong':
+        return new NextResponse('WRONG');
+      case 'ok':
+        return new NextResponse('OK');
     }
-
-    const phone = normalizePhone(rawPhone);
-    const entry = getVerification('admin', phone);
-
-    if (!entry) {
-      return new NextResponse('NO_REQUEST');
-    }
-
-    if (code !== entry.code) {
-      incrementAttempts('admin', phone);
-      return new NextResponse('WRONG');
-    }
-
-    markVerified('admin', phone);
-    return new NextResponse('OK');
   } catch (error) {
     console.error('Verify phone error:', error);
     return new NextResponse('FAIL', { status: 500 });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
 
 export default function FindAdminPassPage() {
   const [phone, setPhone] = useState('');
@@ -15,8 +16,7 @@ export default function FindAdminPassPage() {
   const [msgType, setMsgType] = useState<'success' | 'danger'>('success');
   const [showMsg, setShowMsg] = useState(false);
 
-  const pwRegex = /^.*(?=.{8})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
-  const pw1Valid = pw1 !== '' && pwRegex.test(pw1);
+  const pw1Valid = pw1 !== '' && isValidPassword(pw1);
   const pw2Valid = pw2 !== '' && pw1 === pw2;
   const showPw1Msg = pw1 !== '';
   const showPw2Msg = pw2 !== '';
@@ -113,7 +113,7 @@ export default function FindAdminPassPage() {
 
   async function resetPassword() {
     if (!pw1Valid) {
-      alert('비밀번호는 영문과 숫자를 포함하여 8글자 이상이어야 합니다.');
+      alert(PASSWORD_RULES);
       return;
     }
     if (!pw2Valid) {

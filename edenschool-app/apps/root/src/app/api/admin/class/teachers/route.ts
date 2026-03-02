@@ -9,7 +9,7 @@ export const GET = withErrorHandler(async (_req: NextRequest) => {
   try {
     const rows = await selectTeacherList();
 
-    return NextResponse.json(rows);
+    return NextResponse.json({ teachers: rows });
   } catch (error) {
     console.error('Get teachers error:', error);
     return NextResponse.json([], { status: 500 });
