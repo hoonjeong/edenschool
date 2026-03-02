@@ -4,14 +4,9 @@ import { countAdminUserByPhone } from '@edenschool/common/queries/admin-user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { normalizePhone, isValidPhone } from '@edenschool/common/validation';
 import { getAdminSession } from '@/lib/admin-session';
-import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 5 SMS requests per 15 minutes per IP
-    const limited = checkRateLimit(req, 'admin-check-phone', 5, 15 * 60 * 1000);
-    if (limited) return limited;
-
     const body = await req.json();
     const phone = normalizePhone(body.phone as string);
 

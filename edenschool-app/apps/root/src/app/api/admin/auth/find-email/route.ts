@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { selectAdminEmailByPhone } from '@edenschool/common/queries/admin-user';
 import { normalizePhone } from '@edenschool/common/validation';
-import { checkRateLimit } from '@/lib/rate-limiter';
 
 function getMaskedEmail(email: string): string {
   const match = email.match(/^(\S+)@(\S+\.\S+)$/);
@@ -19,9 +18,6 @@ function getMaskedEmail(email: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const limited = checkRateLimit(req, 'admin-find-email', 10, 15 * 60 * 1000);
-    if (limited) return limited;
-
     const body = await req.json();
     const phone = normalizePhone(body.phone as string);
 

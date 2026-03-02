@@ -22,7 +22,7 @@ export default function JoinPage() {
       body: JSON.stringify({ phone, phoneType }),
     });
     if (res.status === 429) {
-      setMessage('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      setMessage('요청이 너무 많습니다. 1분 뒤에 다시 시도해주세요.');
       setMessageType('danger');
       return;
     }
@@ -47,10 +47,10 @@ export default function JoinPage() {
     const res = await fetch('/api/auth/verify-phone', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: authCode }),
+      body: JSON.stringify({ code: authCode.trim() }),
     });
     if (res.status === 429) {
-      setMessage('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      setMessage('요청이 너무 많습니다. 1분 뒤에 다시 시도해주세요.');
       setMessageType('danger');
       return;
     }

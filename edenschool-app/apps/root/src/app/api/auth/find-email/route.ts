@@ -17,7 +17,7 @@ function getMaskedEmail(email: string): string {
 }
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(req, 'find-email', 10, 15 * 60 * 1000);
+  const limited = checkRateLimit(req, 'find-email', 10, 60 * 1000);
   if (limited) return limited;
 
   const { phone, phoneType } = await req.json();

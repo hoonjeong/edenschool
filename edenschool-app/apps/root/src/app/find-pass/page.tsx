@@ -16,7 +16,7 @@ export default function FindPassPage() {
       body: JSON.stringify({ email }),
     });
     if (res.status === 429) {
-      setError('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+      setError('요청이 너무 많습니다. 1분 뒤에 다시 시도해주세요.');
       return;
     }
     const data = await res.json();

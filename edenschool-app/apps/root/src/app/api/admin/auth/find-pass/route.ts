@@ -3,14 +3,9 @@ import { updatePasswordByPhone } from '@edenschool/common/queries/admin-user';
 import { hashPassword } from '@edenschool/common/password';
 import { normalizePhone, isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
 import { getAdminSession } from '@/lib/admin-session';
-import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 5 attempts per 15 minutes per IP
-    const limited = checkRateLimit(req, 'admin-find-pass', 5, 15 * 60 * 1000);
-    if (limited) return limited;
-
     const body = await req.json();
     const phone = normalizePhone(body.phone as string);
     const pw = body.pw as string;

@@ -10,7 +10,7 @@ import { getSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
-  const limited = checkRateLimit(req, 'join', 5, 15 * 60 * 1000);
+  const limited = checkRateLimit(req, 'join', 5, 60 * 1000);
   if (limited) return limited;
 
   const formData = await req.formData();

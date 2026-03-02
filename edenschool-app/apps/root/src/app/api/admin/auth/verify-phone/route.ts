@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/admin-session';
-import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 10 verify attempts per 15 minutes per IP
-    const limited = checkRateLimit(req, 'admin-verify-phone', 10, 15 * 60 * 1000);
-    if (limited) return limited;
-
     const { code } = await req.json();
 
     if (!code) {

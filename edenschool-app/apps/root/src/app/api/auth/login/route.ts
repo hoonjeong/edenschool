@@ -9,7 +9,7 @@ import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   // Rate limit: 10 attempts per 15 minutes per IP
-  const limited = checkRateLimit(req, 'login', 10, 15 * 60 * 1000);
+  const limited = checkRateLimit(req, 'login', 10, 60 * 1000);
   if (limited) return limited;
 
   const formData = await req.formData();

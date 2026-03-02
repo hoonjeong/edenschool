@@ -47,7 +47,7 @@ export function checkRateLimit(
 
   if (entry.count >= maxAttempts) {
     return NextResponse.json(
-      { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+      { error: '요청이 너무 많습니다. 1분 뒤에 다시 시도해주세요.' },
       { status: 429 },
     );
   }

@@ -4,14 +4,9 @@ import { getIronSession } from 'iron-session';
 import { selectAdminUserInfoByEmail } from '@edenschool/common/queries/admin-user';
 import { verifyPassword } from '@edenschool/common/password';
 import { getAdminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
-import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 10 attempts per 15 minutes per IP
-    const limited = checkRateLimit(req, 'admin-login', 10, 15 * 60 * 1000);
-    if (limited) return limited;
-
     const formData = await req.formData();
     const email = formData.get('email') as string;
     const pw = formData.get('pw') as string;
