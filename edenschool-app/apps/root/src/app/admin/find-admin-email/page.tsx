@@ -63,7 +63,7 @@ export default function FindAdminEmailPage() {
       const res = await fetch('/api/admin/auth/verify-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: checkNumberInput }),
+        body: JSON.stringify({ code: checkNumberInput.trim() }),
       });
       const data = await res.text();
 
@@ -77,9 +77,17 @@ export default function FindAdminEmailPage() {
         setMsgType('danger');
         setMsg('인증번호가 만료되었습니다. 다시 요청해주세요.');
         setShowMsg(true);
-      } else {
+      } else if (data === 'WRONG') {
         setMsgType('danger');
         setMsg('인증번호가 다릅니다. 다시 입력해주세요.');
+        setShowMsg(true);
+      } else if (data === 'NO_REQUEST') {
+        setMsgType('danger');
+        setMsg('인증 요청 내역이 없습니다. 인증번호를 다시 요청해주세요.');
+        setShowMsg(true);
+      } else {
+        setMsgType('danger');
+        setMsg('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
         setShowMsg(true);
       }
     } catch {

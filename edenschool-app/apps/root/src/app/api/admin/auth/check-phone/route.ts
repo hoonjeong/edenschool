@@ -1,9 +1,10 @@
 import { randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
 import { countAdminUserByPhone } from '@edenschool/common/queries/admin-user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { normalizePhone, isValidPhone } from '@edenschool/common/validation';
-import { getAdminSession } from '@/lib/admin-session';
+import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,8 +37,9 @@ export async function POST(req: NextRequest) {
       return new NextResponse('SMS_FAIL');
     }
 
-    // Store verification code in admin session (not in response)
-    const session = await getAdminSession();
+    // Store verification code in session using req/response pattern (reliable cookie handling)
+    const response = new NextResponse('OK');
+    const session = await getIronSession<AdminSessionData>(req, response, adminSessionOptions);
     session.phoneVerification = {
       code,
       phone,
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
     };
     await session.save();
 
-    return new NextResponse('OK');
+    return response;
   } catch (error) {
     console.error('Check phone error:', error);
     return new NextResponse('FAIL', { status: 500 });

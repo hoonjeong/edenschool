@@ -6,7 +6,6 @@ import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword } from '@edenschool/common/validation';
 import { sessionOptions } from '@edenschool/common/auth';
 import type { SessionData } from '@edenschool/common/auth';
-import { getSession } from '@/lib/session';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
@@ -23,8 +22,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(buildUrl('/join?error=1', req));
   }
 
-  // Verify phone verification was completed
-  const verifySession = await getSession();
+  // Verify phone verification was completed (read via req/response pattern)
+  const tempRes = new NextResponse();
+  const verifySession = await getIronSession<SessionData>(req, tempRes, sessionOptions);
   const verification = verifySession.phoneVerification;
   if (!verification || !verification.studentId || Date.now() > verification.expiresAt || !verification.verified) {
     return NextResponse.redirect(buildUrl('/join?error=1', req));
@@ -49,6 +49,10 @@ export async function POST(req: NextRequest) {
   const userId = await insertUser(email, hashedPw, sphone, pphone, 'S', student.id);
 
   const response = NextResponse.redirect(buildUrl('/', req));
+  // Copy verification session cookies to redirect response
+  tempRes.headers.forEach((value, key) => {
+    response.headers.append(key, value);
+  });
   const session = await getIronSession<SessionData>(req, response, sessionOptions);
   session.user = {
     id: userId,

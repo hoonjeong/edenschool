@@ -16,6 +16,10 @@ export default function FindEmailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, phoneType }),
     });
+    if (res.status === 429) {
+      setError('요청이 너무 많습니다. 1분 뒤에 다시 시도해주세요.');
+      return;
+    }
     const data = await res.json();
     if (data.email) {
       setResult(`이메일: ${data.email}`);

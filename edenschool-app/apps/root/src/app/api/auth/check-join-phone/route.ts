@@ -1,13 +1,14 @@
 import { randomInt } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { getIronSession } from 'iron-session';
 import { selectLiveStudentByPhone } from '@edenschool/common/queries/user';
 import { sendSms, isSmsSuccess } from '@edenschool/common/sms';
 import { isValidPhone } from '@edenschool/common/validation';
-import { getSession } from '@/lib/session';
+import { sessionOptions } from '@edenschool/common/auth';
+import type { SessionData } from '@edenschool/common/auth';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
-  // Rate limit: 5 SMS requests per 15 minutes per IP
   const limited = checkRateLimit(req, 'check-join-phone', 5, 60 * 1000);
   if (limited) return limited;
 
@@ -32,8 +33,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '인증번호 발송에 실패했습니다. 다시 시도해주세요.' });
   }
 
-  // Store verification code in session (not in response)
-  const session = await getSession();
+  // Store verification code in session using req/response pattern
+  const response = NextResponse.json({ success: true, studentId: student.id });
+  const session = await getIronSession<SessionData>(req, response, sessionOptions);
   session.phoneVerification = {
     code,
     studentId: student.id,
@@ -42,5 +44,5 @@ export async function POST(req: NextRequest) {
   };
   await session.save();
 
-  return NextResponse.json({ success: true, studentId: student.id });
+  return response;
 }

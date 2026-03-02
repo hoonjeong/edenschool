@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminSession } from '@/lib/admin-session';
+import { getIronSession } from 'iron-session';
+import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,36 +10,43 @@ export async function POST(req: NextRequest) {
       return new NextResponse('EMPTY');
     }
 
-    const session = await getAdminSession();
+    // Use req/response pattern for reliable session cookie handling
+    const response = new NextResponse('');
+    const session = await getIronSession<AdminSessionData>(req, response, adminSessionOptions);
     const verification = session.phoneVerification;
 
-    if (!verification) {
-      return new NextResponse('NO_REQUEST');
-    }
+    let result: string;
 
-    if (Date.now() > verification.expiresAt) {
+    if (!verification) {
+      result = 'NO_REQUEST';
+    } else if (Date.now() > verification.expiresAt) {
       delete session.phoneVerification;
       await session.save();
-      return new NextResponse('EXPIRED');
-    }
-
-    if (code !== verification.code) {
+      result = 'EXPIRED';
+    } else if (code !== verification.code) {
       // Track failed attempts — invalidate code after 5 failures
       verification.attempts = (verification.attempts || 0) + 1;
       if (verification.attempts >= 5) {
         delete session.phoneVerification;
       }
       await session.save();
-      return new NextResponse('WRONG');
+      result = 'WRONG';
+    } else {
+      // Verification successful — mark as verified
+      session.phoneVerification = {
+        ...verification,
+        verified: true,
+      };
+      await session.save();
+      result = 'OK';
     }
 
-    // Verification successful — mark as verified
-    session.phoneVerification = {
-      ...verification,
-      verified: true,
-    };
-    await session.save();
-    return new NextResponse('OK');
+    // Create final response with correct body and copy session cookies
+    const finalResponse = new NextResponse(result);
+    response.headers.forEach((value, key) => {
+      finalResponse.headers.append(key, value);
+    });
+    return finalResponse;
   } catch (error) {
     console.error('Verify phone error:', error);
     return new NextResponse('FAIL', { status: 500 });

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/session';
+import { getIronSession } from 'iron-session';
+import { sessionOptions } from '@edenschool/common/auth';
+import type { SessionData } from '@edenschool/common/auth';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
-  // Rate limit: 10 verify attempts per 15 minutes per IP
   const limited = checkRateLimit(req, 'verify-phone', 10, 60 * 1000);
   if (limited) return limited;
 
@@ -13,7 +14,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '인증번호를 입력해주세요.' });
   }
 
-  const session = await getSession();
+  // Use req/response pattern for reliable session cookie handling
+  const response = NextResponse.json({});
+  const session = await getIronSession<SessionData>(req, response, sessionOptions);
   const verification = session.phoneVerification;
 
   if (!verification) {
@@ -33,7 +36,12 @@ export async function POST(req: NextRequest) {
       delete session.phoneVerification;
     }
     await session.save();
-    return NextResponse.json({ error: '인증번호가 일치하지 않습니다.' });
+    // Copy session cookies to error response
+    const errorRes = NextResponse.json({ error: '인증번호가 일치하지 않습니다.' });
+    response.headers.forEach((value, key) => {
+      errorRes.headers.append(key, value);
+    });
+    return errorRes;
   }
 
   // Verification successful — mark as verified
@@ -42,5 +50,11 @@ export async function POST(req: NextRequest) {
     verified: true,
   };
   await session.save();
-  return NextResponse.json({ success: true, studentId: verification.studentId });
+
+  // Copy session cookies to success response
+  const successRes = NextResponse.json({ success: true, studentId: verification.studentId });
+  response.headers.forEach((value, key) => {
+    successRes.headers.append(key, value);
+  });
+  return successRes;
 }
