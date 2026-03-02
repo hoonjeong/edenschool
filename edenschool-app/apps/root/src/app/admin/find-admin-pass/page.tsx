@@ -15,7 +15,7 @@ export default function FindAdminPassPage() {
   const [msgType, setMsgType] = useState<'success' | 'danger'>('success');
   const [showMsg, setShowMsg] = useState(false);
 
-  const pwRegex = /^.*(?=.{6})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
+  const pwRegex = /^.*(?=.{8})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
   const pw1Valid = pw1 !== '' && pwRegex.test(pw1);
   const pw2Valid = pw2 !== '' && pw1 === pw2;
   const showPw1Msg = pw1 !== '';
@@ -38,6 +38,12 @@ export default function FindAdminPassPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
       });
+      if (res.status === 429) {
+        setMsgType('danger');
+        setMsg('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
+        setShowMsg(true);
+        return;
+      }
       const data = await res.text();
       if (data === 'FAIL') {
         setMsgType('danger');
@@ -97,7 +103,7 @@ export default function FindAdminPassPage() {
 
   async function resetPassword() {
     if (!pw1Valid) {
-      alert('비밀번호는 영문과 숫자를 포함하여 6글자 이상이어야 합니다.');
+      alert('비밀번호는 영문과 숫자를 포함하여 8글자 이상이어야 합니다.');
       return;
     }
     if (!pw2Valid) {
@@ -188,7 +194,7 @@ export default function FindAdminPassPage() {
             <label style={{ fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>새 비밀번호</label>
             <input
               type="password"
-              placeholder="영문+숫자 6자 이상"
+              placeholder="영문+숫자 8자 이상"
               className="form-control"
               value={pw1}
               onChange={(e) => setPw1(e.target.value)}
@@ -198,7 +204,7 @@ export default function FindAdminPassPage() {
             <div className="alert alert-success">사용가능한 비밀번호입니다.</div>
           )}
           {showPw1Msg && !pw1Valid && (
-            <div className="alert alert-danger">영문과 숫자를 포함하여 6글자 이상이어야 합니다.</div>
+            <div className="alert alert-danger">영문과 숫자를 포함하여 8글자 이상이어야 합니다.</div>
           )}
 
           <div className="form-group">
