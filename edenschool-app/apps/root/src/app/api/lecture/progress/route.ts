@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/session';
+import { requireApiSession } from '@/lib/session';
+import { withErrorHandler } from '@/lib/api-handler';
 import { selectLectureProgress, upsertLectureProgress } from '@edenschool/common/queries/lecture-progress';
 import { isLectureAccessibleByStudent } from '@edenschool/common/queries/lecture';
 
 // 학생: 진도 조회
-export async function GET(req: NextRequest) {
-  const session = await getSession();
-  if (!session.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const GET = withErrorHandler(async (req: NextRequest) => {
+  const session = await requireApiSession();
 
   const lectureId = Number(req.nextUrl.searchParams.get('lectureId'));
   if (!lectureId) {
@@ -17,14 +15,11 @@ export async function GET(req: NextRequest) {
 
   const progress = await selectLectureProgress(session.user.id, lectureId);
   return NextResponse.json({ progress });
-}
+});
 
 // 학생: 진도 저장
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const session = await requireApiSession();
 
   const body = await req.json();
   const { lectureId, watchedSeconds, duration, percent, completed } = body;
@@ -65,4 +60,4 @@ export async function POST(req: NextRequest) {
   );
 
   return NextResponse.json({ success: true });
-}
+});

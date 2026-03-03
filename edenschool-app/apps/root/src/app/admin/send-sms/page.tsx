@@ -1,16 +1,7 @@
-'use client';
+import { requireAdminSession } from '@/lib/admin-session';
+import { SendSmsClient } from './SendSmsClient';
 
-import Link from 'next/link';
-import SmsComposer from '@/components/SmsComposer';
-
-export default function SendSmsPage() {
-  return (
-    <div>
-      <div className="admin-sub-nav">
-        <Link href="/admin/student-manage">담당반 정보</Link>
-        <Link href="/admin/send-sms" className="active">문자발송</Link>
-      </div>
-      <SmsComposer mode="admin" />
-    </div>
-  );
+export default async function SendSmsPage() {
+  await requireAdminSession();
+  return <SendSmsClient />;
 }

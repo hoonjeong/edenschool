@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stat, open } from 'fs/promises';
-import { createReadStream } from 'fs';
+import { createReadStream, statSync } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { getSession } from '@/lib/session';
+import { getAdminSession } from '@/lib/admin-session';
+import { withErrorHandler } from '@/lib/api-handler';
 
 const CONTENT_TYPES: Record<string, string> = {
   '.mp4': 'video/mp4',
@@ -19,7 +22,7 @@ const VIDEO_DIR = (() => {
     path.resolve(process.cwd(), '../../video'),
   ];
   return candidates.find(dir => {
-    try { require('fs').statSync(dir); return true; } catch { return false; }
+    try { statSync(dir); return true; } catch { return false; }
   }) || candidates[0];
 })();
 
@@ -27,10 +30,19 @@ const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
 } as const;
 
-export async function GET(
+export const GET = withErrorHandler(async (
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
-) {
+) => {
+  // 인증 체크: 일반 회원 또는 관리자
+  const [userSession, adminSession] = await Promise.all([
+    getSession(),
+    getAdminSession(),
+  ]);
+  if (!userSession.user && !adminSession.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { path: segments } = await params;
   const fileName = decodeURIComponent(segments.join('/'));
 
@@ -107,4 +119,4 @@ export async function GET(
       ...SECURITY_HEADERS,
     },
   });
-}
+});

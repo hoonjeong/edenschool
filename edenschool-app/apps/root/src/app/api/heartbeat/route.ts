@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/session';
+import { requireApiSession } from '@/lib/session';
+import { withErrorHandler } from '@/lib/api-handler';
 import { upsertSessionLog } from '@edenschool/common/queries/session-log';
 
 // 인메모리 쓰로틀: user_id -> 마지막 DB 기록 시각
 const throttleMap = new Map<number, number>();
 const THROTTLE_MS = 5 * 60 * 1000; // 5분
 
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const session = await requireApiSession();
 
   const userId = session.user.id;
   const now = Date.now();
@@ -31,4 +29,4 @@ export async function POST(req: NextRequest) {
   await upsertSessionLog(userId, ip, userAgent);
 
   return NextResponse.json({ ok: true });
-}
+});
