@@ -3,8 +3,6 @@ import { stat, open } from 'fs/promises';
 import { createReadStream, statSync } from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
-import { getSession } from '@/lib/session';
-import { getAdminSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -34,15 +32,6 @@ export const GET = withErrorHandler(async (
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) => {
-  // 인증 체크: 일반 회원 또는 관리자
-  const [userSession, adminSession] = await Promise.all([
-    getSession(),
-    getAdminSession(),
-  ]);
-  if (!userSession.user && !adminSession.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const { path: segments } = await params;
   const fileName = decodeURIComponent(segments.join('/'));
 
