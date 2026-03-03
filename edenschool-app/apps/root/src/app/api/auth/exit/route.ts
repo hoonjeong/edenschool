@@ -10,5 +10,6 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   await updateUserStatus(session.user.studentId!, 'E');
 
   session.destroy();
+  await session.save();
   return NextResponse.json({ success: true });
 });

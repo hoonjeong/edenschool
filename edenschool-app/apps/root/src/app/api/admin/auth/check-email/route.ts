@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { countAdminUserByEmail } from '@edenschool/common/queries/admin-user';
 import { isValidEmail } from '@edenschool/common/validation';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, 'admin-check-email', 20, 60 * 1000);
+  if (limited) return limited;
+
   try {
     const body = await req.json();
     const email = body.email as string;

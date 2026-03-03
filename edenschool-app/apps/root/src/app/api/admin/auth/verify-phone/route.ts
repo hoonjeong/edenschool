@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleVerifyPhone } from '@/lib/auth-handlers';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, 'admin-verify-phone', 10, 60 * 1000);
+  if (limited) return limited;
+
   try {
     const { code, phone } = await req.json();
     const result = handleVerifyPhone('admin', phone, code);

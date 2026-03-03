@@ -11,10 +11,9 @@ interface UserInfo {
 
 interface MyInfoClientProps {
   info: UserInfo;
-  userId: number;
 }
 
-export default function MyInfoClient({ info, userId }: MyInfoClientProps) {
+export default function MyInfoClient({ info }: MyInfoClientProps) {
   const [phone, setPhone] = useState(info.phone || '');
   const [email, setEmail] = useState(info.email || '');
   const [beforePw, setBeforePw] = useState('');
@@ -26,7 +25,7 @@ export default function MyInfoClient({ info, userId }: MyInfoClientProps) {
   const [changeButtonText, setChangeButtonText] = useState('회원정보 변경');
   const [changePwButtonText, setChangePwButtonText] = useState('비밀번호 변경');
 
-  const pwRegex = /^.*(?=.{6})(?=.*[0-9])(?=.*[a-zA-Z]).*$/;
+  const pwRegex = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/;
 
   async function changeInfo() {
     if (infoReadonly) {
@@ -37,7 +36,7 @@ export default function MyInfoClient({ info, userId }: MyInfoClientProps) {
         const res = await fetch('/api/admin/user/change-info', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: userId, phone, email }),
+          body: JSON.stringify({ phone, email }),
         });
         const data = await res.text();
 
@@ -63,7 +62,7 @@ export default function MyInfoClient({ info, userId }: MyInfoClientProps) {
       setChangePwButtonText('변경 완료');
     } else {
       if (!pwRegex.test(newPw)) {
-        alert('비밀번호는 영문과 숫자를 포함하여 6글자 이상이어야 합니다.');
+        alert('비밀번호는 영문과 숫자를 포함하여 8자 이상이어야 합니다.');
         return;
       }
       if (newPw !== rePw) {
@@ -75,7 +74,7 @@ export default function MyInfoClient({ info, userId }: MyInfoClientProps) {
         const res = await fetch('/api/admin/user/change-pw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: userId, beforepw: beforePw, newpw: newPw }),
+          body: JSON.stringify({ beforepw: beforePw, newpw: newPw }),
         });
         const data = await res.text();
 

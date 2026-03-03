@@ -14,5 +14,5 @@ export default async function MyInfoPage() {
     );
   }
 
-  return <MyInfoClient info={info} userId={session.user!.id} />;
+  return <MyInfoClient info={info} />;
 }

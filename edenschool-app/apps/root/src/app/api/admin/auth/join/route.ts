@@ -6,8 +6,12 @@ import { hashPassword } from '@edenschool/common/password';
 import { isValidEmail, isValidPassword, normalizePhone } from '@edenschool/common/validation';
 import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 import { getVerification, deleteVerification } from '@/lib/verification-store';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, 'admin-join', 5, 60 * 1000);
+  if (limited) return limited;
+
   try {
     const formData = await req.formData();
     const email = formData.get('email') as string;
@@ -28,6 +32,13 @@ export async function POST(req: NextRequest) {
 
     // Clear verification after use
     deleteVerification('admin', normalizedPhone);
+
+    // Check if email is already registered
+    const { countAdminUserByEmail } = await import('@edenschool/common/queries/admin-user');
+    const emailCount = await countAdminUserByEmail(email);
+    if (emailCount > 0) {
+      return NextResponse.redirect(buildUrl('/admin/join?error=email', req));
+    }
 
     // Check if phone exists in admin_user_info
     const adminId = await selectAdminUserIdByPhone(normalizedPhone);

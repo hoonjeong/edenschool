@@ -18,11 +18,18 @@ if (typeof setInterval !== 'undefined') {
 }
 
 function getClientIp(req: NextRequest): string {
-  return (
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown'
-  );
+  // x-real-ip는 리버스 프록시(Nginx)가 설정하므로 클라이언트 위조가 어려움 → 우선 사용
+  const realIp = req.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+
+  // x-forwarded-for 사용 시: 프록시가 뒤에 추가하므로 마지막(rightmost) IP가 가장 신뢰할 수 있음
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    const ips = forwarded.split(',').map(ip => ip.trim()).filter(Boolean);
+    return ips[ips.length - 1] || 'unknown';
+  }
+
+  return 'unknown';
 }
 
 /**

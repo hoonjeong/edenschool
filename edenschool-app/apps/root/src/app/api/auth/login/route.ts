@@ -11,50 +11,55 @@ export async function POST(req: NextRequest) {
   const limited = checkRateLimit(req, 'login', 10, 60 * 1000);
   if (limited) return limited;
 
-  const formData = await req.formData();
-  const email = formData.get('email') as string;
-  const pw = formData.get('pw') as string;
-  const referer = safeRedirectPath(formData.get('referer') as string, '/');
-  const saveEmail = formData.get('saveEmail') === 'on';
-  const autoLogin = formData.get('autoLogin') === 'on';
+  try {
+    const formData = await req.formData();
+    const email = formData.get('email') as string;
+    const pw = formData.get('pw') as string;
+    const referer = safeRedirectPath(formData.get('referer') as string, '/');
+    const saveEmail = formData.get('saveEmail') === 'on';
+    const autoLogin = formData.get('autoLogin') === 'on';
 
-  if (!email || !pw) {
-    const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
-    return NextResponse.redirect(buildUrl(errorUrl, req));
+    if (!email || !pw) {
+      const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
+      return NextResponse.redirect(buildUrl(errorUrl, req));
+    }
+
+    // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
+    const user = await selectUserInfoByEmail(email);
+    if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
+      const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
+      return NextResponse.redirect(buildUrl(errorUrl, req));
+    }
+
+    const response = NextResponse.redirect(buildUrl(referer || '/', req));
+
+    // Save email cookie
+    if (saveEmail) {
+      response.cookies.set('saved-email', email, {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: process.env.COOKIE_SECURE === 'true',
+      });
+    } else {
+      response.cookies.delete('saved-email');
+    }
+
+    const opts = getSessionOptions(autoLogin);
+    const session = await getIronSession<SessionData>(req, response, opts);
+    session.user = {
+      id: user.id,
+      email: user.email,
+      studentId: user.studentId,
+      name: user.name,
+      code: user.code,
+    };
+    await session.save();
+
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.redirect(buildUrl('/login?error=1', req));
   }
-
-  // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
-  const user = await selectUserInfoByEmail(email);
-  if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
-    const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
-    return NextResponse.redirect(buildUrl(errorUrl, req));
-  }
-
-  const response = NextResponse.redirect(buildUrl(referer || '/', req));
-
-  // Save email cookie
-  if (saveEmail) {
-    response.cookies.set('saved-email', email, {
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: process.env.COOKIE_SECURE === 'true',
-    });
-  } else {
-    response.cookies.delete('saved-email');
-  }
-
-  const opts = getSessionOptions(autoLogin);
-  const session = await getIronSession<SessionData>(req, response, opts);
-  session.user = {
-    id: user.id,
-    email: user.email,
-    studentId: user.studentId,
-    name: user.name,
-    code: user.code,
-  };
-  await session.save();
-
-  return response;
 }
