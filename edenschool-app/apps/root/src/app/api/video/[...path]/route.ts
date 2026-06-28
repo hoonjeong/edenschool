@@ -16,7 +16,6 @@ const ALLOWED_EXTENSIONS = new Set(Object.keys(CONTENT_TYPES));
 // 이 라우트는 인증이 없으므로(공개 홈페이지 배경·소개 영상에 사용) 명시적으로
 // 허용된 공개 영상만 서빙한다. video/ 폴더에 다른 파일이 있어도 노출되지 않는다.
 // 보호가 필요한 강의 영상은 Vimeo로 서빙되며 이 라우트를 거치지 않는다.
-// 공개 영상을 추가하려면 여기에 파일명을 등록할 것.
 const PUBLIC_VIDEOS = new Set(['back.mp4', 'introduce.mp4']);
 
 // PM2 cwd: edenschool-app/ → ./video, 로컬 dev cwd: apps/root/ → ../../video
@@ -72,7 +71,8 @@ export const GET = withErrorHandler(async (
   const etag = `"${fileSize}-${Math.floor(fileStat.mtimeMs)}"`;
   const lastModified = fileStat.mtime.toUTCString();
   const cacheHeaders = {
-    'Cache-Control': 'public, max-age=86400',
+    // 루프 영상이 캐시에서 재사용되도록 길게 캐시(+ ETag로 재검증)
+    'Cache-Control': 'public, max-age=2592000',
     'ETag': etag,
     'Last-Modified': lastModified,
     'Accept-Ranges': 'bytes',
@@ -91,27 +91,35 @@ export const GET = withErrorHandler(async (
     return new NextResponse(null, { status: 304, headers: cacheHeaders });
   }
 
-  // If-Range: 검증자가 일치할 때만 부분 응답, 아니면 전체 응답
+  // Range 분석. 전체 파일 요청(bytes=0-)은 부분응답(206) 대신 전체 응답(200)으로 준다.
+  // 206은 브라우저가 루프 시 캐시를 재사용하지 않아 매 반복마다 재다운로드된다.
   const rangeHeader = req.headers.get('range');
   const ifRange = req.headers.get('if-range');
-  const useRange = !!rangeHeader && (!ifRange || ifRange === etag || ifRange === lastModified);
+  const rangeAllowed = !!rangeHeader && (!ifRange || ifRange === etag || ifRange === lastModified);
 
-  if (useRange) {
+  let partial: { start: number; end: number } | null = null;
+  if (rangeAllowed) {
     const match = rangeHeader!.match(/bytes=(\d+)-(\d*)/);
     if (!match) {
       return new NextResponse('Invalid Range', { status: 416 });
     }
-
     const start = parseInt(match[1], 10);
-    const end = match[2] ? parseInt(match[2], 10) : Math.min(start + 5 * 1024 * 1024 - 1, fileSize - 1);
-
-    if (start >= fileSize || end >= fileSize) {
-      return new NextResponse('Range Not Satisfiable', {
-        status: 416,
-        headers: { 'Content-Range': `bytes */${fileSize}` },
-      });
+    const explicitEnd = match[2] ? parseInt(match[2], 10) : null;
+    const isWholeFile = start === 0 && (explicitEnd === null || explicitEnd >= fileSize - 1);
+    if (!isWholeFile) {
+      const end = explicitEnd !== null ? explicitEnd : Math.min(start + 5 * 1024 * 1024 - 1, fileSize - 1);
+      if (start >= fileSize || end >= fileSize) {
+        return new NextResponse('Range Not Satisfiable', {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${fileSize}` },
+        });
+      }
+      partial = { start, end };
     }
+  }
 
+  if (partial) {
+    const { start, end } = partial;
     const chunkSize = end - start + 1;
     const fileHandle = await open(resolved, 'r');
     const buffer = Buffer.alloc(chunkSize);
@@ -129,7 +137,7 @@ export const GET = withErrorHandler(async (
     });
   }
 
-  // No range — stream the file to avoid loading entire file into memory
+  // 전체 파일 응답(200) — 스트리밍, 강한 캐시로 루프 시 재사용 유도
   const nodeStream = createReadStream(resolved);
   const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
