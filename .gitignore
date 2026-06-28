@@ -18,6 +18,11 @@ node_modules/
 .next/
 dist/
 .turbo/
+*.tsbuildinfo
+
+# ── 대용량 미디어 (서버에 직접 배치, 깃 미포함) ──
+edenschool-app/video/
+edenschool-app/image/
 
 # ── 환경변수 (실제 값 포함 - 절대 커밋 금지) ──
 .env
