@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
-import { insertFileInfo } from '@edenschool/common/queries/file';
+import { insertFileInfoName } from '@edenschool/common/queries/file';
 import { validateUploadedFile } from '@/lib/upload-validation';
+import { saveUploadFile } from '@/lib/legacy-upload';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
@@ -19,11 +20,13 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     if (validationError) return validationError;
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const fileId = await insertFileInfo(file.name, buffer);
+    // 레거시와 동일하게 파일시스템(upload/)에 저장하고 DB에는 파일명만 기록.
+    const savedName = await saveUploadFile(file.name, buffer);
+    const fileId = await insertFileInfoName(savedName);
 
     return NextResponse.json({
       fileId,
-      fileName: file.name,
+      fileName: savedName,
     });
   } catch (error) {
     console.error('File upload error:', error);
