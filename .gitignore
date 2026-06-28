@@ -30,6 +30,10 @@ ssh/
 *.key
 *.pem
 
+# ── 레거시 업로드 이미지 (서버에서 복사, 깃 미포함 / 폴더는 .gitkeep로 유지) ──
+edenschool-app/upload/*
+!edenschool-app/upload/.gitkeep
+
 # ── Claude Code 작업 디렉토리 ──
 .claude/
 
