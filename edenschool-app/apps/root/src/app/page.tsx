@@ -230,7 +230,7 @@ export default function HomePage() {
           <div className="about-video-player">
             <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
               <iframe
-                src="https://www.youtube.com/embed/vKMEGJY9yuw"
+                src="https://www.youtube-nocookie.com/embed/vKMEGJY9yuw"
                 title="이든배움국어학원 소개 영상"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
