@@ -69,17 +69,16 @@ function toStaffMember(item: TeacherDisplay): StaffMember {
 const FALLBACK_HIGH: Teacher[] = [
   { branch: '이든배움국어상동2관', school: '상원고', name: '김보름 선생님', photo: '/assets/teachers/김보름.jpg', schedule: [{ grade: '고1', time: '토 19:00~22:00 / 일 19:00~22:00' }, { grade: '고2', time: '토 10:00~13:00 / 토 16:00~19:00' }, { grade: '고3', time: '일 10:00~13:00 / 일 15:00~18:00' }] },
   { branch: '이든배움국어상동3관', school: '상동고', name: '이창완 선생님', photo: '/assets/teachers/이창완.jpg', schedule: [{ grade: '고1', time: '토 18:00~21:00' }, { grade: '고2', time: '일 19:00~22:00' }, { grade: '고3', time: '일 10:00~13:00' }] },
-  { branch: '이든배움국어본관', school: '송내고', name: '이우용 선생님', photo: '/assets/teachers/이우용.jpg', schedule: [{ grade: '고1', time: '일 16:00~19:00' }, { grade: '고2', time: '토 16:00~19:00' }, { grade: '고3', time: '토 19:00~22:00' }] },
+  { branch: '이든배움국어본관', school: '송내고', name: '이우용 선생님', photo: '/assets/teachers/이우용.jpg', schedule: [{ grade: '고1', time: '일 16:00~19:00' }, { grade: '고2', time: '토 16:00~19:00' }, { grade: '고3', time: '토 19:00~22:00 / 월 19:00~22:00' }] },
   { branch: '이든배움국어본관', school: '부명고', name: '박옥선 선생님', photo: '/assets/teachers/박옥선.jpg', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 18:30~21:30 / 일 14:30~17:30' }, { grade: '고3', time: '토 13:00~16:00 / 일 19:00~22:00' }] },
-  { branch: '이든배움국어본관', school: '정명고', name: '박정영 선생님', photo: '/assets/teachers/박정영.jpg', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 15:00~18:00 / 일 10:00~13:00' }, { grade: '고3', time: '금 19:00~22:00 / 토 19:00~22:00' }] },
+  { branch: '이든배움국어본관', school: '정명고', name: '박정영 선생님', photo: '/assets/teachers/박정영.jpg', schedule: [{ grade: '고1', time: '토 10:00~13:00 / 일 14:00~17:00' }, { grade: '고2', time: '토 15:00~18:00 / 일 10:00~13:00' }, { grade: '고3', time: '금 19:00~22:00 / 토 19:00~22:00' }] },
   { branch: '이든배움국어상동3관', school: '상일고', name: '권지영 선생님', photo: '/assets/teachers/권지영.jpg', schedule: [{ grade: '고1', time: '토 16:00~19:00' }, { grade: '고2', time: '토 19:00~22:00' }, { grade: '고3', time: '토 12:00~15:00 / 토 16:00~19:00' }] },
   { branch: '이든배움국어상동5관', school: '중원·중흥고', name: '김소솜 선생님', photo: '/assets/teachers/김소솜.jpg', schedule: [], schools: [{ name: '중원고', schedule: [{ grade: '고1', time: '토 10:00~13:00' }, { grade: '고2', time: '토 16:00~19:00' }, { grade: '고3', time: '일 19:00~22:00' }] }, { name: '중흥고', schedule: [{ grade: '고1', time: '일 14:00~17:00' }, { grade: '고2', time: '일 10:00~13:00' }, { grade: '고3', time: '일 19:00~22:00' }] }] },
-  { branch: '이든배움국어본관', school: '계남고', name: '백슬기 선생님', photo: '/assets/teachers/백슬기.jpg', schedule: [{ grade: '고1', time: '토 14:00~17:00' }, { grade: '고3', time: '토 10:00~13:00' }] },
   { branch: '이든배움국어상동3관', school: '소명여고·상동중', name: '박서연 선생님', photo: '/assets/teachers/박서연.jpg', schedule: [], schools: [{ name: '소명여고', schedule: [{ grade: '고1', time: '일 18:00~21:00' }] }, { name: '상동중', schedule: [{ grade: '1학년', time: '토 16:00~18:30' }, { grade: '2학년', time: '토 12:30~15:30' }, { grade: '3학년', time: '일 14:00~17:00' }] }] },
 ];
 const FALLBACK_MIDDLE: Teacher[] = [
   { branch: '이든배움국어본관', school: '상일중', name: '김태경 선생님', photo: '/assets/teachers/김태경.jpg', schedule: [{ grade: '1학년', time: '토 14:00~16:30' }, { grade: '2학년', time: '토 10:00~13:00 / 일 17:00~20:00' }, { grade: '3학년', time: '토 17:00~20:00 / 일 14:00~17:00' }] },
-  { branch: '이든배움국어상동5관', school: '석천중', name: '심미숙 선생님', photo: '/assets/teachers/심미숙.jpg', schedule: [{ grade: '1학년', time: '토 14:00~16:30' }, { grade: '2학년', time: '일 17:00~20:00' }, { grade: '3학년', time: '토 10:00~13:00' }] },
+  { branch: '이든배움국어상동5관', school: '석천중', name: '심미숙 선생님', photo: '/assets/teachers/심미숙.jpg', schedule: [{ grade: '1학년', time: '토 14:00~16:30' }, { grade: '2학년', time: '일 17:00~22:00 / 토 17:00~20:00' }, { grade: '3학년', time: '토 10:00~13:00' }] },
 ];
 const FALLBACK_SUNEUNG: SuneungTeacher[] = [
   { name: '라영서 선생님', photo: '/assets/teachers/라영서.jpg', time: '일 14:00~17:00' },
