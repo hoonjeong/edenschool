@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      // 레거시 게시물 본문 이미지: image-view.html?id=<file_info.id>
+      { source: '/image-view.html', destination: '/api/legacy-image' },
+    ];
+  },
 };
 
 export default nextConfig;
