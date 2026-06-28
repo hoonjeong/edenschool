@@ -13,34 +13,6 @@ export interface SitePopup {
   updated_at: string;
 }
 
-export async function selectSitePopup(): Promise<SitePopup | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, is_active, image_file_id, link_url, DATE_FORMAT(start_date,'%Y-%m-%d') as start_date, DATE_FORMAT(end_date,'%Y-%m-%d') as end_date, updated_at FROM site_popup WHERE id=1`
-  );
-  return (rows[0] as SitePopup) || null;
-}
-
-export async function updateSitePopup(data: {
-  is_active: number;
-  image_file_id: number | null;
-  link_url: string;
-  start_date: string | null;
-  end_date: string | null;
-}): Promise<void> {
-  await pool.query(
-    `UPDATE site_popup SET is_active=?, image_file_id=?, link_url=?, start_date=?, end_date=? WHERE id=1`,
-    [data.is_active, data.image_file_id, data.link_url, data.start_date || null, data.end_date || null]
-  );
-}
-
-// 프론트용: 활성 + 기간 내 팝업 조회
-export async function selectActivePopup(): Promise<SitePopup | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, is_active, image_file_id, link_url, DATE_FORMAT(start_date,'%Y-%m-%d') as start_date, DATE_FORMAT(end_date,'%Y-%m-%d') as end_date FROM site_popup WHERE id=1 AND is_active=1 AND (start_date IS NULL OR start_date <= CURDATE()) AND (end_date IS NULL OR end_date >= CURDATE())`
-  );
-  return (rows[0] as SitePopup) || null;
-}
-
 // ───── 다중 팝업: 목록/추가/수정/삭제 ─────
 
 const POPUP_COLS = `id, is_active, image_file_id, link_url, DATE_FORMAT(start_date,'%Y-%m-%d') as start_date, DATE_FORMAT(end_date,'%Y-%m-%d') as end_date, updated_at`;
