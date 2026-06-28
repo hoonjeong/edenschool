@@ -34,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={bodyClasses}>
         {!isAdmin && <Navbar />}
-        {!isAdmin && <PopupModal />}
+        {!isAdmin && isAbout && <PopupModal />}
         {children}
         {!isAdmin && <SessionHeartbeatWrapper />}
         <BootstrapClient />
