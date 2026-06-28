@@ -25,6 +25,11 @@ dist/
 .env.production
 .env.*.local
 
+# ── SSH 키 (서버 개인키 - 절대 커밋 금지) ──
+ssh/
+*.key
+*.pem
+
 # ── Claude Code 작업 디렉토리 ──
 .claude/
 
