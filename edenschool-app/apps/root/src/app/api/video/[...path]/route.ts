@@ -13,6 +13,12 @@ const CONTENT_TYPES: Record<string, string> = {
 
 const ALLOWED_EXTENSIONS = new Set(Object.keys(CONTENT_TYPES));
 
+// 이 라우트는 인증이 없으므로(공개 홈페이지 배경·소개 영상에 사용) 명시적으로
+// 허용된 공개 영상만 서빙한다. video/ 폴더에 다른 파일이 있어도 노출되지 않는다.
+// 보호가 필요한 강의 영상은 Vimeo로 서빙되며 이 라우트를 거치지 않는다.
+// 공개 영상을 추가하려면 여기에 파일명을 등록할 것.
+const PUBLIC_VIDEOS = new Set(['back.mp4', 'introduce.mp4']);
+
 // PM2 cwd: edenschool-app/ → ./video, 로컬 dev cwd: apps/root/ → ../../video
 const VIDEO_DIR = (() => {
   const candidates = [
@@ -34,6 +40,11 @@ export const GET = withErrorHandler(async (
 ) => {
   const { path: segments } = await params;
   const fileName = decodeURIComponent(segments.join('/'));
+
+  // 허용 목록에 없는 파일은 존재 여부와 무관하게 404 (디렉토리 전체 노출 방지)
+  if (!PUBLIC_VIDEOS.has(fileName)) {
+    return new NextResponse('Not Found', { status: 404 });
+  }
 
   // Path traversal prevention: resolve and verify prefix
   const resolved = path.resolve(VIDEO_DIR, fileName);
