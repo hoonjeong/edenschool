@@ -16,7 +16,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const validationError = validateUploadedFile(file);
+    const validationError = await validateUploadedFile(file);
     if (validationError) return validationError;
 
     const buffer = Buffer.from(await file.arrayBuffer());

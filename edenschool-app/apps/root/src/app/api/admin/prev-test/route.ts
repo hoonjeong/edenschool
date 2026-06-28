@@ -51,7 +51,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     // Insert prev_test_file_info if file provided (matches DataMapper: insertPrevTestFileInfo)
     if (file) {
-      const validationError = validateUploadedFile(file);
+      const validationError = await validateUploadedFile(file);
       if (validationError) return validationError;
       const fileName = file.name;
       const buffer = Buffer.from(await file.arrayBuffer());

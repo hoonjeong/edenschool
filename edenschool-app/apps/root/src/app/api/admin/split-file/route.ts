@@ -41,7 +41,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     });
 
     if (file) {
-      const validationError = validateUploadedFile(file);
+      const validationError = await validateUploadedFile(file);
       if (validationError) return validationError;
       const buffer = Buffer.from(await file.arrayBuffer());
       await insertSplitFileContent(metaId, buffer, file.name);
