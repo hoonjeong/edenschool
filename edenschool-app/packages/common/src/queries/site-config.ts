@@ -41,6 +41,65 @@ export async function selectActivePopup(): Promise<SitePopup | null> {
   return (rows[0] as SitePopup) || null;
 }
 
+// ───── 다중 팝업: 목록/추가/수정/삭제 ─────
+
+const POPUP_COLS = `id, is_active, image_file_id, link_url, DATE_FORMAT(start_date,'%Y-%m-%d') as start_date, DATE_FORMAT(end_date,'%Y-%m-%d') as end_date, updated_at`;
+
+// 관리자: 전체 팝업 목록(최신순)
+export async function selectAllPopups(): Promise<SitePopup[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT ${POPUP_COLS} FROM site_popup ORDER BY id DESC`
+  );
+  return rows as SitePopup[];
+}
+
+// 프론트: 활성 + 기간 내 팝업 목록(모두 표시)
+export async function selectActivePopups(): Promise<SitePopup[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT ${POPUP_COLS} FROM site_popup
+     WHERE is_active=1 AND image_file_id IS NOT NULL
+       AND (start_date IS NULL OR start_date <= CURDATE())
+       AND (end_date IS NULL OR end_date >= CURDATE())
+     ORDER BY id DESC`
+  );
+  return rows as SitePopup[];
+}
+
+interface PopupInput {
+  is_active: number;
+  image_file_id: number | null;
+  link_url: string;
+  start_date: string | null;
+  end_date: string | null;
+}
+
+// 관리자: 팝업 추가
+export async function insertPopup(data: PopupInput): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO site_popup (is_active, image_file_id, link_url, start_date, end_date) VALUES (?,?,?,?,?)`,
+    [data.is_active, data.image_file_id, data.link_url, data.start_date || null, data.end_date || null]
+  );
+  return result.insertId;
+}
+
+// 관리자: 팝업 수정(전체 필드)
+export async function updatePopupById(id: number, data: PopupInput): Promise<void> {
+  await pool.query(
+    `UPDATE site_popup SET is_active=?, image_file_id=?, link_url=?, start_date=?, end_date=? WHERE id=?`,
+    [data.is_active, data.image_file_id, data.link_url, data.start_date || null, data.end_date || null, id]
+  );
+}
+
+// 관리자: 활성/비활성 토글
+export async function setPopupActive(id: number, isActive: number): Promise<void> {
+  await pool.query(`UPDATE site_popup SET is_active=? WHERE id=?`, [isActive, id]);
+}
+
+// 관리자: 팝업 삭제
+export async function deletePopupById(id: number): Promise<void> {
+  await pool.query(`DELETE FROM site_popup WHERE id=?`, [id]);
+}
+
 // ────────────────────── site_page ──────────────────────
 
 export interface SitePage {

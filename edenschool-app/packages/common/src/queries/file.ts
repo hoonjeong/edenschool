@@ -82,11 +82,14 @@ export async function deletePostFileStatusByFileId(fileId: number): Promise<numb
   return result.affectedRows;
 }
 
-// ROOT: isFilePublicImage (teacher_display photo)
+// ROOT: isFilePublicImage (강사 사진 또는 팝업 이미지는 공개)
 export async function isFilePublicImage(fileId: number): Promise<boolean> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT 1 FROM teacher_display WHERE photo_file_id=? AND is_active=1 LIMIT 1`,
-    [fileId]
+    `SELECT 1 FROM teacher_display WHERE photo_file_id=? AND is_active=1
+     UNION
+     SELECT 1 FROM site_popup WHERE image_file_id=?
+     LIMIT 1`,
+    [fileId, fileId]
   );
   return rows.length > 0;
 }

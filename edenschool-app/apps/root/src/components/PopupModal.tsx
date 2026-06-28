@@ -2,111 +2,84 @@
 
 import { useState, useEffect } from 'react';
 
+interface Popup {
+  id: number;
+  image_file_id: number;
+  link_url: string;
+}
+
 export function PopupModal() {
-  const [popup, setPopup] = useState<{
-    image_file_id: number;
-    link_url: string;
-  } | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [popups, setPopups] = useState<Popup[]>([]);
 
   useEffect(() => {
-    // "오늘 다시 보지 않기" 체크
-    const dismissed = localStorage.getItem('popup_dismissed');
-    if (dismissed) {
-      const today = new Date().toISOString().slice(0, 10);
-      if (dismissed === today) return;
-    }
-
     fetch('/api/site/popup')
       .then((r) => r.json())
       .then((data) => {
-        if (data.popup && data.popup.image_file_id) {
-          setPopup(data.popup);
-          setVisible(true);
-        }
+        if (!Array.isArray(data.popups)) return;
+        const today = new Date().toISOString().slice(0, 10);
+        // 팝업별 "오늘 다시 보지 않기" 적용
+        const visible: Popup[] = data.popups.filter(
+          (p: Popup) => localStorage.getItem(`popup_dismissed_${p.id}`) !== today
+        );
+        setPopups(visible);
       })
       .catch(() => {});
   }, []);
 
-  if (!visible || !popup) return null;
+  if (popups.length === 0) return null;
 
-  const handleClose = () => setVisible(false);
+  const close = (id: number) => setPopups((prev) => prev.filter((p) => p.id !== id));
 
-  const handleDismissToday = () => {
+  const dismissToday = (id: number) => {
     const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem('popup_dismissed', today);
-    setVisible(false);
-  };
-
-  const handleImageClick = () => {
-    if (popup.link_url) {
-      window.open(popup.link_url, '_blank');
-    }
+    localStorage.setItem(`popup_dismissed_${id}`, today);
+    close(id);
   };
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)',
-      }}
-      onClick={handleClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.5)' }}
+      onClick={() => setPopups([])}
     >
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: 12,
-          overflow: 'hidden',
-          maxWidth: 480,
-          width: '90%',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          src={`/api/file/image/${popup.image_file_id}`}
-          alt="팝업"
-          style={{ width: '100%', display: 'block', cursor: popup.link_url ? 'pointer' : 'default' }}
-          onClick={handleImageClick}
-        />
-        <div style={{ display: 'flex', borderTop: '1px solid #e2e8f0' }}>
-          <button
-            onClick={handleDismissToday}
-            style={{
-              flex: 1,
-              padding: '12px',
-              border: 'none',
-              background: 'none',
-              fontSize: 14,
-              color: '#64748b',
-              cursor: 'pointer',
-              borderRight: '1px solid #e2e8f0',
-            }}
-          >
-            오늘 다시 보지 않기
-          </button>
-          <button
-            onClick={handleClose}
-            style={{
-              flex: 1,
-              padding: '12px',
-              border: 'none',
-              background: 'none',
-              fontSize: 14,
-              color: '#1e293b',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            닫기
-          </button>
+      {popups.map((p, i) => (
+        <div
+          key={p.id}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: `translate(calc(-50% + ${i * 28}px), calc(-50% + ${i * 28}px))`,
+            background: '#fff',
+            borderRadius: 12,
+            overflow: 'hidden',
+            width: '90%',
+            maxWidth: 420,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+          }}
+        >
+          <img
+            src={`/api/file/image/${p.image_file_id}`}
+            alt="팝업"
+            style={{ width: '100%', display: 'block', cursor: p.link_url ? 'pointer' : 'default' }}
+            onClick={() => p.link_url && window.open(p.link_url, '_blank')}
+          />
+          <div style={{ display: 'flex', borderTop: '1px solid #e2e8f0' }}>
+            <button
+              onClick={() => dismissToday(p.id)}
+              style={{ flex: 1, padding: 12, border: 'none', background: 'none', fontSize: 14, color: '#64748b', cursor: 'pointer', borderRight: '1px solid #e2e8f0' }}
+            >
+              오늘 다시 보지 않기
+            </button>
+            <button
+              onClick={() => close(p.id)}
+              style={{ flex: 1, padding: 12, border: 'none', background: 'none', fontSize: 14, color: '#1e293b', fontWeight: 600, cursor: 'pointer' }}
+            >
+              닫기
+            </button>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
