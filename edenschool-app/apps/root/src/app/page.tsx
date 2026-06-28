@@ -228,14 +228,15 @@ export default function HomePage() {
           <h2>이든배움국어학원 소개 영상</h2>
           <p>이든배움국어학원을 영상으로 만나보세요</p>
           <div className="about-video-player">
-            <video
-              controls
-              playsInline
-              preload="metadata"
-            >
-              <source src="/api/video/introduce.mp4" type="video/mp4" />
-              브라우저가 비디오 재생을 지원하지 않습니다.
-            </video>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+              <iframe
+                src="https://www.youtube.com/embed/oeW-xeHUekc"
+                title="이든배움국어학원 소개 영상"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
           </div>
         </div>
       </section>
