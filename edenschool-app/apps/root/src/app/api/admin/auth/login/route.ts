@@ -1,8 +1,8 @@
 import { buildUrl, safeRedirectPath } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { selectAdminUserInfoByEmail } from '@edenschool/common/queries/admin-user';
-import { verifyPassword } from '@edenschool/common/password';
+import { selectAdminUserInfoByEmail, updatePasswordById } from '@edenschool/common/queries/admin-user';
+import { verifyPassword, needsRehash, hashPassword } from '@edenschool/common/password';
 import { getAdminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 import { checkRateLimit } from '@/lib/rate-limiter';
 
@@ -26,6 +26,15 @@ export async function POST(req: NextRequest) {
     const user = await selectAdminUserInfoByEmail(email);
     if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
       return NextResponse.redirect(buildUrl('/admin/login?error=1', req));
+    }
+
+    // 레거시 SHA1 해시는 로그인 성공 시 bcrypt로 재해싱(점진 전환). 실패해도 로그인은 진행.
+    if (needsRehash(user.pw)) {
+      try {
+        await updatePasswordById(user.id, await hashPassword(pw));
+      } catch (e) {
+        console.error('Password rehash failed:', e);
+      }
     }
 
     const defaultPage = user.code === 'O' ? '/admin/statistics' : '/admin/student-manage';

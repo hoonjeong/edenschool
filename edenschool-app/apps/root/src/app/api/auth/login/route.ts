@@ -1,8 +1,8 @@
 import { buildUrl, safeRedirectPath } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { selectUserInfoByEmail } from '@edenschool/common/queries/user';
-import { verifyPassword } from '@edenschool/common/password';
+import { selectUserInfoByEmail, updateUserInfoPw } from '@edenschool/common/queries/user';
+import { verifyPassword, needsRehash, hashPassword } from '@edenschool/common/password';
 import { getSessionOptions } from '@edenschool/common/auth';
 import type { SessionData } from '@edenschool/common/auth';
 import { checkRateLimit } from '@/lib/rate-limiter';
@@ -29,6 +29,15 @@ export async function POST(req: NextRequest) {
     if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
       const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
       return NextResponse.redirect(buildUrl(errorUrl, req));
+    }
+
+    // 레거시 SHA1 해시는 로그인 성공 시 bcrypt로 재해싱(점진 전환). 실패해도 로그인은 진행.
+    if (needsRehash(user.pw)) {
+      try {
+        await updateUserInfoPw(user.id, await hashPassword(pw));
+      } catch (e) {
+        console.error('Password rehash failed:', e);
+      }
     }
 
     const response = NextResponse.redirect(buildUrl(referer || '/', req));
