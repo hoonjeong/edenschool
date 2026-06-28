@@ -68,10 +68,36 @@ export const GET = withErrorHandler(async (
   const contentType = CONTENT_TYPES[ext] || 'application/octet-stream';
   const fileSize = fileStat.size;
 
-  const range = req.headers.get('range');
+  // 캐시 검증자(ETag/Last-Modified) — 파일 크기 + 수정시각 기반
+  const etag = `"${fileSize}-${Math.floor(fileStat.mtimeMs)}"`;
+  const lastModified = fileStat.mtime.toUTCString();
+  const cacheHeaders = {
+    'Cache-Control': 'public, max-age=86400',
+    'ETag': etag,
+    'Last-Modified': lastModified,
+    'Accept-Ranges': 'bytes',
+    ...SECURITY_HEADERS,
+  };
 
-  if (range) {
-    const match = range.match(/bytes=(\d+)-(\d*)/);
+  // 조건부 요청 → 변경 없으면 304 (본문 미전송)
+  const ifNoneMatch = req.headers.get('if-none-match');
+  const ifModifiedSince = req.headers.get('if-modified-since');
+  const notModified = ifNoneMatch
+    ? ifNoneMatch === etag
+    : ifModifiedSince
+      ? new Date(ifModifiedSince).getTime() >= Math.floor(fileStat.mtimeMs / 1000) * 1000
+      : false;
+  if (notModified) {
+    return new NextResponse(null, { status: 304, headers: cacheHeaders });
+  }
+
+  // If-Range: 검증자가 일치할 때만 부분 응답, 아니면 전체 응답
+  const rangeHeader = req.headers.get('range');
+  const ifRange = req.headers.get('if-range');
+  const useRange = !!rangeHeader && (!ifRange || ifRange === etag || ifRange === lastModified);
+
+  if (useRange) {
+    const match = rangeHeader!.match(/bytes=(\d+)-(\d*)/);
     if (!match) {
       return new NextResponse('Invalid Range', { status: 416 });
     }
@@ -96,11 +122,9 @@ export const GET = withErrorHandler(async (
       status: 206,
       headers: {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-        'Accept-Ranges': 'bytes',
         'Content-Length': String(chunkSize),
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400',
-        ...SECURITY_HEADERS,
+        ...cacheHeaders,
       },
     });
   }
@@ -112,11 +136,9 @@ export const GET = withErrorHandler(async (
   return new NextResponse(webStream, {
     status: 200,
     headers: {
-      'Accept-Ranges': 'bytes',
       'Content-Length': String(fileSize),
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400',
-      ...SECURITY_HEADERS,
+      ...cacheHeaders,
     },
   });
 });
