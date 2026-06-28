@@ -28,7 +28,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       // 레거시 게시물 본문 이미지: image-view.html?id=<file_info.id>
+      // 게시글 보기(/post-view)에서 상대경로가 /image-view.html 로 해석됨
       { source: '/image-view.html', destination: '/api/legacy-image' },
+      // 에디터(/admin/write)에서는 상대경로가 /admin/image-view.html 로 해석됨 (작성 중 미리보기용)
+      { source: '/admin/image-view.html', destination: '/api/legacy-image' },
     ];
   },
 };

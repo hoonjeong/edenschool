@@ -119,7 +119,9 @@ function WriteContent() {
               const result = await uploadFileToServer(file);
               if (result) {
                 const range = quill.getSelection(true);
-                quill.insertEmbed(range.index, 'image', `/api/file/image/${result.id}`);
+                // 레거시 형식(image-view.html?id=)으로 삽입 → 예전 홈페이지와 호환되고,
+                // 새 앱에선 rewrite로 공개 legacy-image 라우트가 서빙(학생/비로그인도 표시).
+                quill.insertEmbed(range.index, 'image', `image-view.html?id=${result.id}`);
                 quill.setSelection(range.index + 1);
               } else {
                 alert('이미지 업로드에 실패했습니다.');
