@@ -62,6 +62,14 @@ export async function selectExitStudentOneMonthList(): Promise<Student[]> {
   return rows as Student[];
 }
 
+// Admin(원장): 전체 재원 학생 목록 (학생 관리 페이지용)
+export async function selectAllActiveStudents(): Promise<Student[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, name, school, grade, year, sphone, pphone, status FROM student WHERE status=1 ORDER BY name ASC`
+  );
+  return rows as Student[];
+}
+
 // Admin: selectStudentListById (students in a class)
 export async function selectStudentListByClassId(classId: number): Promise<Student[]> {
   const [rows] = await pool.query<RowDataPacket[]>(

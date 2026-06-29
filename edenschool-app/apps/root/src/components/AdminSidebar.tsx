@@ -80,7 +80,7 @@ export async function AdminSidebar() {
             <a href="/admin/new-student" className="admin-sidebar-link">
               <i className="fas fa-user-plus"></i> 학생추가
             </a>
-            <a href="/admin/student-manage" className="admin-sidebar-link">
+            <a href="/admin/student-list" className="admin-sidebar-link">
               <i className="fas fa-user-cog"></i> 학생관리
             </a>
 
