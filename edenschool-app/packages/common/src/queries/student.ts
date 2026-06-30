@@ -70,6 +70,14 @@ export async function selectAllActiveStudents(): Promise<Student[]> {
   return rows as Student[];
 }
 
+// Admin(원장): 전체 퇴원 학생 목록 (퇴원생 관리 페이지용)
+export async function selectAllExitedStudents(): Promise<Student[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, name, school, grade, year, sphone, pphone, status, date_format(modify_date, '%Y-%m-%d') as modifyDate FROM student WHERE status=0 ORDER BY modify_date DESC`
+  );
+  return rows as Student[];
+}
+
 // Admin: selectStudentListById (students in a class)
 export async function selectStudentListByClassId(classId: number): Promise<Student[]> {
   const [rows] = await pool.query<RowDataPacket[]>(

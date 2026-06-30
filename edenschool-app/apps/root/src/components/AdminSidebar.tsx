@@ -83,6 +83,9 @@ export async function AdminSidebar() {
             <a href="/admin/student-list" className="admin-sidebar-link">
               <i className="fas fa-user-cog"></i> 학생관리
             </a>
+            <a href="/admin/exit-student-list" className="admin-sidebar-link">
+              <i className="fas fa-user-slash"></i> 퇴원생 관리
+            </a>
 
             {/* 선생님 관리 */}
             <div className="admin-sidebar-section">선생님 관리</div>

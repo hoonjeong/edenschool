@@ -34,6 +34,7 @@ export async function Navbar() {
                       <a href="/admin/lecture-info">동영상 관리</a>
                       <a href="/admin/new-student">학생 추가</a>
                       <a href="/admin/student-list">학생 관리</a>
+                      <a href="/admin/exit-student-list">퇴원생 관리</a>
                       <a href="/admin/send-sms">문자보내기</a>
                     </div>
                   </div>
@@ -88,6 +89,7 @@ export async function Navbar() {
                 <a href="/admin/lecture-info"><i className="fas fa-list"></i> 동영상 관리</a>
                 <a href="/admin/new-student"><i className="fas fa-user-plus"></i> 학생 추가</a>
                 <a href="/admin/student-list"><i className="fas fa-users"></i> 학생 관리</a>
+                <a href="/admin/exit-student-list"><i className="fas fa-user-slash"></i> 퇴원생 관리</a>
                 <a href="/admin/send-sms"><i className="fas fa-sms"></i> 문자보내기</a>
               </>
             )}
