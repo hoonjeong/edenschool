@@ -39,9 +39,11 @@ export default async function StatisticsPage() {
   const exitResult: number[] = [];
 
   // Fill 12 months
+  const baseNow = new Date();
   for (let i = 11; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
+    // 1일로 고정해 월을 계산한다(말일에 setMonth가 다음 달로 넘쳐 특정 월이
+    // 빠지고 중복되는 버그 방지: 예) 6/30에서 2월로 가면 3/2로 넘침).
+    const d = new Date(baseNow.getFullYear(), baseNow.getMonth() - i, 1);
     const m = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0');
     months.push(m);
     const nr = (newChartData as any[]).find(r => r.gkey === m);
