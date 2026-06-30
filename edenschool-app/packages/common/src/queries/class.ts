@@ -126,10 +126,10 @@ export async function deleteClassStatusById(id: number): Promise<void> {
   await pool.query(`DELETE FROM class_status WHERE id=?`, [id]);
 }
 
-// Admin: endClassStatus
+// Admin: endClassStatus — 활성(status=1) 수강반만 종료(과거 종료 기록은 보존)
 export async function endClassStatus(studentId: number): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
-    `UPDATE class_status SET end_time=now(), status=0 WHERE student_id=?`,
+    `UPDATE class_status SET end_time=now(), status=0 WHERE student_id=? AND status=1`,
     [studentId]
   );
   return result.affectedRows;

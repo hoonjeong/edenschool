@@ -117,7 +117,11 @@ export default function StudentInfoClient({ student, classList, classNames }: Pr
   };
 
   const deleteStudent = async () => {
-    if (!confirm('학생을 퇴원 처리하시겠습니까?')) return;
+    const hasActiveClass = classList.some((c) => c.status === 1);
+    const message = hasActiveClass
+      ? '수강중인 반이 존재합니다. 퇴원처리 할까요?'
+      : '학생을 퇴원 처리하시겠습니까?';
+    if (!confirm(message)) return;
 
     const res = await fetch('/api/admin/student/exit', {
       method: 'POST',
