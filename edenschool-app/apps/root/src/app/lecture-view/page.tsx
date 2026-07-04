@@ -5,6 +5,7 @@ import { selectFileInfoListById } from '@edenschool/common/queries/file';
 import { selectQuestionList } from '@edenschool/common/queries/question';
 import { selectLectureProgress } from '@edenschool/common/queries/lecture-progress';
 import VimeoPlayer from './VimeoPlayer';
+import QuestionForm from './QuestionForm';
 import { sanitizeAdminHtml } from '@/lib/sanitize';
 
 export default async function LectureViewPage({
@@ -114,15 +115,7 @@ export default async function LectureViewPage({
             <i className="fas fa-comment-dots"></i> 질문 ({questions.length})
           </div>
           <div className="eden-card-body">
-            <form action="/api/question" method="POST">
-              <input type="hidden" name="lectureId" value={id} />
-              <input type="hidden" name="userId" value={session.user.id} />
-              <div className="eden-input-row">
-                <input type="text" name="text" placeholder="질문을 입력하세요" required />
-                <button type="submit" className="eden-btn eden-btn-primary">등록</button>
-              </div>
-              <p style={{ fontSize: 12, color: '#64748b', margin: '6px 0 0' }}>질문을 올리면 선생님에게 전달됩니다.</p>
-            </form>
+            <QuestionForm lectureId={id} />
             {questions.length > 0 ? (
               <div style={{ marginTop: 16 }}>
                 {questions.map((q, i) => (
