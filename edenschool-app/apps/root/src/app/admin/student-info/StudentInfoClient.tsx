@@ -104,7 +104,7 @@ export default function StudentInfoClient({ student, classList, classNames }: Pr
   const deleteClass = async (id: number) => {
     if (!confirm('수강 기록을 삭제하시겠습니까?')) return;
 
-    const res = await fetch(`/api/admin/class/status/${id}`, {
+    const res = await fetch(`/api/admin/class/status?id=${id}`, {
       method: 'DELETE',
     });
 
