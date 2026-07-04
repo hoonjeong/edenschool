@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
-import { selectClassIdByName, insertClassStatus } from '@edenschool/common/queries/class';
+import { selectClassIdByName, insertClassStatus, isStudentEnrolledInClass } from '@edenschool/common/queries/class';
 import { selectStudentById, updateStudentStatus } from '@edenschool/common/queries/student';
 import { updateUserStatus } from '@edenschool/common/queries/user';
 import { insertStudentAnalysis } from '@edenschool/common/queries/admin-user';
@@ -20,6 +20,12 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
     if (class_id === -1) {
       return NextResponse.json({ message: '존재하지 않는 반입니다.' }, { status: 404 });
+    }
+
+    // 중복 등록 방지: 해당 반에 이미 수강중(status=1)이면 등록 불가
+    const alreadyEnrolled = await isStudentEnrolledInClass(Number(student_id), class_id);
+    if (alreadyEnrolled) {
+      return NextResponse.json({ message: '이미 수강중인 반입니다.' }, { status: 409 });
     }
 
     // 배정 전 현재 상태 확인 (퇴원생 → 재원 전환일 때만 통계용 재등록 로그)
