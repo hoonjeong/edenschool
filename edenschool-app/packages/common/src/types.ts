@@ -193,6 +193,9 @@ export interface Question {
   insertTime?: string;
   date?: string;
   writer?: string;
+  answer?: string | null;
+  answerBy?: string | null;
+  answerDate?: string | null;
 }
 
 // FileInfo.java

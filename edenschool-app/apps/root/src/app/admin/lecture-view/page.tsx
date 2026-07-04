@@ -4,7 +4,8 @@ import { requireAdminSession } from '@/lib/admin-session';
 import pool from '@edenschool/common/db';
 import { selectFileInfoListById } from '@edenschool/common/queries/file';
 import { selectLectureViewLogsByLectureId } from '@edenschool/common/queries/lecture-view-log';
-import QuestionForm from './QuestionForm';
+import { selectQuestionListAdmin } from '@edenschool/common/queries/question';
+import QuestionAnswerList from './QuestionAnswerList';
 
 interface LectureRow {
   id: number;
@@ -23,21 +24,12 @@ interface FileRow {
   filesize: number;
 }
 
-interface QuestionRow {
-  id: number;
-  text: string;
-  user_id: number;
-  writer: string;
-  lecture_id: number;
-  date: string;
-}
-
 export default async function LectureViewPage({
   searchParams,
 }: {
   searchParams: Promise<{ id?: string }>;
 }) {
-  const session = await requireAdminSession();
+  await requireAdminSession();
 
   const { id } = await searchParams;
   if (!id) redirect('/admin/lecture-info');
@@ -70,15 +62,8 @@ export default async function LectureViewPage({
   // Fetch view logs
   const viewLogs = await selectLectureViewLogsByLectureId(lectureId);
 
-  // Fetch questions
-  const [questionRows] = await pool.query(
-    `SELECT q.id, q.text, q.user_id, s.name as writer, date_format(q.insert_time, "%Y-%m-%d") as date
-     FROM question q, student s, user_info u
-     WHERE q.lecture_id=? AND u.id=q.user_id AND s.id=u.student_id
-     ORDER BY q.id`,
-    [lectureId]
-  );
-  const questions = questionRows as QuestionRow[];
+  // Fetch questions (with answers)
+  const questions = await selectQuestionListAdmin(lectureId);
 
   // Extract Vimeo embed URL (only allow http/https)
   const vimeoUrl = lecture.url && /^https?:\/\//.test(lecture.url) ? lecture.url : '';
@@ -243,31 +228,10 @@ export default async function LectureViewPage({
         )}
       </div>
 
-      {/* Questions */}
+      {/* Questions & Answers */}
       <div className="mb-4">
-        <h5>질문 ({questions.length})</h5>
-
-        <QuestionForm lectureId={lectureId} userId={session.user!.id} />
-
-        {questions.length === 0 ? (
-          <p className="text-muted mt-2">질문이 없습니다.</p>
-        ) : (
-          <div className="mt-3">
-            {questions.map((q) => (
-              <div key={q.id} className="card mb-2">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between">
-                    <strong>{q.writer || '알 수 없음'}</strong>
-                    <small className="text-muted">{q.date}</small>
-                  </div>
-                  <p className="mb-0 mt-1" style={{ whiteSpace: 'pre-wrap' }}>
-                    {q.text}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <h5>질문 &amp; 답변 ({questions.length})</h5>
+        <QuestionAnswerList questions={questions} />
       </div>
     </div>
   );

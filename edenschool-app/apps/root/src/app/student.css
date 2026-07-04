@@ -869,6 +869,15 @@ body.eden-body {
   line-height: 1.5;
 }
 
+.eden-answer {
+  margin-top: 8px;
+  margin-left: 16px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-left: 3px solid var(--eden-primary, #2563eb);
+  border-radius: 6px;
+}
+
 /* ===== File List ===== */
 .eden-file-item {
   display: flex;

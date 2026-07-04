@@ -125,6 +125,18 @@ export default async function LectureViewPage({
                       <span className="eden-comment-date">{q.date}</span>
                     </div>
                     <p className="eden-comment-text">{q.text}</p>
+                    {q.answer && (
+                      <div className="eden-answer">
+                        <div className="eden-comment-header">
+                          <span className="eden-comment-author" style={{ color: 'var(--eden-primary, #2563eb)' }}>
+                            <i className="fas fa-reply" style={{ marginRight: 4 }} />
+                            {q.answerBy || '선생님'} 답변
+                          </span>
+                          <span className="eden-comment-date">{q.answerDate}</span>
+                        </div>
+                        <p className="eden-comment-text">{q.answer}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
