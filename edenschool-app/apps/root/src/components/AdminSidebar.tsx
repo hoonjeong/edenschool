@@ -45,15 +45,6 @@ export async function AdminSidebar() {
 
         {isAdmin && (
           <>
-            {/* 게시글 */}
-            <div className="admin-sidebar-section">게시글</div>
-            <a href="/admin/post-info" className="admin-sidebar-link">
-              <i className="fas fa-list"></i> 글관리
-            </a>
-            <a href="/admin/write" className="admin-sidebar-link">
-              <i className="fas fa-pen"></i> 글쓰기
-            </a>
-
             {/* 강의 */}
             <div className="admin-sidebar-section">강의</div>
             <a href="/admin/insert-lecture" className="admin-sidebar-link">
@@ -62,14 +53,17 @@ export async function AdminSidebar() {
             <a href="/admin/lecture-info" className="admin-sidebar-link">
               <i className="fas fa-chalkboard-teacher"></i> 강의관리
             </a>
-
-            {/* 수강반 */}
-            <div className="admin-sidebar-section">수강반</div>
-            <a href="/admin/new-class" className="admin-sidebar-link">
-              <i className="fas fa-plus"></i> 수강반추가
+            <a href="/admin/lecture-view-log" className="admin-sidebar-link">
+              <i className="fas fa-play-circle"></i> 영상 시청 기록
             </a>
-            <a href="/admin/class-manager" className="admin-sidebar-link">
-              <i className="fas fa-cogs"></i> 수강반관리
+
+            {/* 게시글 */}
+            <div className="admin-sidebar-section">게시글</div>
+            <a href="/admin/post-info" className="admin-sidebar-link">
+              <i className="fas fa-list"></i> 글관리
+            </a>
+            <a href="/admin/write" className="admin-sidebar-link">
+              <i className="fas fa-pen"></i> 글쓰기
             </a>
 
             {/* 학생 */}
@@ -83,14 +77,17 @@ export async function AdminSidebar() {
             <a href="/admin/exit-student-list" className="admin-sidebar-link">
               <i className="fas fa-user-slash"></i> 퇴원생 관리
             </a>
-
-            {/* 선생님 관리 */}
-            <div className="admin-sidebar-section">선생님 관리</div>
-            <a href="/admin/new-teacher" className="admin-sidebar-link">
-              <i className="fas fa-user-plus"></i> 선생님 추가
+            <a href="/admin/send-sms" className="admin-sidebar-link">
+              <i className="fas fa-sms"></i> 문자발송
             </a>
-            <a href="/admin/teacher-manager" className="admin-sidebar-link">
-              <i className="fas fa-user-cog"></i> 선생님 관리
+
+            {/* 수강반 */}
+            <div className="admin-sidebar-section">수강반</div>
+            <a href="/admin/new-class" className="admin-sidebar-link">
+              <i className="fas fa-plus"></i> 수강반추가
+            </a>
+            <a href="/admin/class-manager" className="admin-sidebar-link">
+              <i className="fas fa-cogs"></i> 수강반관리
             </a>
 
             {/* 홈페이지 관리 */}
@@ -102,16 +99,13 @@ export async function AdminSidebar() {
               <i className="fas fa-th-large"></i> 수업안내 수정
             </a>
 
-            {/* 기타 */}
-            <div className="admin-sidebar-section">기타</div>
-            <a href="/admin/send-sms" className="admin-sidebar-link">
-              <i className="fas fa-sms"></i> 문자발송
+            {/* 선생님 관리 */}
+            <div className="admin-sidebar-section">선생님 관리</div>
+            <a href="/admin/new-teacher" className="admin-sidebar-link">
+              <i className="fas fa-user-plus"></i> 선생님 추가
             </a>
-            <a href="/admin/statistics" className="admin-sidebar-link">
-              <i className="fas fa-chart-pie"></i> 통계
-            </a>
-            <a href="/admin/lecture-view-log" className="admin-sidebar-link">
-              <i className="fas fa-play-circle"></i> 영상 시청 기록
+            <a href="/admin/teacher-manager" className="admin-sidebar-link">
+              <i className="fas fa-user-cog"></i> 선생님 관리
             </a>
 
             {/* 내신 기출관리 */}
