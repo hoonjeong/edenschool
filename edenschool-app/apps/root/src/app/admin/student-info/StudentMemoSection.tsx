@@ -55,24 +55,24 @@ export default function StudentMemoSection({ studentId, initialMemos }: Props) {
   };
 
   return (
-    <div className="card mb-4">
-      <div className="card-header bg-light">
-        <strong>메모</strong>
+    <div className="card mb-4 border-secondary">
+      <div className="card-header bg-secondary text-white">
+        <strong>📝 상담기록</strong>
       </div>
       <div className="card-body">
         <div className="form-row align-items-end mb-3">
           <div className="col-md-9 mb-2">
             <textarea
               className="form-control"
-              rows={2}
+              rows={6}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="메모를 입력하세요."
+              placeholder="상담 내용을 입력하세요."
             />
           </div>
           <div className="col-md-3 mb-2">
             <button className="btn btn-primary btn-block" onClick={addMemo} disabled={saving}>
-              메모 추가
+              상담기록 추가
             </button>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function StudentMemoSection({ studentId, initialMemos }: Props) {
         <table className="table table-bordered table-hover mb-0">
           <thead className="thead-light">
             <tr>
-              <th>메모</th>
+              <th>상담내용</th>
               <th style={{ width: '150px' }}>입력날짜</th>
               <th style={{ width: '70px' }}>삭제</th>
             </tr>
@@ -88,7 +88,7 @@ export default function StudentMemoSection({ studentId, initialMemos }: Props) {
           <tbody>
             {memos.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center">등록된 메모가 없습니다.</td>
+                <td colSpan={3} className="text-center">등록된 상담기록이 없습니다.</td>
               </tr>
             ) : (
               memos.map((m) => {

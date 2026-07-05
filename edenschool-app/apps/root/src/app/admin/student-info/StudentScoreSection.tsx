@@ -218,12 +218,17 @@ export default function StudentScoreSection({
     },
   };
 
+  // 카테고리별 색상 구분 (내신=파랑 / 모의고사=초록)
+  const accent = category === 'naesin'
+    ? { border: 'border-primary', header: 'bg-primary text-white', btn: 'btn-light', icon: '📗' }
+    : { border: 'border-success', header: 'bg-success text-white', btn: 'btn-light', icon: '📘' };
+
   return (
-    <div className="card mb-4">
-      <div className="card-header bg-light d-flex justify-content-between align-items-center">
-        <strong>{title}</strong>
+    <div className={`card mb-4 ${accent.border}`}>
+      <div className={`card-header d-flex justify-content-between align-items-center ${accent.header}`}>
+        <strong>{accent.icon} {title}</strong>
         <button
-          className="btn btn-sm btn-outline-info"
+          className={`btn btn-sm ${accent.btn}`}
           onClick={() => setShowChart((v) => !v)}
         >
           {showChart ? '통계 닫기' : '성적 통계보기'}
