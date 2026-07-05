@@ -79,15 +79,6 @@ export async function updatePassByEmail(email: string, hashedPw: string): Promis
   await pool.query(`UPDATE user_info SET pw=? WHERE email=?`, [hashedPw, email]);
 }
 
-// ROOT: selectUserPhoneByEmail — get phone number for a user by email
-export async function selectUserPhoneByEmail(email: string): Promise<{ sphone: string; pphone: string } | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT sphone, pphone FROM user_info WHERE email=?`,
-    [email]
-  );
-  return rows[0] ? { sphone: rows[0].sphone, pphone: rows[0].pphone } : null;
-}
-
 // ROOT: selectUserAllInfoById
 export async function selectUserAllInfoById(id: number): Promise<Record<string, any> | null> {
   const [rows] = await pool.query<RowDataPacket[]>(

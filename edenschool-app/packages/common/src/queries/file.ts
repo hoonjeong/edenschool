@@ -29,15 +29,6 @@ export async function selectPostFileInfoListById(postId: number): Promise<FileIn
   return rows as FileInfo[];
 }
 
-// Admin: insertFileInfo (DB BLOB 저장 - 레거시/구버전 경로)
-export async function insertFileInfo(filename: string, filedata: Buffer): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO file_info (filename, filedata, insert_time) VALUES (?,?,now())`,
-    [filename, filedata]
-  );
-  return result.insertId;
-}
-
 // Admin: insertFileInfoName (파일시스템 저장 - 파일명만 DB에, filedata는 NULL)
 // 레거시와 동일 방식. 실제 바이트는 upload 폴더에 저장된다.
 export async function insertFileInfoName(filename: string): Promise<number> {

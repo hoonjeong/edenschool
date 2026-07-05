@@ -45,12 +45,3 @@ export async function answerQuestion(questionId: number, answer: string, answerB
   );
   return result.affectedRows;
 }
-
-// Admin: selectQuestionLectureId (답변 권한 검증용 — 질문이 속한 강의 id)
-export async function selectQuestionLectureId(questionId: number): Promise<number | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT lecture_id FROM question WHERE id=?`,
-    [questionId]
-  );
-  return rows[0]?.lecture_id ?? null;
-}

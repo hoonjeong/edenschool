@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { requireAdminSession } from '@/lib/admin-session';
 import pool from '@edenschool/common/db';
-import { selectPrevTestSchoolName } from '@edenschool/common/queries/prev-test';
 import type { RowDataPacket } from 'mysql2';
 import DashboardFilters from './DashboardFilters';
 import ResultTable from './ResultTable';

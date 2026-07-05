@@ -62,11 +62,6 @@ export async function updatePopupById(id: number, data: PopupInput): Promise<voi
   );
 }
 
-// 관리자: 활성/비활성 토글
-export async function setPopupActive(id: number, isActive: number): Promise<void> {
-  await pool.query(`UPDATE site_popup SET is_active=? WHERE id=?`, [isActive, id]);
-}
-
 // 관리자: 팝업 삭제
 export async function deletePopupById(id: number): Promise<void> {
   await pool.query(`DELETE FROM site_popup WHERE id=?`, [id]);
@@ -148,14 +143,6 @@ export async function selectClassDisplayListActive(): Promise<ClassDisplay[]> {
      ORDER BY cd.sort_order ASC, cd.id ASC`
   );
   return rows as ClassDisplay[];
-}
-
-export async function selectClassDisplayById(id: number): Promise<ClassDisplay | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM class_display WHERE id=?`,
-    [id]
-  );
-  return (rows[0] as ClassDisplay) || null;
 }
 
 export async function insertClassDisplay(data: {

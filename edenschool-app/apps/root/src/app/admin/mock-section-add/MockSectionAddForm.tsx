@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import FileDropZone from '@/components/FileDropZone';
 
 const AREAS = ['화법', '작문', '화법작문통합', '문법', '문학', '독서', '매체'];
 const MONTHS = [3, 4, 6, 7, 9, 10, 11];
@@ -29,9 +30,7 @@ function parseSectionName(name: string) {
 
 function MockSectionAddContent() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2005 + 1 }, (_, i) => currentYear - i);
@@ -75,7 +74,6 @@ function MockSectionAddContent() {
       else {
         alert('저장되었습니다.');
         setFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } catch { alert('저장 중 오류가 발생했습니다.'); }
     finally { setLoading(false); }
@@ -85,36 +83,7 @@ function MockSectionAddContent() {
     <div>
       <h4 className="mb-3">영역별 모의고사 추가</h4>
 
-      <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-        onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFileSelect(f); }}
-        onClick={() => fileInputRef.current?.click()}
-        style={{
-          border: `2px dashed ${isDragging ? '#007bff' : '#ced4da'}`,
-          borderRadius: 8, padding: file ? 20 : '40px 20px', textAlign: 'center',
-          cursor: 'pointer', backgroundColor: isDragging ? '#e7f1ff' : file ? '#f8f9fa' : '#fff', marginBottom: 20,
-        }}
-      >
-        <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".hwp,.hwpx,.pdf"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }} />
-        {file ? (
-          <div>
-            <div className="font-weight-bold" style={{ fontSize: 16 }}>{file.name}</div>
-            <div className="text-muted small mb-2">{(file.size / 1024).toFixed(1)} KB</div>
-            <button type="button" className="btn btn-sm btn-outline-danger"
-              onClick={(e) => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}>
-              파일 제거
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div style={{ fontSize: 32, color: isDragging ? '#007bff' : '#adb5bd', marginBottom: 8, lineHeight: 1 }}>+</div>
-            <div className="text-muted">파일을 드래그하여 놓거나 클릭하여 선택하세요</div>
-            <div className="text-muted small mt-1">HWP, PDF 파일 지원</div>
-          </div>
-        )}
-      </div>
+      <FileDropZone file={file} onSelect={handleFileSelect} onRemove={() => setFile(null)} />
 
       <div className="card mb-3">
         <div className="card-body">

@@ -1,6 +1,6 @@
 import pool from '../db';
 import type { MyDream } from '../types';
-import type { RowDataPacket, ResultSetHeader } from 'mysql2';
+import type { RowDataPacket } from 'mysql2';
 
 // ROOT: selectMyDreamByUserId
 export async function selectMyDreamByUserId(userId: number): Promise<MyDream[]> {

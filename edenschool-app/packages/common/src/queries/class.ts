@@ -177,12 +177,3 @@ export async function selectMonthlyExitStudentsByTeacher(teacherName: string): P
   );
   return rows;
 }
-
-// Admin: selectTeacherClassTestListByTeacherName
-export async function selectTeacherClassTestListByTeacherName(name: string): Promise<ClassInfo[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, teacherOne, teacherTwo, (SELECT count(0) FROM test_plan WHERE class_id=c.id) as testCount FROM class_info c WHERE (c.teacherOne=? OR c.teacherTwo=?) AND liveStatus=1 ORDER BY code ASC, name ASC`,
-    [name, name]
-  );
-  return rows as ClassInfo[];
-}

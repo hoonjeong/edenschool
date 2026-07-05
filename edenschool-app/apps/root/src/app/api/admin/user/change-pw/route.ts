@@ -3,7 +3,7 @@ import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAdminUserPwById, updatePasswordById } from '@edenschool/common/queries/admin-user';
 import { verifyPassword, hashPassword } from '@edenschool/common/password';
-import { isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
+import { isValidPassword } from '@edenschool/common/validation';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAdminApiSession();
