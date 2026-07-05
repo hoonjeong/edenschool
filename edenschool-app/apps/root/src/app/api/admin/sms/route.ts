@@ -3,7 +3,7 @@ import { sendSms } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
-import { selectSendHistory, selectSendHistoryBatch, selectSendHistoryBySenderId } from '@edenschool/common/queries/sms-log';
+import { selectSendHistoryByPhone, selectSendHistoryBatch, selectSendHistoryBySenderId } from '@edenschool/common/queries/sms-log';
 
 // GET: Fetch send history for a phone number
 export const GET = withErrorHandler(async (req: NextRequest) => {
@@ -35,7 +35,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ history: [] });
   }
 
-  const rows = await selectSendHistory(phone);
+  // 특정 번호의 발송 이력(본인 발송분)
+  const rows = await selectSendHistoryByPhone(session.user.id, phone, 30);
   return NextResponse.json({ history: rows });
 });
 

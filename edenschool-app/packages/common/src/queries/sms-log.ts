@@ -1,11 +1,14 @@
 import pool from '../db';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// Admin: selectSendHistory
-export async function selectSendHistory(num: string): Promise<Record<string, any>[]> {
+// Admin: 특정 번호의 발송 이력 (본인 발송분, 최근순). 번호는 대시 유무 무관하게 매칭.
+export async function selectSendHistoryByPhone(sendId: number, phone: string, limit: number = 30): Promise<Record<string, any>[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT message as msg, date_format(send_time, "%Y-%m-%d %h:%m") as date FROM sms_send_result_nine WHERE phone=? ORDER BY id DESC LIMIT 3`,
-    [num]
+    `SELECT phone, message, type, result_message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time
+     FROM sms_send_result_renew
+     WHERE send_id=? AND REPLACE(phone,'-','')=REPLACE(?,'-','')
+     ORDER BY id DESC LIMIT ?`,
+    [sendId, phone, limit]
   );
   return rows;
 }

@@ -72,6 +72,8 @@ export default function SmsComposer({ mode }: Props) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [myHistory, setMyHistory] = useState<SendLog[]>([]);
+  const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
+  const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
 
   const byteLength = getByteLength(message);
   const smsType = byteLength <= 90 ? 'SMS' : 'LMS';
@@ -106,6 +108,16 @@ export default function SmsComposer({ mode }: Props) {
       .then((r) => r.json())
       .then((data) => setMyHistory(data.history || []))
       .catch(() => {});
+  };
+
+  // 특정 번호의 발송 이력 조회 (선택한 번호 기준)
+  const fetchNumberHistory = (phone: string) => {
+    if (!phone) return;
+    setSelectedNumber(phone);
+    fetch(`/api/admin/sms?phone=${encodeURIComponent(phone)}`)
+      .then((r) => r.json())
+      .then((data) => setNumberHistory(data.history || []))
+      .catch(() => setNumberHistory([]));
   };
 
   useEffect(() => {
@@ -187,9 +199,11 @@ export default function SmsComposer({ mode }: Props) {
 
   const handlePhoneToggle = (phone: string) => {
     if (!phone) return;
+    const isAdding = !checkedPhones.includes(phone);
     setCheckedPhones((prev) =>
       prev.includes(phone) ? prev.filter((p) => p !== phone) : [...prev, phone]
     );
+    if (isAdding) fetchNumberHistory(phone); // 최근 선택한 번호의 이력 표시
   };
 
   const handleAllStudentToggle = (checked: boolean) => {
@@ -197,6 +211,7 @@ export default function SmsComposer({ mode }: Props) {
 
     if (checked) {
       setCheckedPhones((prev) => [...new Set([...prev, ...phones])]);
+      if (phones.length) fetchNumberHistory(phones[phones.length - 1]);
     } else {
       const parentPhones = studentList.map((s) => s.pphone).filter(Boolean);
       setCheckedPhones((prev) => prev.filter((p) => parentPhones.includes(p)));
@@ -208,6 +223,7 @@ export default function SmsComposer({ mode }: Props) {
 
     if (checked) {
       setCheckedPhones((prev) => [...new Set([...prev, ...phones])]);
+      if (phones.length) fetchNumberHistory(phones[phones.length - 1]);
     } else {
       const studentPhones = studentList.map((s) => s.sphone).filter(Boolean);
       setCheckedPhones((prev) => prev.filter((p) => studentPhones.includes(p)));
@@ -301,6 +317,7 @@ export default function SmsComposer({ mode }: Props) {
       } else {
         setResult(`발송 완료: 총 ${data.count || checkedPhones.length}건`);
         fetchMyHistory();
+        if (selectedNumber) fetchNumberHistory(selectedNumber);
       }
     } catch {
       setResult('발송 중 오류가 발생했습니다.');
@@ -316,7 +333,40 @@ export default function SmsComposer({ mode }: Props) {
     setMessage('');
     setResult(null);
     setSearchQuery('');
+    setSelectedNumber(null);
+    setNumberHistory([]);
   };
+
+  // 발송 이력 테이블 렌더 (개별/전체 공용)
+  const renderHistory = (list: SendLog[], emptyText: string) =>
+    list.length > 0 ? (
+      <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+        <table className="table table-sm" style={{ marginBottom: 0, fontSize: '12px' }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '6px 10px' }}>수신번호</th>
+              <th style={{ padding: '6px 10px' }}>내용</th>
+              <th style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>발송시간</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((h, i) => (
+              <tr key={i}>
+                <td style={{ padding: '4px 10px', whiteSpace: 'nowrap' }}>{h.phone}</td>
+                <td style={{ padding: '4px 10px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {h.message}
+                </td>
+                <td style={{ padding: '4px 10px', whiteSpace: 'nowrap', color: '#64748b' }}>{h.send_time}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '16px 0' }}>
+        {emptyText}
+      </div>
+    );
 
   /* ─── Render ─── */
   return (
@@ -497,30 +547,39 @@ export default function SmsComposer({ mode }: Props) {
                 {/* Selected chips */}
                 {checkedPhones.length > 0 && (
                   <div style={{ padding: '8px 12px', borderTop: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
-                    {checkedPhones.map((phone) => (
-                      <span
-                        key={phone}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '2px 8px',
-                          backgroundColor: '#eff6ff',
-                          border: '1px solid #bfdbfe',
-                          borderRadius: '12px',
-                          fontSize: '11px',
-                          color: '#1e40af',
-                        }}
-                      >
-                        {phoneNameMap[phone] || phone}
+                    {checkedPhones.map((phone) => {
+                      const active = phone === selectedNumber;
+                      return (
                         <span
-                          onClick={() => removePhone(phone)}
-                          style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '2px', color: '#6b7280' }}
+                          key={phone}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '2px 8px',
+                            backgroundColor: active ? '#2563eb' : '#eff6ff',
+                            border: `1px solid ${active ? '#2563eb' : '#bfdbfe'}`,
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            color: active ? '#fff' : '#1e40af',
+                          }}
                         >
-                          ×
+                          <span
+                            onClick={() => fetchNumberHistory(phone)}
+                            style={{ cursor: 'pointer' }}
+                            title="이 번호의 발송 이력 보기"
+                          >
+                            {phoneNameMap[phone] || phone}
+                          </span>
+                          <span
+                            onClick={() => removePhone(phone)}
+                            style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '2px', color: active ? '#dbeafe' : '#6b7280' }}
+                          >
+                            ×
+                          </span>
                         </span>
-                      </span>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </>
@@ -624,38 +683,36 @@ export default function SmsComposer({ mode }: Props) {
           </div>
         </div>
 
-        {/* ═══ Card 4: 최근 발송 이력 ═══ */}
+        {/* ═══ Card 4: 발송 이력 (개별 / 전체 구분) ═══ */}
         <div className="card">
-          <div className="card-header">4. 최근 발송 이력</div>
-          <div className="card-body" style={{ padding: myHistory.length > 0 ? 0 : undefined }}>
-            {myHistory.length > 0 ? (
-              <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
-                <table className="table table-sm" style={{ marginBottom: 0, fontSize: '12px' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ padding: '6px 10px' }}>수신번호</th>
-                      <th style={{ padding: '6px 10px' }}>내용</th>
-                      <th style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>발송시간</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myHistory.map((h, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '4px 10px', whiteSpace: 'nowrap' }}>{h.phone}</td>
-                        <td style={{ padding: '4px 10px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {h.message}
-                        </td>
-                        <td style={{ padding: '4px 10px', whiteSpace: 'nowrap', color: '#64748b' }}>{h.send_time}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '20px 0' }}>
-                발송 이력이 없습니다.
-              </div>
-            )}
+          <div className="card-header">4. 발송 이력</div>
+          <div className="card-body">
+            {/* 개별 발송 이력 (선택한 번호) */}
+            <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px' }}>
+              <i className="fas fa-user" style={{ marginRight: 4, color: '#2563eb' }}></i>
+              개별 발송 이력
+              {selectedNumber && (
+                <span style={{ color: '#2563eb', marginLeft: 6, fontWeight: 500 }}>
+                  · {phoneNameMap[selectedNumber] || selectedNumber} ({selectedNumber})
+                </span>
+              )}
+            </div>
+            {selectedNumber
+              ? renderHistory(numberHistory, '이 번호로 보낸 이력이 없습니다.')
+              : (
+                <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '16px 0' }}>
+                  수신번호를 선택(또는 아래 칩 클릭)하면 해당 번호의 발송 이력이 표시됩니다.
+                </div>
+              )}
+
+            <hr style={{ margin: '14px 0' }} />
+
+            {/* 전체 발송 이력 (본인 발송 전체) */}
+            <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px' }}>
+              <i className="fas fa-list" style={{ marginRight: 4, color: '#64748b' }}></i>
+              전체 발송 이력 <span style={{ color: '#94a3b8', fontWeight: 400 }}>(내가 보낸 최근)</span>
+            </div>
+            {renderHistory(myHistory, '발송 이력이 없습니다.')}
           </div>
         </div>
       </div>
