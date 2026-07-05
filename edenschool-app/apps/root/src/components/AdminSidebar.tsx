@@ -45,27 +45,6 @@ export async function AdminSidebar() {
 
         {isAdmin && (
           <>
-            {/* 내신 기출관리 */}
-            <div className="admin-sidebar-section">내신 기출관리</div>
-            <a href="/admin/prev-test-add?region=부천" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 부천지역 기출
-            </a>
-            <a href="/admin/prev-test-add?region=타지역" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 타지역 기출
-            </a>
-            <a href="/admin/split-file-add" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 쪼개기 파일
-            </a>
-
-            {/* 모의고사 기출관리 */}
-            <div className="admin-sidebar-section">모의고사 기출관리</div>
-            <a href="/admin/mock-full-add" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 풀세트 모의고사
-            </a>
-            <a href="/admin/mock-section-add" className="admin-sidebar-link">
-              <i className="fas fa-plus-circle"></i> 영역별 모의고사
-            </a>
-
             {/* 게시글 */}
             <div className="admin-sidebar-section">게시글</div>
             <a href="/admin/post-info" className="admin-sidebar-link">
@@ -133,6 +112,27 @@ export async function AdminSidebar() {
             </a>
             <a href="/admin/lecture-view-log" className="admin-sidebar-link">
               <i className="fas fa-play-circle"></i> 영상 시청 기록
+            </a>
+
+            {/* 내신 기출관리 */}
+            <div className="admin-sidebar-section">내신 기출관리</div>
+            <a href="/admin/prev-test-add?region=부천" className="admin-sidebar-link">
+              <i className="fas fa-plus-circle"></i> 부천지역 기출
+            </a>
+            <a href="/admin/prev-test-add?region=타지역" className="admin-sidebar-link">
+              <i className="fas fa-plus-circle"></i> 타지역 기출
+            </a>
+            <a href="/admin/split-file-add" className="admin-sidebar-link">
+              <i className="fas fa-plus-circle"></i> 쪼개기 파일
+            </a>
+
+            {/* 모의고사 기출관리 */}
+            <div className="admin-sidebar-section">모의고사 기출관리</div>
+            <a href="/admin/mock-full-add" className="admin-sidebar-link">
+              <i className="fas fa-plus-circle"></i> 풀세트 모의고사
+            </a>
+            <a href="/admin/mock-section-add" className="admin-sidebar-link">
+              <i className="fas fa-plus-circle"></i> 영역별 모의고사
             </a>
 
             {/* 개발중 */}
