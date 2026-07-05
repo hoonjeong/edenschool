@@ -5,7 +5,7 @@ import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 // ROOT: selectLectureListByStudentId
 export async function selectLectureListByStudentId(studentId: number): Promise<Lecture[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT l.subject, l.id, l.teacher, l.lecture_date as lectureDate FROM lecture l, class_status s WHERE s.student_id=? AND s.status=1 AND l.class_id=s.class_id AND l.insert_time>s.start_time AND if(s.end_time IS NULL, now(), s.end_time)>l.insert_time ORDER BY l.id DESC`,
+    `SELECT DISTINCT l.subject, l.id, l.teacher, l.lecture_date as lectureDate FROM lecture l, class_status s WHERE s.student_id=? AND l.class_id=s.class_id AND l.insert_time>s.start_time AND if(s.end_time IS NULL, now(), s.end_time)>l.insert_time ORDER BY l.id DESC`,
     [studentId]
   );
   return rows as Lecture[];
@@ -14,7 +14,7 @@ export async function selectLectureListByStudentId(studentId: number): Promise<L
 // ROOT: selectSpecialLectureListByStudentId
 export async function selectSpecialLectureListByStudentId(studentId: number): Promise<Lecture[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT l.subject, l.id, l.teacher, l.lecture_date as lectureDate FROM lecture l, class_status s WHERE s.student_id=? AND s.status=1 AND l.code="E" AND l.insert_time>(s.start_time - INTERVAL 1 MONTH) AND if(s.end_time IS NULL, now(), s.end_time)>l.insert_time ORDER BY id DESC`,
+    `SELECT DISTINCT l.subject, l.id, l.teacher, l.lecture_date as lectureDate FROM lecture l, class_status s WHERE s.student_id=? AND l.code="E" AND l.insert_time>(s.start_time - INTERVAL 1 MONTH) AND if(s.end_time IS NULL, now(), s.end_time)>l.insert_time ORDER BY id DESC`,
     [studentId]
   );
   return rows as Lecture[];
@@ -54,13 +54,13 @@ export async function isLectureAccessibleByStudent(lectureId: number, studentId:
       l.code IN ('F','S')
       OR EXISTS (
         SELECT 1 FROM class_status s
-        WHERE s.student_id=? AND s.status=1 AND l.class_id=s.class_id
+        WHERE s.student_id=? AND l.class_id=s.class_id
           AND l.insert_time>s.start_time
           AND IF(s.end_time IS NULL, NOW(), s.end_time)>l.insert_time
       )
       OR (l.code='E' AND EXISTS (
         SELECT 1 FROM class_status s
-        WHERE s.student_id=? AND s.status=1
+        WHERE s.student_id=?
           AND l.insert_time>(s.start_time - INTERVAL 1 MONTH)
           AND IF(s.end_time IS NULL, NOW(), s.end_time)>l.insert_time
       ))
