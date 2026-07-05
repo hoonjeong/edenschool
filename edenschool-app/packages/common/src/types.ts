@@ -346,6 +346,28 @@ export interface QnaComment {
   writer?: string;
 }
 
+// StudentMemo (학생 메모)
+export interface StudentMemo {
+  id: number;
+  studentId: number;
+  content: string;
+  insertTime?: string;
+  date?: string;
+}
+
+// StudentScore (학생 성적 - 내신/모의고사 공용)
+export interface StudentScore {
+  id: number;
+  studentId: number;
+  category: 'naesin' | 'mock';
+  testName: string;
+  rawScore: number | null;
+  gradeRank: number | null;
+  memo: string | null;
+  insertTime?: string;
+  date?: string;
+}
+
 // LectureViewLogWithStudent (관리자용)
 export interface LectureViewLogWithStudent {
   id: number;

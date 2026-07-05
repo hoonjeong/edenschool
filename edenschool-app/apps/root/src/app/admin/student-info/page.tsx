@@ -1,7 +1,10 @@
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectClassInfoByStudentId, selectClassInfoLive } from '@edenschool/common/queries/class';
+import { selectStudentMemos, selectStudentScores } from '@edenschool/common/queries/student-record';
 import StudentInfoClient from './StudentInfoClient';
+import StudentMemoSection from './StudentMemoSection';
+import StudentScoreSection from './StudentScoreSection';
 
 export default async function StudentInfoPage({
   searchParams,
@@ -31,9 +34,15 @@ export default async function StudentInfoPage({
     );
   }
 
-  const classList = await selectClassInfoByStudentId(Number(studentId));
-
+  const sid = Number(studentId);
+  const classList = await selectClassInfoByStudentId(sid);
   const classNames = await selectClassInfoLive();
+
+  const [memos, naesinScores, mockScores] = await Promise.all([
+    selectStudentMemos(sid),
+    selectStudentScores(sid, 'naesin'),
+    selectStudentScores(sid, 'mock'),
+  ]);
 
   return (
     <div>
@@ -41,6 +50,26 @@ export default async function StudentInfoPage({
         student={student}
         classList={classList}
         classNames={classNames}
+      />
+
+      <hr className="my-4" />
+
+      <StudentMemoSection studentId={sid} initialMemos={memos} />
+
+      <StudentScoreSection
+        studentId={sid}
+        category="naesin"
+        title="내신 성적 관리"
+        nameLabel="내신시험명"
+        initialScores={naesinScores}
+      />
+
+      <StudentScoreSection
+        studentId={sid}
+        category="mock"
+        title="모의고사 성적 관리"
+        nameLabel="모의고사명"
+        initialScores={mockScores}
       />
     </div>
   );
