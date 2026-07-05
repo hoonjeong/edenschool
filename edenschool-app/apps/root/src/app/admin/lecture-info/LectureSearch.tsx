@@ -13,9 +13,24 @@ interface LectureRow {
   code: string;
 }
 
-export default function LectureSearch({ lectures }: { lectures: LectureRow[] }) {
+interface Props {
+  lectures: LectureRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+  search: string;
+}
+
+export default function LectureSearch({ lectures, total, page, totalPages, search }: Props) {
   const router = useRouter();
-  const [search, setSearch] = useState('');
+  const [keyword, setKeyword] = useState(search);
+
+  const doSearch = () => {
+    const sp = new URLSearchParams();
+    if (keyword.trim()) sp.set('search', keyword.trim());
+    const qs = sp.toString();
+    router.push(`/admin/lecture-info${qs ? '?' + qs : ''}`);
+  };
 
   const handleDelete = async (id: number) => {
     if (!confirm('이 강의를 삭제하시겠습니까?')) return;
@@ -37,27 +52,30 @@ export default function LectureSearch({ lectures }: { lectures: LectureRow[] }) 
     }
   };
 
-  const filtered = lectures.filter((lec) => {
-    const keyword = search.toLowerCase();
-    return (
-      lec.subject.toLowerCase().includes(keyword) ||
-      lec.className.toLowerCase().includes(keyword) ||
-      lec.teacher.toLowerCase().includes(keyword) ||
-      lec.date.includes(keyword) ||
-      (lec.code && lec.code.toLowerCase().includes(keyword))
-    );
-  });
+  function pageUrl(p: number) {
+    const sp = new URLSearchParams();
+    if (search) sp.set('search', search);
+    if (p > 1) sp.set('page', String(p));
+    const qs = sp.toString();
+    return `/admin/lecture-info${qs ? '?' + qs : ''}`;
+  }
 
   return (
     <>
-      <div className="mb-3">
+      <div className="input-group mb-3">
         <input
           type="text"
           className="form-control"
-          placeholder="검색 (제목, 반이름, 선생님, 날짜, 코드)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          placeholder="검색 (제목, 반이름, 선생님, 날짜) — Enter"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') doSearch(); }}
         />
+        <div className="input-group-append">
+          <button className="btn btn-primary" type="button" onClick={doSearch}>
+            <i className="fas fa-search"></i> 검색
+          </button>
+        </div>
       </div>
 
       <table className="table table-bordered table-hover">
@@ -73,37 +91,28 @@ export default function LectureSearch({ lectures }: { lectures: LectureRow[] }) 
           </tr>
         </thead>
         <tbody>
-          {filtered.length === 0 ? (
+          {lectures.length === 0 ? (
             <tr>
               <td colSpan={7} className="text-center">
-                강의가 없습니다.
+                {search ? '검색 결과가 없습니다.' : '강의가 없습니다.'}
               </td>
             </tr>
           ) : (
-            filtered.map((lec) => (
+            lectures.map((lec) => (
               <tr key={lec.id}>
                 <td className="text-center">{lec.id}</td>
                 <td>
-                  <Link href={`/admin/lecture-view?id=${lec.id}`}>
-                    {lec.subject}
-                  </Link>
+                  <Link href={`/admin/lecture-view?id=${lec.id}`}>{lec.subject}</Link>
                 </td>
                 <td className="text-center">{lec.className}</td>
                 <td className="text-center">{lec.teacher}</td>
                 <td className="text-center">{lec.date}</td>
                 <td className="text-center">{lec.code}</td>
                 <td className="text-center">
-                  <Link
-                    href={`/admin/lecture-modify?id=${lec.id}`}
-                    className="btn btn-sm btn-warning mr-1"
-                  >
+                  <Link href={`/admin/lecture-modify?id=${lec.id}`} className="btn btn-sm btn-warning mr-1">
                     수정
                   </Link>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(lec.id)}
-                  >
+                  <button type="button" className="btn btn-sm btn-danger" onClick={() => handleDelete(lec.id)}>
                     삭제
                   </button>
                 </td>
@@ -113,10 +122,30 @@ export default function LectureSearch({ lectures }: { lectures: LectureRow[] }) 
         </tbody>
       </table>
 
-      <p className="text-muted">
-        총 {filtered.length}건
-        {search && ` (전체 ${lectures.length}건 중)`}
-      </p>
+      <div className="d-flex justify-content-between align-items-center">
+        <p className="text-muted mb-0">총 {total}건 (페이지 {page}/{totalPages || 1})</p>
+        {totalPages > 1 && (
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              {page > 1 && (
+                <li className="page-item"><Link className="page-link" href={pageUrl(page - 1)}>이전</Link></li>
+              )}
+              {Array.from({ length: Math.min(10, totalPages) }, (_, i) => {
+                const start = totalPages <= 10 ? 1 : Math.max(1, Math.min(page - 4, totalPages - 9));
+                const p = start + i;
+                return (
+                  <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
+                    <Link className="page-link" href={pageUrl(p)}>{p}</Link>
+                  </li>
+                );
+              })}
+              {page < totalPages && (
+                <li className="page-item"><Link className="page-link" href={pageUrl(page + 1)}>다음</Link></li>
+              )}
+            </ul>
+          </nav>
+        )}
+      </div>
     </>
   );
 }

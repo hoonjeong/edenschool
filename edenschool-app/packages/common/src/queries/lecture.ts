@@ -70,12 +70,35 @@ export async function isLectureAccessibleByStudent(lectureId: number, studentId:
   return rows.length > 0;
 }
 
-// Admin: selectLectureList
-export async function selectLectureList(): Promise<Lecture[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT l.id, l.subject, l.teacher, if(i.name IS NULL, "특강", i.name) as className, l.code, l.lecture_date as lectureDate FROM lecture l LEFT JOIN class_info i ON l.class_id=i.id ORDER BY id DESC LIMIT 300`
+// Admin: searchLectureList (강의관리 — 서버사이드 검색 + 페이징)
+export async function searchLectureList(params: { search?: string; page?: number; pageSize?: number }): Promise<{ list: Lecture[]; total: number }> {
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 50;
+  const offset = (page - 1) * pageSize;
+
+  let where = '';
+  const qp: any[] = [];
+  if (params.search) {
+    where = `WHERE (l.subject LIKE ? OR l.teacher LIKE ? OR i.name LIKE ? OR l.lecture_date LIKE ?)`;
+    const kw = `%${params.search}%`;
+    qp.push(kw, kw, kw, kw);
+  }
+
+  const [cnt] = await pool.query<RowDataPacket[]>(
+    `SELECT COUNT(*) as cnt FROM lecture l LEFT JOIN class_info i ON l.class_id=i.id ${where}`,
+    qp
   );
-  return rows as Lecture[];
+  const total = cnt[0].cnt as number;
+
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT l.id, l.subject, l.teacher, if(i.name IS NULL, "특강", i.name) as className, l.code, l.lecture_date as lectureDate
+     FROM lecture l LEFT JOIN class_info i ON l.class_id=i.id
+     ${where}
+     ORDER BY l.id DESC
+     LIMIT ? OFFSET ?`,
+    [...qp, pageSize, offset]
+  );
+  return { list: rows as Lecture[], total };
 }
 
 // Admin: selectLectureListByAdminName
