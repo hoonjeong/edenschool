@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
       phone: user.phone || '',
       code: user.code,
     };
+    session.autoLogin = autoLogin;
     await session.save();
 
     return response;

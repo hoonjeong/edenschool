@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/api-handler';
-import { requireApiSession } from '@/lib/session';
+import { requireApiSession, getSessionForSave } from '@/lib/session';
 import { checkUsedEmail, updateUserInfo } from '@edenschool/common/queries/user';
 import { isValidEmail, normalizePhone, isValidPhone } from '@edenschool/common/validation';
 
@@ -27,9 +27,12 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   await updateUserInfo(session.user.studentId!, email, normalizedSphone, normalizedPphone);
 
-  // Update session
-  session.user.email = email;
-  await session.save();
+  // 세션의 이메일 갱신 — 자동로그인 지속성(쿠키 수명)을 유지한 채 재저장
+  const saveSession = await getSessionForSave(session.autoLogin ?? false);
+  if (saveSession.user) {
+    saveSession.user.email = email;
+    await saveSession.save();
+  }
 
   return NextResponse.json({ success: true });
 });

@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       name: user.name,
       code: user.code,
     };
+    session.autoLogin = autoLogin;
     await session.save();
 
     return response;

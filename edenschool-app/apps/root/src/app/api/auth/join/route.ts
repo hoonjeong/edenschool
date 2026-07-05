@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     name: student.name,
     code: 'S',
   };
+  session.autoLogin = false;
   await session.save();
 
   return response;
