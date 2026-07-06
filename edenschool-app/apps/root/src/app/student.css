@@ -398,8 +398,8 @@ body.eden-body {
 .eden-board-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 17px 18px;
+  gap: 14px;
+  padding: 26px 20px;
   border-bottom: 1px solid #f1f5f9;
   text-decoration: none;
   color: var(--eden-text);
@@ -446,7 +446,7 @@ body.eden-body {
   line-height: 1.55;
   color: var(--eden-text-muted);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -458,8 +458,8 @@ body.eden-body {
 
 .eden-board-thumb {
   flex: none;
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--eden-border);
@@ -1170,8 +1170,8 @@ body.eden-body {
   }
 
   .eden-board-item {
-    padding: 15px;
-    gap: 10px;
+    padding: 20px 15px;
+    gap: 12px;
   }
 
   .eden-board-title {
@@ -1183,8 +1183,8 @@ body.eden-body {
   }
 
   .eden-board-thumb {
-    width: 54px;
-    height: 54px;
+    width: 76px;
+    height: 76px;
   }
 }
 
