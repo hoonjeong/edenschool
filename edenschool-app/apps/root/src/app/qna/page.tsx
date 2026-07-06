@@ -1,14 +1,8 @@
 import { selectQnaPostList } from '@edenschool/common/queries/qna';
 import { getSession } from '@/lib/session';
 import { BoardList } from '@/components/BoardList';
-import { stripHtml } from '@/lib/sanitize';
+import { toPreviewText, extractFirstImage } from '@/lib/board-preview';
 import { QnaWriteButton } from './QnaWriteButton';
-
-function toPreview(html?: string): string {
-  if (!html) return '';
-  const text = stripHtml(html);
-  return text.length > 160 ? text.slice(0, 160) + '…' : text;
-}
 
 const BOARD_CATEGORIES = [
   { code: 'N', label: '공지사항', href: '/board?category=N' },
@@ -46,7 +40,8 @@ export default async function QnaPage() {
           id: item.id,
           subject: item.subject,
           href: `/qna/${item.id}`,
-          preview: toPreview(item.contents),
+          preview: toPreviewText(item.contents),
+          thumbnail: extractFirstImage(item.contents),
           commentCount: item.commentCount ?? 0,
         }))}
         emptyText="질문이 없습니다."

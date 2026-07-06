@@ -451,6 +451,21 @@ body.eden-body {
   overflow: hidden;
 }
 
+.eden-board-preview-muted {
+  font-style: italic;
+  color: #94a3b8;
+}
+
+.eden-board-thumb {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--eden-border);
+  background: #f1f5f9;
+}
+
 .eden-board-badge {
   flex: none;
   display: inline-flex;
@@ -1165,6 +1180,11 @@ body.eden-body {
 
   .eden-board-preview {
     font-size: 12.5px;
+  }
+
+  .eden-board-thumb {
+    width: 54px;
+    height: 54px;
   }
 }
 

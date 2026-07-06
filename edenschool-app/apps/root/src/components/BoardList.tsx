@@ -7,6 +7,7 @@ export interface BoardListItem {
   subject: string;
   href: string;
   preview?: string;
+  thumbnail?: string | null;
   commentCount?: number;
 }
 
@@ -50,10 +51,23 @@ export function BoardList({
                   {item.commentCount ?? 0}
                 </span>
               </div>
-              {item.preview && (
+              {item.preview ? (
                 <p className="eden-board-preview">{item.preview}</p>
-              )}
+              ) : item.thumbnail ? (
+                <p className="eden-board-preview eden-board-preview-muted">
+                  이미지 게시글입니다.
+                </p>
+              ) : null}
             </div>
+            {item.thumbnail && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="eden-board-thumb"
+                src={item.thumbnail}
+                alt=""
+                loading="lazy"
+              />
+            )}
             <i className="fas fa-chevron-right eden-board-arrow"></i>
           </a>
         ))}
