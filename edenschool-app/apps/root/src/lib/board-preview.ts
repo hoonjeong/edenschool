@@ -1,6 +1,6 @@
 /** 본문 HTML(또는 태그가 섞인 텍스트)에서 앞부분을 잘라 발췌로 만든다.
  *  미리보기 전용이라 태그 제거는 가벼운 regex로 처리(결과는 JSX에서 escape되어 렌더). 없으면 '' */
-export function toPreviewText(text0?: string | null, maxLen = 300): string {
+export function toPreviewText(text0?: string | null, maxLen = 120): string {
   if (!text0) return '';
   const text = String(text0)
     .replace(/<[^>]*>/g, ' ') // 태그 제거
