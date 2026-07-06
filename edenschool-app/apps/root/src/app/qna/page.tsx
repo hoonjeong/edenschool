@@ -1,7 +1,14 @@
 import { selectQnaPostList } from '@edenschool/common/queries/qna';
 import { getSession } from '@/lib/session';
-import { SearchTable } from '@/components/SearchTable';
+import { BoardList } from '@/components/BoardList';
+import { stripHtml } from '@/lib/sanitize';
 import { QnaWriteButton } from './QnaWriteButton';
+
+function toPreview(html?: string): string {
+  if (!html) return '';
+  const text = stripHtml(html);
+  return text.length > 100 ? text.slice(0, 100) + '…' : text;
+}
 
 const BOARD_CATEGORIES = [
   { code: 'N', label: '공지사항', href: '/board?category=N' },
@@ -34,44 +41,16 @@ export default async function QnaPage() {
         </a>
       </div>
 
-      <SearchTable>
-        <table className="eden-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>제목</th>
-              <th>작성자</th>
-              <th>날짜</th>
-              <th>조회</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((item, i) => (
-              <tr key={item.id}>
-                <td className="text-center">{list.length - i}</td>
-                <td>
-                  <a href={`/qna/${item.id}`}>
-                    {item.subject}
-                    {(item.commentCount ?? 0) > 0 && (
-                      <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 4 }}>
-                        ({item.commentCount})
-                      </span>
-                    )}
-                  </a>
-                </td>
-                <td className="text-center">{item.writer ?? '-'}</td>
-                <td className="text-center">{item.date}</td>
-                <td className="text-center">{item.readCount}</td>
-              </tr>
-            ))}
-            {list.length === 0 && (
-              <tr className="eden-empty">
-                <td colSpan={5}>게시글이 없습니다.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </SearchTable>
+      <BoardList
+        items={list.map((item) => ({
+          id: item.id,
+          subject: item.subject,
+          href: `/qna/${item.id}`,
+          preview: toPreview(item.contents),
+          commentCount: item.commentCount ?? 0,
+        }))}
+        emptyText="질문이 없습니다."
+      />
 
       <div style={{ marginTop: 16, textAlign: 'right' }}>
         <QnaWriteButton isLoggedIn={isLoggedIn} />

@@ -1,5 +1,12 @@
 import { selectPostInfoList } from '@edenschool/common/queries/post';
-import { SearchTable } from '@/components/SearchTable';
+import { BoardList } from '@/components/BoardList';
+import { stripHtml } from '@/lib/sanitize';
+
+function toPreview(html?: string): string {
+  if (!html) return '';
+  const text = stripHtml(html);
+  return text.length > 100 ? text.slice(0, 100) + '…' : text;
+}
 
 const CATEGORIES = [
   { code: 'N', label: '공지사항' },
@@ -40,35 +47,15 @@ export default async function BoardPage({
         </a>
       </div>
 
-      <SearchTable>
-        <table className="eden-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>제목</th>
-              <th>작성자</th>
-              <th>날짜</th>
-              <th>댓글</th>
-              <th>조회</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((item, i) => (
-              <tr key={item.id}>
-                <td className="text-center">{list.length - i}</td>
-                <td><a href={`/post-view?id=${item.id}`}>{item.subject}</a></td>
-                <td className="text-center">{item.writer ?? '-'}</td>
-                <td className="text-center">{item.date}</td>
-                <td className="text-center">{item.commentCount ?? 0}</td>
-                <td className="text-center">{item.readCount}</td>
-              </tr>
-            ))}
-            {list.length === 0 && (
-              <tr className="eden-empty"><td colSpan={6}>게시글이 없습니다.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </SearchTable>
+      <BoardList
+        items={list.map((item) => ({
+          id: item.id,
+          subject: item.subject,
+          href: `/post-view?id=${item.id}`,
+          preview: toPreview(item.contents),
+          commentCount: item.commentCount ?? 0,
+        }))}
+      />
     </div>
   );
 }

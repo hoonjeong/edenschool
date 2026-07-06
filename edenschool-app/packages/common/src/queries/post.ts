@@ -4,7 +4,7 @@ import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 // ROOT: selectPostInfoList
 export async function selectPostInfoList(code: string, category?: string): Promise<PostInfo[]> {
-  let sql = `SELECT p.id, p.subject, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;
+  let sql = `SELECT p.id, p.subject, LEFT(p.contents, 500) as contents, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;
   const params: any[] = [code];
   if (category) {
     sql += ` AND category=?`;
