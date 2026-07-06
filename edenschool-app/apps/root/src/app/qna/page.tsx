@@ -7,7 +7,7 @@ import { QnaWriteButton } from './QnaWriteButton';
 function toPreview(html?: string): string {
   if (!html) return '';
   const text = stripHtml(html);
-  return text.length > 100 ? text.slice(0, 100) + '…' : text;
+  return text.length > 160 ? text.slice(0, 160) + '…' : text;
 }
 
 const BOARD_CATEGORIES = [

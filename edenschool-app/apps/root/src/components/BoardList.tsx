@@ -41,12 +41,14 @@ export function BoardList({
             <div className="eden-board-main">
               <div className="eden-board-title-row">
                 <span className="eden-board-title">{item.subject}</span>
-                {(item.commentCount ?? 0) > 0 && (
-                  <span className="eden-board-badge">
-                    <i className="far fa-comment"></i>
-                    {item.commentCount}
-                  </span>
-                )}
+                <span
+                  className={`eden-board-badge${
+                    (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
+                  }`}
+                >
+                  <i className="far fa-comment"></i>
+                  {item.commentCount ?? 0}
+                </span>
               </div>
               {item.preview && (
                 <p className="eden-board-preview">{item.preview}</p>

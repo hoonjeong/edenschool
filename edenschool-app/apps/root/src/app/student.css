@@ -441,12 +441,12 @@ body.eden-body {
 }
 
 .eden-board-preview {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--eden-text-muted);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -458,10 +458,15 @@ body.eden-body {
   gap: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--eden-primary);
-  background: var(--eden-primary-light);
+  color: var(--eden-text-muted);
+  background: #f1f5f9;
   padding: 3px 9px;
   border-radius: 999px;
+}
+
+.eden-board-badge.has-comments {
+  color: var(--eden-primary);
+  background: var(--eden-primary-light);
 }
 
 .eden-board-arrow {
