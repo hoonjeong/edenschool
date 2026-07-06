@@ -1,16 +1,9 @@
 import { selectQnaPostList } from '@edenschool/common/queries/qna';
 import { getSession } from '@/lib/session';
 import { BoardList } from '@/components/BoardList';
-import { toPreviewText, extractFirstImage } from '@/lib/board-preview';
+import { BoardTabs } from '@/components/BoardTabs';
+import { toBoardItem } from '@/lib/board';
 import { QnaWriteButton } from './QnaWriteButton';
-
-const BOARD_CATEGORIES = [
-  { code: 'N', label: '공지사항', href: '/board?category=N' },
-  { code: 'S', label: '이든이야기', href: '/board?category=S' },
-  { code: 'C', label: '입시정보', href: '/board?category=C' },
-  { code: 'D', label: '입시자료', href: '/board?category=D' },
-  { code: 'R', label: '수강후기', href: '/board?category=R' },
-];
 
 export default async function QnaPage() {
   const list = await selectQnaPostList();
@@ -23,27 +16,10 @@ export default async function QnaPage() {
         <h2>게시판</h2>
       </div>
 
-      {/* 카테고리 탭 */}
-      <div className="eden-tabs">
-        {BOARD_CATEGORIES.map((cat) => (
-          <a key={cat.code} href={cat.href} className="eden-tab">
-            {cat.label}
-          </a>
-        ))}
-        <a href="/qna" className="eden-tab active">
-          질문게시판
-        </a>
-      </div>
+      <BoardTabs active="qna" />
 
       <BoardList
-        items={list.map((item) => ({
-          id: item.id,
-          subject: item.subject,
-          href: `/qna/${item.id}`,
-          preview: toPreviewText(item.contents),
-          thumbnail: extractFirstImage(item.contents),
-          commentCount: item.commentCount ?? 0,
-        }))}
+        items={list.map((item) => toBoardItem(item, `/qna/${item.id}`))}
         emptyText="질문이 없습니다."
       />
 

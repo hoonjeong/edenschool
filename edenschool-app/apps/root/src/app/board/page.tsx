@@ -1,14 +1,7 @@
 import { selectPostInfoList } from '@edenschool/common/queries/post';
 import { BoardList } from '@/components/BoardList';
-import { toPreviewText, extractFirstImage } from '@/lib/board-preview';
-
-const CATEGORIES = [
-  { code: 'N', label: '공지사항' },
-  { code: 'S', label: '이든이야기' },
-  { code: 'C', label: '입시정보' },
-  { code: 'D', label: '입시자료' },
-  { code: 'R', label: '수강후기' },
-];
+import { BoardTabs } from '@/components/BoardTabs';
+import { toBoardItem } from '@/lib/board';
 
 export default async function BoardPage({
   searchParams,
@@ -25,31 +18,10 @@ export default async function BoardPage({
         <h2>게시판</h2>
       </div>
 
-      {/* 카테고리 탭 */}
-      <div className="eden-tabs">
-        {CATEGORIES.map((cat) => (
-          <a
-            key={cat.code}
-            href={`/board?category=${cat.code}`}
-            className={`eden-tab${category === cat.code ? ' active' : ''}`}
-          >
-            {cat.label}
-          </a>
-        ))}
-        <a href="/qna" className="eden-tab">
-          질문게시판
-        </a>
-      </div>
+      <BoardTabs active={category} />
 
       <BoardList
-        items={list.map((item) => ({
-          id: item.id,
-          subject: item.subject,
-          href: `/post-view?id=${item.id}`,
-          preview: toPreviewText(item.contents),
-          thumbnail: extractFirstImage(item.contents),
-          commentCount: item.commentCount ?? 0,
-        }))}
+        items={list.map((item) => toBoardItem(item, `/post-view?id=${item.id}`))}
       />
     </div>
   );

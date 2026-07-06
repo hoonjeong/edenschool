@@ -1,15 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import type { BoardListItem } from '@/lib/board';
 
-export interface BoardListItem {
-  id: number;
-  subject: string;
-  href: string;
-  preview?: string;
-  thumbnail?: string | null;
-  commentCount?: number;
-}
+export type { BoardListItem };
 
 export function BoardList({
   items,
