@@ -18,25 +18,21 @@ export async function selectPostInfoList(code: string, category?: string): Promi
     where += ` AND category=?`;
     params.push(category);
   }
-  const base = `p.id, p.subject, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) FROM comment WHERE post_id=p.id) as commentCount, a.name as writer`;
-  const tail = ` FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id${where} ORDER BY p.id DESC LIMIT 500`;
-
-  // MySQL 8.0+: DB 단계에서 태그를 제거해 '텍스트' 앞부분만 가져온다(장황한 에디터 HTML 대응).
-  // 첫 이미지 src도 따로 추출. 본문 스캔 범위는 40000자로 제한(CPU 보호).
-  const modern =
-    `SELECT ${base}, ` +
-    `LEFT(REGEXP_REPLACE(LEFT(p.contents, 40000), '<[^>]*>', ' '), 1000) as contents, ` +
-    `REGEXP_SUBSTR(p.contents, '<img[^>]*src="[^"]*"') as firstImage` +
-    tail;
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>(modern, params);
-    return rows as PostInfo[];
-  } catch {
-    // 구버전 MySQL(REGEXP_* 미지원): 원문 앞부분만 가져와 JS에서 처리
-    const legacy = `SELECT ${base}, LEFT(p.contents, 4000) as contents${tail}`;
-    const [rows] = await pool.query<RowDataPacket[]>(legacy, params);
-    return rows as PostInfo[];
-  }
+  // MySQL 5.7 호환(REGEXP_* 미지원): 태그 제거는 앱(JS)에서 처리.
+  // - contents: 발췌용으로 본문 앞 30000자(장황한 에디터 HTML도 텍스트 확보)
+  // - firstImage: 문자열 함수로 첫 이미지 src만 추출(본문 어디에 있든, 위치 무관)
+  const sql = `SELECT p.id, p.subject,
+      LEFT(p.contents, 30000) as contents,
+      CASE WHEN LOCATE('src="', p.contents) = 0 THEN NULL
+           ELSE SUBSTRING_INDEX(SUBSTRING(p.contents, LOCATE('src="', p.contents) + 5), '"', 1) END as firstImage,
+      p.code, p.category, p.user_id as userId, p.read_count as readCount,
+      date_format(p.insert_time, "%Y.%m.%d") as date,
+      (SELECT count(0) FROM comment WHERE post_id=p.id) as commentCount,
+      a.name as writer
+    FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id${where}
+    ORDER BY p.id DESC LIMIT 500`;
+  const [rows] = await pool.query<RowDataPacket[]>(sql, params);
+  return rows as PostInfo[];
 }
 
 // ROOT: selectPostInfoById
