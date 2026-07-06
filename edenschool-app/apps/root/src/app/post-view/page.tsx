@@ -4,7 +4,7 @@ import { getSession } from '@/lib/session';
 import { selectPostInfoById, selectCommentList, updatePostReadCount } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
 import { sanitizeAdminHtml, stripHtml, addImageAlt } from '@/lib/sanitize';
-import { SITE_URL, SITE_NAME } from '@/lib/site';
+import { getSiteUrl, SITE_NAME } from '@/lib/site';
 
 /** YouTube/Vimeo embed 링크를 iframe으로 변환 */
 function embedVideos(html: string): string {
@@ -29,7 +29,7 @@ export async function generateMetadata({
 
   const title = `${post.subject} - ${SITE_NAME}`;
   const description = post.metaDescription || stripHtml(post.contents).slice(0, 150);
-  const url = `${SITE_URL}/post-view?id=${id}`;
+  const url = `${await getSiteUrl()}/post-view?id=${id}`;
 
   return {
     title,
@@ -69,7 +69,7 @@ export default async function PostViewPage({
     datePublished: post.date?.replace(/\./g, '-'),
     author: { '@type': 'Organization', name: SITE_NAME },
     publisher: { '@type': 'Organization', name: SITE_NAME },
-    mainEntityOfPage: `${SITE_URL}/post-view?id=${id}`,
+    mainEntityOfPage: `${await getSiteUrl()}/post-view?id=${id}`,
   };
 
   return (

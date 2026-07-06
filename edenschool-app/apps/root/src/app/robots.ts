@@ -1,7 +1,11 @@
 import type { MetadataRoute } from 'next';
-import { SITE_URL } from '@/lib/site';
+import { getSiteUrl } from '@/lib/site';
 
-export default function robots(): MetadataRoute.Robots {
+// 요청 host 기반 sitemap URL이 필요하므로 요청 시 생성
+export const dynamic = 'force-dynamic';
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const site = await getSiteUrl();
   return {
     rules: {
       userAgent: '*',
@@ -19,7 +23,7 @@ export default function robots(): MetadataRoute.Robots {
         '/ai-career',
       ],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
+    sitemap: `${site}/sitemap.xml`,
+    host: site,
   };
 }
