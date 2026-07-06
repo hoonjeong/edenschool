@@ -25,6 +25,15 @@ export default async function BoardPage({
   const category = params.category || 'N';
   const list = await selectPostInfoList('P', category);
 
+  // [임시 디버그] 목록 쿼리가 contents를 반환하는지 확인 (확인 후 제거 예정)
+  console.log(
+    '[board-debug] category=%s rows=%d firstContentsLen=%s sample=%s',
+    category,
+    list.length,
+    list[0] ? String(list[0].contents?.length ?? 'undefined') : 'no-rows',
+    list[0]?.contents ? String(list[0].contents).slice(0, 40) : '',
+  );
+
   return (
     <div className="eden-container">
       <div className="eden-page-header">
