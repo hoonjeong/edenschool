@@ -2,6 +2,14 @@ import pool from '../db';
 import type { PostInfo, Comment } from '../types';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
+// 사이트맵용: 게시글 id + 날짜 목록 (본문 제외, 경량)
+export async function selectPostSitemap(): Promise<{ id: number; date: string }[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, date_format(insert_time, '%Y-%m-%d') as date FROM post_info WHERE code='P' ORDER BY id DESC LIMIT 2000`
+  );
+  return rows as { id: number; date: string }[];
+}
+
 // ROOT: selectPostInfoList
 export async function selectPostInfoList(code: string, category?: string): Promise<PostInfo[]> {
   let sql = `SELECT p.id, p.subject, LEFT(p.contents, 3000) as contents, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;

@@ -91,7 +91,7 @@ export default async function QnaDetailPage({ params }: PageProps) {
       <div className="eden-card" style={{ marginBottom: 20 }}>
         <div className="eden-card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <span style={{ fontSize: 18, fontWeight: 700 }}>{post.subject}</span>
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{post.subject}</h1>
             {isOwner && <QnaActions postId={postId} />}
           </div>
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>

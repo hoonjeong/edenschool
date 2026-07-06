@@ -15,6 +15,14 @@ function toWriterRow<T extends Record<string, any>>(row: T): Omit<T, 'name' | 's
   return { ...rest, writer: `${school || ''} ${maskName(name || '')}`.trim() };
 }
 
+// 사이트맵용: 질문글 id + 날짜 목록 (본문 제외, 경량)
+export async function selectQnaSitemap(): Promise<{ id: number; date: string }[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, date_format(insert_time, '%Y-%m-%d') as date FROM qna_post ORDER BY id DESC LIMIT 2000`
+  );
+  return rows as { id: number; date: string }[];
+}
+
 // 목록 조회 (댓글 수 포함)
 export async function selectQnaPostList(): Promise<QnaPost[]> {
   const [rows] = await pool.query<RowDataPacket[]>(

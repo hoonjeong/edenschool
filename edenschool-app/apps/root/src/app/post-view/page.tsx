@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getSession } from '@/lib/session';
 import { selectPostInfoById, selectCommentList, updatePostReadCount } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
-import { sanitizeAdminHtml } from '@/lib/sanitize';
+import { sanitizeAdminHtml, stripHtml } from '@/lib/sanitize';
+import { SITE_URL, SITE_NAME } from '@/lib/site';
 
 /** YouTube/Vimeo embed 링크를 iframe으로 변환 */
 function embedVideos(html: string): string {
@@ -10,6 +12,32 @@ function embedVideos(html: string): string {
     /<a\s+href="(https?:\/\/(?:www\.)?(?:youtube\.com\/embed\/|player\.vimeo\.com\/video\/)[^"]+)"[^>]*>[^<]*<\/a>/gi,
     '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:16px 0"><iframe src="$1" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>'
   );
+}
+
+// 동적 메타태그 생성 (게시글별 제목/설명/OG)
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const id = Number(params.id);
+  if (!id) return { title: `게시판 - ${SITE_NAME}` };
+
+  const post = await selectPostInfoById(id);
+  if (!post) return { title: `게시판 - ${SITE_NAME}` };
+
+  const title = `${post.subject} - ${SITE_NAME}`;
+  const description = post.metaDescription || stripHtml(post.contents).slice(0, 150);
+  const url = `${SITE_URL}/post-view?id=${id}`;
+
+  return {
+    title,
+    description,
+    keywords: post.metaKeyword || undefined,
+    alternates: { canonical: url },
+    openGraph: { title, description, type: 'article', url },
+  };
 }
 
 export default async function PostViewPage({
@@ -30,11 +58,30 @@ export default async function PostViewPage({
   const comments = await selectCommentList(id);
   const session = await getSession();
 
+  // JSON-LD 구조화 데이터 (검색엔진/AI 검색용)
+  const plainText = stripHtml(post.contents);
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.subject,
+    description: post.metaDescription || plainText.slice(0, 150),
+    articleBody: plainText.slice(0, 500),
+    datePublished: post.date?.replace(/\./g, '-'),
+    author: { '@type': 'Organization', name: SITE_NAME },
+    publisher: { '@type': 'Organization', name: SITE_NAME },
+    mainEntityOfPage: `${SITE_URL}/post-view?id=${id}`,
+  };
+
   return (
     <div className="eden-container">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
+
       <div className="eden-card" style={{ marginBottom: 20 }}>
         <div className="eden-card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-          <span style={{ fontSize: 18, fontWeight: 700 }}>{post.subject}</span>
+          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{post.subject}</h1>
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>
             {post.writer} &middot; {post.date} &middot; 조회 {post.readCount}
           </span>

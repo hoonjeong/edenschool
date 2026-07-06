@@ -6,8 +6,10 @@ import { Navbar } from '@/components/Navbar';
 import { BootstrapClient } from '@/components/BootstrapClient';
 import { SessionHeartbeatWrapper } from '@/components/SessionHeartbeatWrapper';
 import { PopupModal } from '@/components/PopupModal';
+import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: process.env.SITE_TITLE || '부천국어학원 이든배움국어학원',
   description: process.env.SITE_DESCRIPTION || '부천국어학원 이든배움국어학원입니다.',
   keywords: process.env.SITE_KEYWORDS || '부천국어학원,이든배움국어학원',
