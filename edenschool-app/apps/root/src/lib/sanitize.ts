@@ -49,6 +49,27 @@ export function sanitizeAdminHtml(html: string): string {
   });
 }
 
+/** HTML 속성값 이스케이프 (속성 주입용) */
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * alt 속성이 없는 <img>에 기본 alt 텍스트를 주입한다 (SEO/접근성).
+ * 이미 alt가 있는 이미지는 건드리지 않는다.
+ */
+export function addImageAlt(html: string, alt: string): string {
+  const safeAlt = escapeAttr(alt || '');
+  return html.replace(
+    /<img\b(?![^>]*\salt=)([^>]*?)>/gi,
+    `<img alt="${safeAlt}"$1>`
+  );
+}
+
 /** HTML 태그 제거 → 순수 텍스트 추출 */
 export function stripHtml(html: string): string {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })

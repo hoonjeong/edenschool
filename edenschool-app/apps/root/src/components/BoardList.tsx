@@ -58,7 +58,7 @@ export function BoardList({
               <img
                 className="eden-board-thumb"
                 src={item.thumbnail}
-                alt=""
+                alt={item.subject}
                 loading="lazy"
               />
             )}

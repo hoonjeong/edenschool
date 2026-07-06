@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { getSession } from '@/lib/session';
 import { selectPostInfoById, selectCommentList, updatePostReadCount } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
-import { sanitizeAdminHtml, stripHtml } from '@/lib/sanitize';
+import { sanitizeAdminHtml, stripHtml, addImageAlt } from '@/lib/sanitize';
 import { SITE_URL, SITE_NAME } from '@/lib/site';
 
 /** YouTube/Vimeo embed 링크를 iframe으로 변환 */
@@ -87,7 +87,7 @@ export default async function PostViewPage({
           </span>
         </div>
         <div className="eden-card-body">
-          <div dangerouslySetInnerHTML={{ __html: embedVideos(sanitizeAdminHtml(post.contents)) }} />
+          <div dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(sanitizeAdminHtml(post.contents), post.subject)) }} />
         </div>
       </div>
 
