@@ -445,10 +445,6 @@ body.eden-body {
   font-size: 13px;
   line-height: 1.55;
   color: var(--eden-text-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .eden-board-preview-muted {
