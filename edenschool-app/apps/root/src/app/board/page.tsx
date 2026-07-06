@@ -25,20 +25,35 @@ export default async function BoardPage({
   const category = params.category || 'N';
   const list = await selectPostInfoList('P', category);
 
-  // [임시 디버그] 목록 쿼리가 contents를 반환하는지 확인 (확인 후 제거 예정)
-  console.log(
-    '[board-debug] category=%s rows=%d firstContentsLen=%s sample=%s',
-    category,
-    list.length,
-    list[0] ? String(list[0].contents?.length ?? 'undefined') : 'no-rows',
-    list[0]?.contents ? String(list[0].contents).slice(0, 40) : '',
-  );
+  // [임시 디버그] 목록 쿼리가 contents를 반환하는지 화면에 표시 (확인 후 제거 예정)
+  const first = list[0] as (typeof list)[number] & { contents?: unknown };
+  const debugInfo = list.length === 0
+    ? 'no-rows'
+    : `rows=${list.length}, contentsType=${typeof first?.contents}, ` +
+      `contentsLen=${first?.contents == null ? 'null/undefined' : String(first.contents).length}, ` +
+      `sample="${first?.contents ? String(first.contents).slice(0, 50) : ''}"`;
 
   return (
     <div className="eden-container">
       <div className="eden-page-header">
         <h2>게시판</h2>
       </div>
+
+      {/* [임시 디버그] 확인 후 제거 예정 */}
+      <pre
+        style={{
+          background: '#fffbe6',
+          border: '1px solid #f0c000',
+          borderRadius: 6,
+          padding: '10px 12px',
+          fontSize: 12,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
+          marginBottom: 16,
+        }}
+      >
+        [board-debug] {debugInfo}
+      </pre>
 
       {/* 카테고리 탭 */}
       <div className="eden-tabs">
