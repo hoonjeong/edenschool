@@ -33,36 +33,38 @@ export function BoardList({
       <div className="eden-board-list">
         {filtered.map((item) => (
           <a key={item.id} href={item.href} className="eden-board-item">
-            <div className="eden-board-main">
-              <div className="eden-board-title-row">
-                <span className="eden-board-title">{item.subject}</span>
-                <span
-                  className={`eden-board-badge${
-                    (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
-                  }`}
-                >
-                  <i className="far fa-comment"></i>
-                  {item.commentCount ?? 0}
-                </span>
-              </div>
-              {item.preview ? (
-                <p className="eden-board-preview">{item.preview}</p>
-              ) : item.thumbnail ? (
-                <p className="eden-board-preview eden-board-preview-muted">
-                  이미지 게시글입니다.
-                </p>
-              ) : null}
+            <div className="eden-board-header">
+              <span className="eden-board-title">{item.subject}</span>
+              <span
+                className={`eden-board-badge${
+                  (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
+                }`}
+              >
+                <i className="far fa-comment"></i>
+                {item.commentCount ?? 0}
+              </span>
+              <i className="fas fa-chevron-right eden-board-arrow"></i>
             </div>
-            {item.thumbnail && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className="eden-board-thumb"
-                src={item.thumbnail}
-                alt={item.subject}
-                loading="lazy"
-              />
+            {(item.thumbnail || item.preview) && (
+              <div className="eden-board-body">
+                {item.thumbnail && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="eden-board-thumb"
+                    src={item.thumbnail}
+                    alt={item.subject}
+                    loading="lazy"
+                  />
+                )}
+                {item.preview ? (
+                  <p className="eden-board-preview">{item.preview}</p>
+                ) : item.thumbnail ? (
+                  <p className="eden-board-preview eden-board-preview-muted">
+                    이미지 게시글입니다.
+                  </p>
+                ) : null}
+              </div>
             )}
-            <i className="fas fa-chevron-right eden-board-arrow"></i>
           </a>
         ))}
         {filtered.length === 0 && (

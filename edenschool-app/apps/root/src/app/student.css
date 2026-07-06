@@ -397,9 +397,9 @@ body.eden-body {
 
 .eden-board-item {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 26px 20px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
   border-bottom: 1px solid #f1f5f9;
   text-decoration: none;
   color: var(--eden-text);
@@ -414,14 +414,10 @@ body.eden-body {
   background-color: #f8fafc;
 }
 
-.eden-board-main {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.eden-board-title-row {
+/* 1행: 제목(전체 표시) + 댓글 배지 + 화살표 */
+.eden-board-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 }
 
@@ -430,18 +426,26 @@ body.eden-body {
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .eden-board-item:hover .eden-board-title {
   color: var(--eden-primary);
 }
 
+/* 2행: 썸네일 + 발췌를 좌우로 분리 */
+.eden-board-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
 .eden-board-preview {
-  margin: 6px 0 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
   font-size: 13px;
   line-height: 1.55;
   color: var(--eden-text-muted);
