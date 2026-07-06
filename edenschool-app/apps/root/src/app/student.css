@@ -466,22 +466,16 @@ body.eden-body {
   background: #f1f5f9;
 }
 
-.eden-board-badge {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
+.eden-board-count {
+  margin-left: 5px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--eden-text-muted);
-  background: #f1f5f9;
-  padding: 3px 9px;
-  border-radius: 999px;
+  white-space: nowrap;
 }
 
-.eden-board-badge.has-comments {
+.eden-board-count.has-comments {
   color: var(--eden-primary);
-  background: var(--eden-primary-light);
 }
 
 .eden-board-arrow {

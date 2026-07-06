@@ -34,14 +34,15 @@ export function BoardList({
         {filtered.map((item) => (
           <a key={item.id} href={item.href} className="eden-board-item">
             <div className="eden-board-header">
-              <span className="eden-board-title">{item.subject}</span>
-              <span
-                className={`eden-board-badge${
-                  (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
-                }`}
-              >
-                <i className="far fa-comment"></i>
-                {item.commentCount ?? 0}
+              <span className="eden-board-title">
+                {item.subject}
+                <span
+                  className={`eden-board-count${
+                    (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
+                  }`}
+                >
+                  ({item.commentCount ?? 0})
+                </span>
               </span>
               <i className="fas fa-chevron-right eden-board-arrow"></i>
             </div>
