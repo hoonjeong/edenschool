@@ -446,7 +446,7 @@ body.eden-body {
   line-height: 1.55;
   color: var(--eden-text-muted);
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
