@@ -1,9 +1,13 @@
 import { stripHtml } from '@/lib/sanitize';
 
-/** 본문 HTML에서 텍스트 발췌를 추출 (태그 제거 후 잘라냄). 텍스트가 없으면 '' */
+/** 본문 HTML에서 앞부분 텍스트를 잘라 발췌로 만든다 (요약이 아닌 원문 일부). 텍스트가 없으면 '' */
 export function toPreviewText(html?: string, maxLen = 160): string {
   if (!html) return '';
-  const text = stripHtml(html);
+  // 문단/줄바꿈 경계를 공백으로 바꿔 단어가 붙지 않게 한 뒤 태그 제거
+  const spaced = html
+    .replace(/<\/(p|div|h[1-6]|li|blockquote|tr)>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, ' ');
+  const text = stripHtml(spaced).replace(/\s+/g, ' ').trim();
   return text.length > maxLen ? text.slice(0, maxLen) + '…' : text;
 }
 

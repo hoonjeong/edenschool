@@ -18,7 +18,7 @@ function toWriterRow<T extends Record<string, any>>(row: T): Omit<T, 'name' | 's
 // 목록 조회 (댓글 수 포함)
 export async function selectQnaPostList(): Promise<QnaPost[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT q.id, q.subject, LEFT(q.contents, 500) as contents, q.read_count as readCount,
+    `SELECT q.id, q.subject, LEFT(q.contents, 3000) as contents, q.read_count as readCount,
       date_format(q.insert_time, "%Y.%m.%d") as date,
       (SELECT count(0) FROM qna_comment WHERE qna_post_id=q.id) as commentCount,
       s.name, s.school
