@@ -491,6 +491,30 @@ body.eden-body {
   font-size: 14px;
 }
 
+/* PC(데스크톱)에서는 게시판 리스트 글자를 더 크게 (모바일은 기본값 유지) */
+@media (min-width: 769px) {
+  .eden-board-title {
+    font-size: 30px;
+    line-height: 1.4;
+  }
+  .eden-board-count {
+    font-size: 26px;
+    margin-left: 8px;
+  }
+  .eden-board-preview {
+    font-size: 22px;
+    line-height: 1.5;
+  }
+  .eden-board-arrow {
+    font-size: 18px;
+    margin-top: 6px;
+  }
+  .eden-board-thumb {
+    width: 120px;
+    height: 120px;
+  }
+}
+
 /* ===== Auth Box (Login/Join/Find) ===== */
 .eden-auth-wrapper {
   min-height: calc(100vh - var(--eden-navbar-height));
