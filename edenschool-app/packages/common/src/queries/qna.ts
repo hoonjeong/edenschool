@@ -38,7 +38,7 @@ export async function selectQnaPostList(): Promise<QnaPost[]> {
   const modern =
     `SELECT ${base}, ` +
     `LEFT(REGEXP_REPLACE(LEFT(q.contents, 40000), '<[^>]*>', ' '), 1000) as contents, ` +
-    `REGEXP_SUBSTR(LEFT(q.contents, 40000), 'src="[^"]*"') as firstImage` +
+    `REGEXP_SUBSTR(q.contents, '<img[^>]*src="[^"]*"') as firstImage` +
     tail;
   try {
     const [rows] = await pool.query<RowDataPacket[]>(modern);

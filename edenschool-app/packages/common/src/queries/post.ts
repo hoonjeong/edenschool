@@ -26,7 +26,7 @@ export async function selectPostInfoList(code: string, category?: string): Promi
   const modern =
     `SELECT ${base}, ` +
     `LEFT(REGEXP_REPLACE(LEFT(p.contents, 40000), '<[^>]*>', ' '), 1000) as contents, ` +
-    `REGEXP_SUBSTR(LEFT(p.contents, 40000), 'src="[^"]*"') as firstImage` +
+    `REGEXP_SUBSTR(p.contents, '<img[^>]*src="[^"]*"') as firstImage` +
     tail;
   try {
     const [rows] = await pool.query<RowDataPacket[]>(modern, params);
