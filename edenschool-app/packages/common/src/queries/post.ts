@@ -12,15 +12,31 @@ export async function selectPostSitemap(): Promise<{ id: number; date: string }[
 
 // ROOT: selectPostInfoList
 export async function selectPostInfoList(code: string, category?: string): Promise<PostInfo[]> {
-  let sql = `SELECT p.id, p.subject, LEFT(p.contents, 3000) as contents, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) as cnt FROM comment WHERE post_id=p.id) as commentCount, a.name as writer FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id WHERE p.code=?`;
   const params: any[] = [code];
+  let where = ` WHERE p.code=?`;
   if (category) {
-    sql += ` AND category=?`;
+    where += ` AND category=?`;
     params.push(category);
   }
-  sql += ` ORDER BY id DESC LIMIT 500`;
-  const [rows] = await pool.query<RowDataPacket[]>(sql, params);
-  return rows as PostInfo[];
+  const base = `p.id, p.subject, p.code, p.category, p.user_id as userId, p.read_count as readCount, date_format(p.insert_time, "%Y.%m.%d") as date, (SELECT count(0) FROM comment WHERE post_id=p.id) as commentCount, a.name as writer`;
+  const tail = ` FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id${where} ORDER BY p.id DESC LIMIT 500`;
+
+  // MySQL 8.0+: DB 단계에서 태그를 제거해 '텍스트' 앞부분만 가져온다(장황한 에디터 HTML 대응).
+  // 첫 이미지 src도 따로 추출. 본문 스캔 범위는 40000자로 제한(CPU 보호).
+  const modern =
+    `SELECT ${base}, ` +
+    `LEFT(REGEXP_REPLACE(LEFT(p.contents, 40000), '<[^>]*>', ' '), 1000) as contents, ` +
+    `REGEXP_SUBSTR(LEFT(p.contents, 40000), 'src="[^"]*"') as firstImage` +
+    tail;
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(modern, params);
+    return rows as PostInfo[];
+  } catch {
+    // 구버전 MySQL(REGEXP_* 미지원): 원문 앞부분만 가져와 JS에서 처리
+    const legacy = `SELECT ${base}, LEFT(p.contents, 4000) as contents${tail}`;
+    const [rows] = await pool.query<RowDataPacket[]>(legacy, params);
+    return rows as PostInfo[];
+  }
 }
 
 // ROOT: selectPostInfoById

@@ -171,6 +171,7 @@ export interface PostInfo {
   insertTime?: string;
   summary?: string;
   commentCount?: number;
+  firstImage?: string | null; // 목록 미리보기용: 본문 첫 이미지 src (쿼리에서 추출)
 }
 
 // Comment.java
@@ -333,6 +334,7 @@ export interface QnaPost {
   updateTime?: string;
   writer?: string;
   commentCount?: number;
+  firstImage?: string | null; // 목록 미리보기용: 본문 첫 이미지 src (쿼리에서 추출)
 }
 
 // QnaComment (질문 댓글)

@@ -25,17 +25,30 @@ export async function selectQnaSitemap(): Promise<{ id: number; date: string }[]
 
 // 목록 조회 (댓글 수 포함)
 export async function selectQnaPostList(): Promise<QnaPost[]> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT q.id, q.subject, LEFT(q.contents, 3000) as contents, q.read_count as readCount,
+  const base = `q.id, q.subject, q.read_count as readCount,
       date_format(q.insert_time, "%Y.%m.%d") as date,
       (SELECT count(0) FROM qna_comment WHERE qna_post_id=q.id) as commentCount,
-      s.name, s.school
-    FROM qna_post q
+      s.name, s.school`;
+  const tail = ` FROM qna_post q
     JOIN user_info u ON u.id=q.user_id
     JOIN student s ON s.id=u.student_id
-    ORDER BY q.id DESC`
-  );
-  return (rows as any[]).map(toWriterRow) as QnaPost[];
+    ORDER BY q.id DESC`;
+
+  // MySQL 8.0+: DB 단계에서 태그 제거 후 텍스트 앞부분만 + 첫 이미지 src 추출
+  const modern =
+    `SELECT ${base}, ` +
+    `LEFT(REGEXP_REPLACE(LEFT(q.contents, 40000), '<[^>]*>', ' '), 1000) as contents, ` +
+    `REGEXP_SUBSTR(LEFT(q.contents, 40000), 'src="[^"]*"') as firstImage` +
+    tail;
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(modern);
+    return (rows as any[]).map(toWriterRow) as QnaPost[];
+  } catch {
+    // 구버전 MySQL: 원문 앞부분만
+    const legacy = `SELECT ${base}, LEFT(q.contents, 4000) as contents${tail}`;
+    const [rows] = await pool.query<RowDataPacket[]>(legacy);
+    return (rows as any[]).map(toWriterRow) as QnaPost[];
+  }
 }
 
 // 단건 조회 (마스킹 적용, 상세 페이지용)
