@@ -74,6 +74,29 @@ export default async function LectureViewPage({
 
       {/* 아래 콘텐츠 영역 - 1단 레이아웃 */}
       <div className="eden-video-below">
+        {/* 저작권 경고 */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            padding: '12px 14px',
+            marginBottom: 16,
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: 8,
+            color: '#b91c1c',
+            fontSize: 13,
+            lineHeight: 1.6,
+          }}
+        >
+          <i className="fas fa-triangle-exclamation" style={{ marginTop: 3, flexShrink: 0 }} />
+          <span>
+            본 영상은 이든배움국어학원 재원생 전용 강의이며, 부정한 방법으로 시청하거나 무단
+            복제·배포할 경우 접속 기록에 따라 이용이 제한되고 이에 대한 법적 책임이 따를 수 있습니다.
+          </span>
+        </div>
+
         {/* 선생님 말씀 */}
         <div className="eden-card">
           <div className="eden-card-header">
