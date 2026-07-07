@@ -90,7 +90,7 @@ export default async function LectureViewPage({
             lineHeight: 1.6,
           }}
         >
-          <i className="fas fa-triangle-exclamation" style={{ marginTop: 3, flexShrink: 0 }} />
+          <i className="fas fa-exclamation-triangle" style={{ marginTop: 3, flexShrink: 0 }} />
           <span>
             본 영상은 이든배움국어학원 재원생 전용 강의이며, 부정한 방법으로 시청하거나 무단
             복제·배포할 경우 접속 기록에 따라 이용이 제한되고 이에 대한 법적 책임이 따를 수 있습니다.
