@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
-import { getClaudeClient, PARENT_MESSAGE_SYSTEM_PROMPT } from '@/lib/claude-client';
+import { getClaudeClient, PARENT_MESSAGE_SYSTEM_PROMPT, PARENT_MESSAGE_GREETING } from '@/lib/claude-client';
 
 // 선생님 상담/클리닉 기록 → 학부모 전송용 메시지 변환 (AI)
 // 비용 최소화를 위해 가장 저렴한 모델(Haiku 4.5) 사용. 짧은 비스트리밍 호출.
@@ -29,15 +29,18 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     ],
   });
 
-  let message = '';
+  let body_text = '';
   for (const block of response.content) {
-    if (block.type === 'text') message += block.text;
+    if (block.type === 'text') body_text += block.text;
   }
-  message = message.trim();
+  body_text = body_text.trim();
 
-  if (!message) {
+  if (!body_text) {
     return NextResponse.json({ error: '메시지 변환에 실패했습니다. 다시 시도해 주세요.' }, { status: 502 });
   }
+
+  // 맨 앞에 고정 인사말을 항상 붙인다.
+  const message = `${PARENT_MESSAGE_GREETING}\n\n${body_text}`;
 
   return NextResponse.json({ message });
 });
