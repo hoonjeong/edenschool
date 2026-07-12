@@ -43,7 +43,7 @@ export default async function TeacherStudentListPage({ searchParams }: Props) {
               <td>{s.sphone}</td>
               <td>{s.pphone}</td>
               <td>
-                <a href={`/admin/student-info?id=${s.id}`} className="btn btn-sm btn-primary">상세</a>
+                <a href={`/admin/teacher-student-info?id=${s.id}`} className="btn btn-sm btn-primary">상세</a>
               </td>
             </tr>
           ))}

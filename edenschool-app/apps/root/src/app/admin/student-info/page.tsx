@@ -1,10 +1,10 @@
+import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectClassInfoByStudentId, selectClassInfoLive } from '@edenschool/common/queries/class';
-import { selectStudentMemos, selectStudentScores } from '@edenschool/common/queries/student-record';
+import { selectStudentMemos } from '@edenschool/common/queries/student-record';
 import StudentInfoClient from './StudentInfoClient';
 import StudentMemoSection from './StudentMemoSection';
-import StudentScoreSection from './StudentScoreSection';
 
 export default async function StudentInfoPage({
   searchParams,
@@ -12,6 +12,8 @@ export default async function StudentInfoPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const session = await requireAdminSession();
+  // 원장 전용 페이지 — 선생님은 선생님용 상세(teacher-student-info)로 유도
+  if (session.user.code !== 'O') redirect('/admin/student-manage');
 
   const params = await searchParams;
   const studentId = params.id;
@@ -38,11 +40,7 @@ export default async function StudentInfoPage({
   const classList = await selectClassInfoByStudentId(sid);
   const classNames = await selectClassInfoLive();
 
-  const [memos, naesinScores, mockScores] = await Promise.all([
-    selectStudentMemos(sid),
-    selectStudentScores(sid, 'naesin'),
-    selectStudentScores(sid, 'mock'),
-  ]);
+  const memos = await selectStudentMemos(sid);
 
   return (
     <div>
@@ -54,23 +52,7 @@ export default async function StudentInfoPage({
 
       <hr className="my-4" />
 
-      <StudentMemoSection studentId={sid} initialMemos={memos} />
-
-      <StudentScoreSection
-        studentId={sid}
-        category="naesin"
-        title="내신 성적 관리"
-        nameLabel="내신시험명"
-        initialScores={naesinScores}
-      />
-
-      <StudentScoreSection
-        studentId={sid}
-        category="mock"
-        title="모의고사 성적 관리"
-        nameLabel="모의고사명"
-        initialScores={mockScores}
-      />
+      <StudentMemoSection initialMemos={memos} />
     </div>
   );
 }

@@ -4,94 +4,35 @@ import { useState } from 'react';
 import type { StudentMemo } from '@edenschool/common/types';
 
 interface Props {
-  studentId: number;
   initialMemos: StudentMemo[];
 }
 
 const PREVIEW_LEN = 40;
 
-export default function StudentMemoSection({ studentId, initialMemos }: Props) {
-  const [memos, setMemos] = useState<StudentMemo[]>(initialMemos);
-  const [content, setContent] = useState('');
+// 원장 화면 전용 — 상담기록 조회(읽기 전용). 저장/삭제 기능 없음.
+export default function StudentMemoSection({ initialMemos }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  const addMemo = async () => {
-    const text = content.trim();
-    if (!text) {
-      alert('메모 내용을 입력하세요.');
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch('/api/admin/student/memo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId, content: text }),
-      });
-      if (!res.ok) {
-        alert('메모 추가에 실패했습니다.');
-        return;
-      }
-      const data = await res.json();
-      const now = new Date();
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      setMemos([{ id: data.id, studentId, content: text, date }, ...memos]);
-      setContent('');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const removeMemo = async (id: number) => {
-    if (!confirm('이 메모를 삭제하시겠습니까?')) return;
-    const res = await fetch(`/api/admin/student/memo?id=${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      alert('삭제에 실패했습니다.');
-      return;
-    }
-    setMemos(memos.filter((m) => m.id !== id));
-  };
 
   return (
     <div className="card mb-4 border-secondary">
       <div className="card-header bg-secondary text-white">
-        <strong>📝 상담기록</strong>
+        <strong>📝 상담기록</strong> <small>(조회 전용)</small>
       </div>
       <div className="card-body">
-        <div className="form-row align-items-end mb-3">
-          <div className="col-md-9 mb-2">
-            <textarea
-              className="form-control"
-              rows={6}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="상담 내용을 입력하세요."
-            />
-          </div>
-          <div className="col-md-3 mb-2">
-            <button className="btn btn-primary btn-block" onClick={addMemo} disabled={saving}>
-              상담기록 추가
-            </button>
-          </div>
-        </div>
-
         <table className="table table-bordered table-hover mb-0">
           <thead className="thead-light">
             <tr>
               <th>상담내용</th>
               <th style={{ width: '150px' }}>입력날짜</th>
-              <th style={{ width: '70px' }}>삭제</th>
             </tr>
           </thead>
           <tbody>
-            {memos.length === 0 ? (
+            {initialMemos.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center">등록된 상담기록이 없습니다.</td>
+                <td colSpan={2} className="text-center">등록된 상담기록이 없습니다.</td>
               </tr>
             ) : (
-              memos.map((m) => {
+              initialMemos.map((m) => {
                 const isLong = m.content.length > PREVIEW_LEN;
                 const expanded = expandedId === m.id;
                 return (
@@ -106,11 +47,6 @@ export default function StudentMemoSection({ studentId, initialMemos }: Props) {
                         : `${m.content.slice(0, PREVIEW_LEN)}...`}
                     </td>
                     <td>{m.date}</td>
-                    <td>
-                      <button className="btn btn-sm btn-danger" onClick={() => removeMemo(m.id)}>
-                        삭제
-                      </button>
-                    </td>
                   </tr>
                 );
               })
