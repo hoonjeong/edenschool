@@ -19,10 +19,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
   const isAdmin = pathname.startsWith('/admin');
+  // /reading(독서교육원)은 자체 레이아웃(AppShell)을 쓰므로 학생용 크롬(Navbar 등) 제외
+  const isReading = pathname.startsWith('/reading');
+  const isPlain = isAdmin || isReading;
   const isAbout = pathname === '/';
 
   const bodyClasses = [
-    !isAdmin ? 'eden-body' : '',
+    !isPlain ? 'eden-body' : '',
     isAbout ? 'eden-about-page' : '',
   ].filter(Boolean).join(' ') || undefined;
 
@@ -35,10 +38,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossOrigin="anonymous" />
       </head>
       <body className={bodyClasses}>
-        {!isAdmin && <Navbar />}
-        {!isAdmin && isAbout && <PopupModal />}
+        {!isPlain && <Navbar />}
+        {!isPlain && isAbout && <PopupModal />}
         {children}
-        {!isAdmin && <SessionHeartbeatWrapper />}
+        {!isPlain && <SessionHeartbeatWrapper />}
         <BootstrapClient />
       </body>
     </html>
