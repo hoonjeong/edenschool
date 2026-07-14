@@ -11,7 +11,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@edenschool/common'],
-  serverExternalPackages: ['pdf-parse', 'cfb'],
+  serverExternalPackages: ['pdf-parse', 'cfb', 'exceljs', '@prisma/client', '@prisma/adapter-mariadb', 'mariadb'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

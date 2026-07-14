@@ -5,6 +5,8 @@ export async function AdminSidebar() {
   const session = await getAdminSession();
   const user = session.user;
   const isAdmin = user?.code === 'O';
+  // 독서교육원(R): 기존 선생님(T)/운영진(O) 메뉴는 노출하지 않음(전용 화면 별도 개발 예정)
+  const isReading = user?.code === 'R';
 
   return (
     <aside className="admin-sidebar" id="adminSidebar">
@@ -14,6 +16,16 @@ export async function AdminSidebar() {
       </a>
 
       <nav className="admin-sidebar-nav">
+        {isReading && (
+          <AdminSidebarSection title="독서교육원">
+            <span className="admin-sidebar-link disabled">
+              <i className="fas fa-book-reader"></i> 준비중입니다
+            </span>
+          </AdminSidebarSection>
+        )}
+
+        {!isReading && (
+        <>
         {/* 선생님 메뉴 (모두) — 원장 로그인 시 기본 접힘 */}
         <AdminSidebarSection title="선생님" defaultCollapsed={isAdmin}>
           <a href="/admin/student-manage" className="admin-sidebar-link">
@@ -148,6 +160,8 @@ export async function AdminSidebar() {
               </span>
             </AdminSidebarSection>
           </>
+        )}
+        </>
         )}
       </nav>
 

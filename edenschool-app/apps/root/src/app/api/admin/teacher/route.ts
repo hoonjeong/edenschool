@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
+import { isManageableRole } from '@/lib/admin-roles';
 import {
   selectTeacherUserList,
   selectTeacherUserById,
@@ -36,13 +37,16 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const body = await req.json();
-    const { name, phone } = body;
+    const { name, phone, code } = body;
 
     if (!name || !phone) {
       return NextResponse.json({ error: '이름과 핸드폰번호를 입력해주세요.' }, { status: 400 });
     }
+    if (!isManageableRole(code)) {
+      return NextResponse.json({ error: '역할을 올바르게 선택해주세요.' }, { status: 400 });
+    }
 
-    const id = await insertTeacherUser(name.trim(), phone.trim());
+    const id = await insertTeacherUser(name.trim(), phone.trim(), code);
     return NextResponse.json({ success: true, id });
   } catch (error) {
     console.error('Teacher insert error:', error);

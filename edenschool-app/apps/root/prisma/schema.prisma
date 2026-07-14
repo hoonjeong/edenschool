@@ -1,0 +1,208 @@
+// 이든 독서교육원(edenbooks) 관리 툴 — 데이터 모델
+// edenschool 운영 DB와 분리된 별도 데이터베이스(edenbooks)에서 사용.
+// 런타임 연결은 src/lib/reading/prisma.ts 의 드라이버 어댑터가 담당하고,
+// 이 스키마는 클라이언트 생성(prisma generate)과 DDL 참조용이다.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/reading/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ── 사용자(선생님/원장) ────────────────────────────────
+enum UserRole {
+  ADMIN // 원장(관리자)
+  TEACHER // 담당 선생님
+  CLINIC // 클리닉 선생님
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  role         UserRole @default(TEACHER)
+  active       Boolean  @default(true)
+  passwordHash String? // scrypt 해시 (로그인용)
+  createdAt    DateTime @default(now())
+
+  classes Class[] // 담당 반
+}
+
+// ── 문자 발송 로그 (알리고) ─────────────────────────────
+model SmsLog {
+  id            Int      @id @default(autoincrement())
+  sendId        Int      @default(0)
+  phone         String
+  message       String   @db.Text
+  type          String   @default("SMS") // SMS/LMS/MMS
+  title         String?
+  resultMessage String?  @db.Text
+  success       Boolean  @default(false)
+  templateId    Int?
+  sentAt        DateTime @default(now())
+
+  @@index([sentAt])
+}
+
+// ── 반 ─────────────────────────────────────────────────
+model Class {
+  id        Int      @id @default(autoincrement())
+  name      String // 반 이름 (예: 목요 3:00 A반)
+  schedule  String? // 요일/시간 텍스트 (예: 월·목 15:00)
+  capacity  Int      @default(8) // 정원
+  color     String   @default("#6366f1")
+  teacherId Int?
+  teacher   User?    @relation(fields: [teacherId], references: [id])
+  createdAt DateTime @default(now())
+
+  students Student[]
+}
+
+// ── 학생 ───────────────────────────────────────────────
+enum StudentStatus {
+  ENROLLED // 재원
+  PAUSED // 휴원
+  WITHDRAWN // 퇴원
+}
+
+model Student {
+  id           Int           @id @default(autoincrement())
+  name         String
+  grade        String // 학년 (예: 초3)
+  phone        String // 연락처(핸드폰)
+  phoneLast4   String // 뒷자리 4자리 (체크인 매칭용)
+  status       StudentStatus @default(ENROLLED)
+  registeredAt DateTime      @default(now())
+  memo         String?       @db.Text
+  classId      Int?
+  class        Class?        @relation(fields: [classId], references: [id])
+
+  attendances  Attendance[]
+  observations Observation[]
+  counsels     Counsel[]
+  corrections  Correction[]
+  clinics      Clinic[]
+
+  @@index([phoneLast4])
+  @@index([status])
+}
+
+// ── 출결 ───────────────────────────────────────────────
+enum AttendanceStatus {
+  PRESENT // 출석
+  LATE // 지각
+  ABSENT // 결석
+  MAKEUP // 보강
+}
+
+enum CheckInMethod {
+  KEYPAD // 태블릿 뒷자리 체크인
+  MANUAL // 수동 보정
+}
+
+model Attendance {
+  id        Int              @id @default(autoincrement())
+  studentId Int
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date      DateTime         @db.Date // 수업일 (당일 1회 제약)
+  checkInAt DateTime         @default(now())
+  status    AttendanceStatus @default(PRESENT)
+  method    CheckInMethod    @default(KEYPAD)
+  note      String?
+
+  @@unique([studentId, date])
+  @@index([date])
+}
+
+// ── 관찰일지 (PDF 루브릭) ───────────────────────────────
+// items: [{ area, item, level: '상'|'중'|'하', text, note }]
+model Observation {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  round     Int // 회차
+  date      DateTime @default(now())
+  items     Json // 관찰 항목 배열
+  memo      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  counsels Counsel[]
+
+  @@index([studentId])
+}
+
+// ── 상담 기록 ──────────────────────────────────────────
+model Counsel {
+  id            Int          @id @default(autoincrement())
+  studentId     Int
+  student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date          DateTime     @default(now())
+  type          String       @default("정기상담") // 상담 유형
+  content       String       @db.Text
+  nextAction    String?      @db.Text
+  nextDate      DateTime?
+  observationId Int?
+  observation   Observation? @relation(fields: [observationId], references: [id])
+  createdAt     DateTime     @default(now())
+
+  @@index([studentId])
+}
+
+// ── AI 서술형 첨삭 ─────────────────────────────────────
+enum CorrectionStatus {
+  UPLOADED // 업로드됨
+  RECOGNIZED // 인식·확정
+  DONE // 첨삭 완료
+}
+
+model Correction {
+  id          Int              @id @default(autoincrement())
+  studentId   Int?
+  student     Student?         @relation(fields: [studentId], references: [id])
+  title       String           @default("첨삭")
+  imageUrl    String? // 원본 이미지(목업)
+  problemText String?          @db.Text // 인식된 문제
+  answerText  String?          @db.Text // 인식된 답안
+  genre       String? // 글의 종류
+  gradeLevel  String? // 첨삭 기준 학년 (초1~초6)
+  options     Json? // { tone, metrics[], custom, edenDirection }
+  scores      Json? // 척도별 점수
+  resultText  String?          @db.Text // AI 첨삭 결과(편집 가능)
+  summary     String?          @db.Text // 이든 분석지 요약(총평)
+  status      CorrectionStatus @default(UPLOADED)
+  createdAt   DateTime         @default(now())
+
+  @@index([studentId])
+}
+
+// ── 공지 템플릿 ────────────────────────────────────────
+model NoticeTemplate {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String   @db.Text // {이름}{반}{점수}{특이점} 변수 포함
+  variables Json // 변수 목록
+  createdAt DateTime @default(now())
+}
+
+// ── 앱 설정 (key-value) ────────────────────────────────
+model AppSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+// ── 클리닉 시간표 ──────────────────────────────────────
+model Clinic {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  weekday   Int // 1=월 ... 6=토
+  time      String // "16:00"
+  subject   String   @default("클리닉")
+  createdAt DateTime @default(now())
+
+  @@index([weekday])
+}

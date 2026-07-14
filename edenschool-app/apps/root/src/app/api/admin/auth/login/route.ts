@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const defaultPage = user.code === 'O' ? '/admin/statistics' : '/admin/student-manage';
+    // O(운영진)=통계, R(독서교육원)=독서교육원 전용 앱(/reading), 그 외(T)=담당반 관리
+    const defaultPage =
+      user.code === 'O' ? '/admin/statistics' : user.code === 'R' ? '/reading' : '/admin/student-manage';
     const dest = referer && referer !== '/admin' ? referer : defaultPage;
     const response = NextResponse.redirect(buildUrl(dest, req));
 

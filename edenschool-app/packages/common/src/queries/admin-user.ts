@@ -143,19 +143,30 @@ export async function selectTeacherList(): Promise<{ name: string }[]> {
   return rows as { name: string }[];
 }
 
-// Admin: selectTeacherUserList (code='T')
+// 선생님 관리 화면에서 다루는 역할 코드(운영진 O / 선생님 T / 독서교육원 R)
+const MANAGEABLE_ADMIN_CODES = ['O', 'T', 'R'] as const;
+type ManageableAdminCode = (typeof MANAGEABLE_ADMIN_CODES)[number];
+
+function normalizeManageableCode(code: string | undefined): ManageableAdminCode {
+  return (MANAGEABLE_ADMIN_CODES as readonly string[]).includes(code ?? '')
+    ? (code as ManageableAdminCode)
+    : 'T';
+}
+
+// Admin: selectTeacherUserList (운영진/선생님/독서교육원)
 export async function selectTeacherUserList(): Promise<AdminUserInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, email, phone, code, date_format(insert_time, '%Y-%m-%d') as insertDate FROM admin_user_info WHERE code='T' ORDER BY name ASC`
+    `SELECT id, name, email, phone, code, date_format(insert_time, '%Y-%m-%d') as insertDate FROM admin_user_info WHERE code IN ('O','T','R') ORDER BY FIELD(code,'O','T','R'), name ASC`
   );
   return rows as AdminUserInfo[];
 }
 
-// Admin: insertTeacherUser
-export async function insertTeacherUser(name: string, phone: string): Promise<number> {
+// Admin: insertTeacherUser — code 미지정 시 선생님(T)로 등록
+export async function insertTeacherUser(name: string, phone: string, code?: string): Promise<number> {
+  const roleCode = normalizeManageableCode(code);
   const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO admin_user_info (name, phone, code, insert_time) VALUES (?, ?, 'T', now())`,
-    [name, phone]
+    `INSERT INTO admin_user_info (name, phone, code, insert_time) VALUES (?, ?, ?, now())`,
+    [name, phone, roleCode]
   );
   return result.insertId;
 }
@@ -163,7 +174,7 @@ export async function insertTeacherUser(name: string, phone: string): Promise<nu
 // Admin: updateTeacherUser
 export async function updateTeacherUser(id: number, name: string, email: string, phone: string): Promise<void> {
   await pool.query(
-    `UPDATE admin_user_info SET name=?, email=?, phone=? WHERE id=? AND code='T'`,
+    `UPDATE admin_user_info SET name=?, email=?, phone=? WHERE id=? AND code IN ('O','T','R')`,
     [name, email, phone, id]
   );
 }
@@ -171,7 +182,7 @@ export async function updateTeacherUser(id: number, name: string, email: string,
 // Admin: deleteTeacherUser
 export async function deleteTeacherUser(id: number): Promise<void> {
   await pool.query(
-    `DELETE FROM admin_user_info WHERE id=? AND code='T'`,
+    `DELETE FROM admin_user_info WHERE id=? AND code IN ('O','T','R')`,
     [id]
   );
 }
@@ -179,7 +190,7 @@ export async function deleteTeacherUser(id: number): Promise<void> {
 // Admin: selectTeacherUserById
 export async function selectTeacherUserById(id: number): Promise<AdminUserInfo | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, name, email, phone, code FROM admin_user_info WHERE id=? AND code='T'`,
+    `SELECT id, name, email, phone, code FROM admin_user_info WHERE id=? AND code IN ('O','T','R')`,
     [id]
   );
   return (rows[0] as AdminUserInfo) || null;

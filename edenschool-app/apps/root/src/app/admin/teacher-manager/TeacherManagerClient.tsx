@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { adminRoleLabel } from '@/lib/admin-roles';
 
 interface Teacher {
   id: number;
   name: string;
   email: string;
   phone: string;
+  code: string;
   insertDate: string;
 }
 
@@ -61,6 +63,7 @@ export function TeacherManagerClient() {
             <thead className="thead-dark">
               <tr>
                 <th>이름</th>
+                <th>역할</th>
                 <th>이메일</th>
                 <th>핸드폰</th>
                 <th>등록일</th>
@@ -70,12 +73,13 @@ export function TeacherManagerClient() {
             <tbody>
               {teachers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center text-muted py-3">등록된 선생님이 없습니다.</td>
+                  <td colSpan={6} className="text-center text-muted py-3">등록된 선생님이 없습니다.</td>
                 </tr>
               ) : (
                 teachers.map((t) => (
                   <tr key={t.id}>
                     <td>{t.name}</td>
+                    <td>{adminRoleLabel(t.code)}</td>
                     <td>{t.email || '-'}</td>
                     <td>{t.phone || '-'}</td>
                     <td className="text-center">{t.insertDate}</td>

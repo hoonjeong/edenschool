@@ -13,5 +13,10 @@ export default async function DashboardPage() {
     redirect('/admin/statistics');
   }
 
+  // 독서교육원(R): 전용 앱(/reading)으로 이동
+  if (session.user.code === 'R') {
+    redirect('/reading');
+  }
+
   return <DashboardClient />;
 }

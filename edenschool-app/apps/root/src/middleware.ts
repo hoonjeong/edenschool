@@ -36,6 +36,19 @@ export async function middleware(req: NextRequest) {
     return withSecurityHeaders(NextResponse.next({ request: { headers: requestHeaders } }));
   }
 
+  // === 독서교육원(R) 전용 세그먼트 ===
+  if (path.startsWith('/reading')) {
+    const res = NextResponse.next({ request: { headers: requestHeaders } });
+    const session = await getIronSession<AdminSessionData>(req, res, adminSessionOptions);
+    if (!session.user) {
+      return NextResponse.redirect(buildUrl('/admin/login', req));
+    }
+    if (session.user.code !== 'R') {
+      return NextResponse.redirect(buildUrl('/admin', req));
+    }
+    return withSecurityHeaders(res);
+  }
+
   // === Admin routes ===
   if (path.startsWith('/admin') || path.startsWith('/api/admin')) {
     // Allow admin public paths and admin auth API

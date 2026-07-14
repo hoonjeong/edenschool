@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ADMIN_ROLES, adminRoleLabel } from '@/lib/admin-roles';
 
 export function NewTeacherForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('T');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,14 +23,14 @@ export function NewTeacherForm() {
       return;
     }
 
-    if (!confirm(`이름: ${name}\n핸드폰: ${phone}\n\n추가하시겠습니까?`)) return;
+    if (!confirm(`이름: ${name}\n핸드폰: ${phone}\n역할: ${adminRoleLabel(code)}\n\n추가하시겠습니까?`)) return;
 
     setLoading(true);
     try {
       const res = await fetch('/api/admin/teacher', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), code }),
       });
       const data = await res.json();
       if (data.success) {
@@ -68,6 +70,20 @@ export function NewTeacherForm() {
             onChange={(e) => setPhone(e.target.value)}
             placeholder="010-0000-0000"
           />
+        </div>
+        <div className="form-group">
+          <label>역할</label>
+          <select
+            className="form-control"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          >
+            {ADMIN_ROLES.map((r) => (
+              <option key={r.code} value={r.code}>
+                {r.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-group mt-4">
           <button type="submit" className="btn btn-primary" disabled={loading}>
