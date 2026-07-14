@@ -1,4 +1,10 @@
-@import "tailwindcss";
+/* edenschool은 Bootstrap을 전역(unlayered) 로드한다. Tailwind를 기본값처럼 @layer로
+   감싸면 CSS 캐스케이드 규칙상 unlayered인 Bootstrap이 항상 이겨서 /reading 스타일이 깨진다.
+   그래서 Tailwind를 레이어 없이(unlayered) import → 유틸리티(클래스)가 Bootstrap
+   요소 선택자를 명시도로 이기게 한다. (전역 Bootstrap은 그대로 두므로 다른 페이지 무영향) */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/preflight.css";
+@import "tailwindcss/utilities.css";
 
 /* 콘텐츠 스캔 대상(유틸리티 생성) — /reading 세그먼트와 reading 컴포넌트만 */
 @source "../../app/reading";
