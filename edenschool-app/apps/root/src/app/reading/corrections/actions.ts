@@ -33,10 +33,12 @@ export async function recognizeMock(seedIndex?: number) {
 }
 
 // 업로드 이미지가 있고 Claude 키가 있으면 실제 비전 OCR, 아니면 샘플 목업
-export async function recognizeImage(dataUrl?: string) {
-  if (dataUrl && hasClaudeKey()) {
+// 여러 장을 받으면 순서대로 이어진 하나의 답안으로 인식한다.
+export async function recognizeImage(dataUrls?: string | string[]) {
+  const imgs = (Array.isArray(dataUrls) ? dataUrls : dataUrls ? [dataUrls] : []).filter(Boolean);
+  if (imgs.length > 0 && hasClaudeKey()) {
     try {
-      return { ...(await recognizeImageWithClaude(dataUrl)), ai: true };
+      return { ...(await recognizeImageWithClaude(imgs)), ai: true };
     } catch (e) {
       console.error("Claude OCR 실패, 샘플로 대체:", e);
     }

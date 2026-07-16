@@ -30,31 +30,40 @@ const OCR_SCHEMA = {
   required: ["problem", "answer"],
 } as const;
 
-export async function recognizeImageWithClaude(dataUrl: string): Promise<OcrResult> {
-  const parsed = parseDataUrl(dataUrl);
-  if (!parsed) throw new Error("이미지 형식을 인식할 수 없습니다.");
+export async function recognizeImageWithClaude(dataUrls: string | string[]): Promise<OcrResult> {
+  const urls = Array.isArray(dataUrls) ? dataUrls : [dataUrls];
+  const parsed = urls.map(parseDataUrl).filter((p): p is { mediaType: string; data: string } => p != null);
+  if (parsed.length === 0) throw new Error("이미지 형식을 인식할 수 없습니다.");
 
   const client = getClaudeClient();
   const res = await client.messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 4000,
     system:
-      "너는 초등학생 손글씨 답안지를 정확히 전사하는 OCR 도우미다. 이미지에서 '문제(지시문)'와 '학생 답안'을 구분해 그대로 옮겨 적는다. 맞춤법을 임의로 고치지 말고 학생이 쓴 그대로 전사한다. 글자 판독 신뢰도가 낮아 확신이 없는 낱말은 그 낱말을 [[ ]]로 감싼다. 문제가 이미지에 없으면 problem은 빈 문자열로 둔다.",
+      "너는 초등학생 손글씨 답안지를 정확히 전사하는 OCR 도우미다. 이미지에서 '문제(지시문)'와 '학생 답안'을 구분해 그대로 옮겨 적는다. 이미지가 여러 장이면 촬영/스캔한 순서대로 이어진 하나의 답안지로 보고, 문제는 한 번만 옮기고 학생 답안은 페이지 순서대로 이어 붙여 전사한다. 맞춤법을 임의로 고치지 말고 학생이 쓴 그대로 전사한다. 글자 판독 신뢰도가 낮아 확신이 없는 낱말은 그 낱말을 [[ ]]로 감싼다. 문제가 이미지에 없으면 problem은 빈 문자열로 둔다.",
     messages: [
       {
         role: "user",
         content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: parsed.mediaType as "image/png" | "image/jpeg" | "image/webp" | "image/gif",
-              data: parsed.data,
-            },
-          },
+          ...parsed.map((p, i) => [
+            ...(parsed.length > 1
+              ? [{ type: "text", text: `[${i + 1}번째 이미지]` } as const]
+              : []),
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: p.mediaType as "image/png" | "image/jpeg" | "image/webp" | "image/gif",
+                data: p.data,
+              },
+            } as const,
+          ]).flat(),
           {
             type: "text",
-            text: "이 답안지를 전사해 주세요. 문제와 학생 답안을 분리해 JSON으로 반환합니다.",
+            text:
+              parsed.length > 1
+                ? `총 ${parsed.length}장의 답안지입니다. 순서대로 이어진 하나의 답안으로 전사해, 문제와 학생 답안을 분리해 JSON으로 반환합니다.`
+                : "이 답안지를 전사해 주세요. 문제와 학생 답안을 분리해 JSON으로 반환합니다.",
           },
         ],
       },

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, Upload, ScanText, SlidersHorizontal, Sparkles,
-  Check, Loader2, ImageIcon, Save, Info,
+  Check, Loader2, ImageIcon, Save, Info, X, Plus,
 } from "lucide-react";
 import {
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -30,7 +30,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
 
   // 데이터
   const [studentId, setStudentId] = useState<number | null>(null);
-  const [imgUrl, setImgUrl] = useState<string | null>(null);
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
   const [problem, setProblem] = useState("");
   const [answer, setAnswer] = useState("");
   const [confirmed, setConfirmed] = useState(false);
@@ -47,17 +47,32 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
 
   const selStudent = students.find((s: any) => s.id === studentId);
 
+  const MAX_IMAGES = 20;
+
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => setImgUrl(reader.result as string);
-    reader.readAsDataURL(f);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    Promise.all(
+      files.map(
+        (f) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(f);
+          }),
+      ),
+    ).then((urls) => setImgUrls((prev) => [...prev, ...urls].slice(0, MAX_IMAGES)));
+    e.target.value = ""; // 같은 파일 다시 선택 가능하도록 초기화
+  }
+
+  function removeImg(i: number) {
+    setImgUrls((prev) => prev.filter((_, idx) => idx !== i));
   }
 
   function recognize() {
     start(async () => {
-      const r = await recognizeImage(imgUrl ?? undefined);
+      const r = await recognizeImage(imgUrls.length ? imgUrls : undefined);
       setProblem(r.problem);
       setAnswer(r.answer);
       setStep(1);
@@ -132,19 +147,47 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
 
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line hover:border-brand-400 hover:bg-brand-50/50 grid place-items-center transition overflow-hidden">
-                {imgUrl ? (
-                  <img src={imgUrl} alt="답안 미리보기" className="w-full h-full object-contain" />
-                ) : (
+              <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFile} className="hidden" />
+              {imgUrls.length === 0 ? (
+                <button onClick={() => fileRef.current?.click()}
+                  className="w-full aspect-[4/3] rounded-2xl border-2 border-dashed border-line hover:border-brand-400 hover:bg-brand-50/50 grid place-items-center transition overflow-hidden">
                   <div className="text-center text-faint">
                     <ImageIcon className="size-10 mx-auto mb-2" />
                     <div className="text-sm font-semibold">클릭하여 답안 이미지 업로드</div>
-                    <div className="text-[12px] mt-1">JPG, PNG · 최대 20장</div>
+                    <div className="text-[12px] mt-1">JPG, PNG · 여러 장 선택 가능 · 최대 {MAX_IMAGES}장</div>
                   </div>
-                )}
-              </button>
+                </button>
+              ) : (
+                <div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {imgUrls.map((u, i) => (
+                      <div key={i} className="relative aspect-square rounded-xl border border-line overflow-hidden bg-canvas">
+                        <img src={u} alt={`답안 ${i + 1}`} className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 rounded bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5">
+                          {i + 1}
+                        </span>
+                        <button onClick={() => removeImg(i)} type="button"
+                          className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-black/55 text-white hover:bg-red-500 transition"
+                          aria-label={`${i + 1}번째 이미지 삭제`}>
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {imgUrls.length < MAX_IMAGES && (
+                      <button onClick={() => fileRef.current?.click()} type="button"
+                        className="aspect-square rounded-xl border-2 border-dashed border-line hover:border-brand-400 hover:bg-brand-50/50 grid place-items-center text-faint transition">
+                        <div className="text-center">
+                          <Plus className="size-6 mx-auto" />
+                          <div className="text-[11px] mt-0.5 font-semibold">추가</div>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-faint mt-2">
+                    총 {imgUrls.length}장 · 촬영/스캔 순서대로 이어진 하나의 답안으로 인식됩니다.
+                  </p>
+                </div>
+              )}
             </div>
             <div>
               <label className={labelCls}>학생 (선택)</label>
@@ -179,10 +222,29 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
           </p>
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <div className="text-[13px] font-semibold mb-1.5">원본 이미지</div>
-              <div className="aspect-[4/3] rounded-xl border border-line bg-canvas grid place-items-center overflow-hidden">
-                {imgUrl ? <img src={imgUrl} className="w-full h-full object-contain" alt="" /> : <span className="text-faint text-sm">이미지 없음 (샘플 인식)</span>}
+              <div className="text-[13px] font-semibold mb-1.5">
+                원본 이미지{imgUrls.length > 1 && <span className="text-faint font-normal"> · {imgUrls.length}장</span>}
               </div>
+              {imgUrls.length === 0 ? (
+                <div className="aspect-[4/3] rounded-xl border border-line bg-canvas grid place-items-center">
+                  <span className="text-faint text-sm">이미지 없음 (샘플 인식)</span>
+                </div>
+              ) : imgUrls.length === 1 ? (
+                <div className="aspect-[4/3] rounded-xl border border-line bg-canvas grid place-items-center overflow-hidden">
+                  <img src={imgUrls[0]} className="w-full h-full object-contain" alt="원본 답안" />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-line bg-canvas p-2 max-h-[420px] overflow-y-auto space-y-2">
+                  {imgUrls.map((u, i) => (
+                    <div key={i} className="relative">
+                      <img src={u} className="w-full rounded-lg object-contain" alt={`원본 답안 ${i + 1}`} />
+                      <span className="absolute top-1.5 left-1.5 rounded bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5">
+                        {i + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-4">
               <div>
