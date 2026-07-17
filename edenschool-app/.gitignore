@@ -22,6 +22,9 @@ Thumbs.db
 # 데이터 파일
 data/
 
+# 대량 임포트 스크립트 (로컬 데이터 작업용 - 커밋 제외)
+scripts/import-*.ts
+
 # 임시 파일
 *.tmp
 *.hwpx.tmp
