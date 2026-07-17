@@ -223,7 +223,11 @@ export const ClinicScalarFieldEnum = {
   studentId: 'studentId',
   weekday: 'weekday',
   time: 'time',
+  endTime: 'endTime',
   subject: 'subject',
+  teacher: 'teacher',
+  progress: 'progress',
+  note: 'note',
   createdAt: 'createdAt'
 } as const
 
@@ -373,7 +377,11 @@ export type AppSettingOrderByRelevanceFieldEnum = (typeof AppSettingOrderByRelev
 
 export const ClinicOrderByRelevanceFieldEnum = {
   time: 'time',
-  subject: 'subject'
+  endTime: 'endTime',
+  subject: 'subject',
+  teacher: 'teacher',
+  progress: 'progress',
+  note: 'note'
 } as const
 
 export type ClinicOrderByRelevanceFieldEnum = (typeof ClinicOrderByRelevanceFieldEnum)[keyof typeof ClinicOrderByRelevanceFieldEnum]

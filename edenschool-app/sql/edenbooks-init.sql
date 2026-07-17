@@ -139,7 +139,11 @@ CREATE TABLE IF NOT EXISTS `Clinic` (
   `studentId` INTEGER NOT NULL,
   `weekday` INTEGER NOT NULL,
   `time` VARCHAR(191) NOT NULL,
+  `endTime` VARCHAR(191) NULL,
   `subject` VARCHAR(191) NOT NULL DEFAULT '클리닉',
+  `teacher` VARCHAR(191) NULL,
+  `progress` VARCHAR(191) NULL,
+  `note` TEXT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX `Clinic_weekday_idx`(`weekday`),
   PRIMARY KEY (`id`)

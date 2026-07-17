@@ -43,7 +43,11 @@ export type ClinicMinAggregateOutputType = {
   studentId: number | null
   weekday: number | null
   time: string | null
+  endTime: string | null
   subject: string | null
+  teacher: string | null
+  progress: string | null
+  note: string | null
   createdAt: Date | null
 }
 
@@ -52,7 +56,11 @@ export type ClinicMaxAggregateOutputType = {
   studentId: number | null
   weekday: number | null
   time: string | null
+  endTime: string | null
   subject: string | null
+  teacher: string | null
+  progress: string | null
+  note: string | null
   createdAt: Date | null
 }
 
@@ -61,7 +69,11 @@ export type ClinicCountAggregateOutputType = {
   studentId: number
   weekday: number
   time: number
+  endTime: number
   subject: number
+  teacher: number
+  progress: number
+  note: number
   createdAt: number
   _all: number
 }
@@ -84,7 +96,11 @@ export type ClinicMinAggregateInputType = {
   studentId?: true
   weekday?: true
   time?: true
+  endTime?: true
   subject?: true
+  teacher?: true
+  progress?: true
+  note?: true
   createdAt?: true
 }
 
@@ -93,7 +109,11 @@ export type ClinicMaxAggregateInputType = {
   studentId?: true
   weekday?: true
   time?: true
+  endTime?: true
   subject?: true
+  teacher?: true
+  progress?: true
+  note?: true
   createdAt?: true
 }
 
@@ -102,7 +122,11 @@ export type ClinicCountAggregateInputType = {
   studentId?: true
   weekday?: true
   time?: true
+  endTime?: true
   subject?: true
+  teacher?: true
+  progress?: true
+  note?: true
   createdAt?: true
   _all?: true
 }
@@ -198,7 +222,11 @@ export type ClinicGroupByOutputType = {
   studentId: number
   weekday: number
   time: string
+  endTime: string | null
   subject: string
+  teacher: string | null
+  progress: string | null
+  note: string | null
   createdAt: Date
   _count: ClinicCountAggregateOutputType | null
   _avg: ClinicAvgAggregateOutputType | null
@@ -230,7 +258,11 @@ export type ClinicWhereInput = {
   studentId?: Prisma.IntFilter<"Clinic"> | number
   weekday?: Prisma.IntFilter<"Clinic"> | number
   time?: Prisma.StringFilter<"Clinic"> | string
+  endTime?: Prisma.StringNullableFilter<"Clinic"> | string | null
   subject?: Prisma.StringFilter<"Clinic"> | string
+  teacher?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  progress?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  note?: Prisma.StringNullableFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
 }
@@ -240,7 +272,11 @@ export type ClinicOrderByWithRelationInput = {
   studentId?: Prisma.SortOrder
   weekday?: Prisma.SortOrder
   time?: Prisma.SortOrder
+  endTime?: Prisma.SortOrderInput | Prisma.SortOrder
   subject?: Prisma.SortOrder
+  teacher?: Prisma.SortOrderInput | Prisma.SortOrder
+  progress?: Prisma.SortOrderInput | Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   student?: Prisma.StudentOrderByWithRelationInput
   _relevance?: Prisma.ClinicOrderByRelevanceInput
@@ -254,7 +290,11 @@ export type ClinicWhereUniqueInput = Prisma.AtLeast<{
   studentId?: Prisma.IntFilter<"Clinic"> | number
   weekday?: Prisma.IntFilter<"Clinic"> | number
   time?: Prisma.StringFilter<"Clinic"> | string
+  endTime?: Prisma.StringNullableFilter<"Clinic"> | string | null
   subject?: Prisma.StringFilter<"Clinic"> | string
+  teacher?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  progress?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  note?: Prisma.StringNullableFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
 }, "id">
@@ -264,7 +304,11 @@ export type ClinicOrderByWithAggregationInput = {
   studentId?: Prisma.SortOrder
   weekday?: Prisma.SortOrder
   time?: Prisma.SortOrder
+  endTime?: Prisma.SortOrderInput | Prisma.SortOrder
   subject?: Prisma.SortOrder
+  teacher?: Prisma.SortOrderInput | Prisma.SortOrder
+  progress?: Prisma.SortOrderInput | Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.ClinicCountOrderByAggregateInput
   _avg?: Prisma.ClinicAvgOrderByAggregateInput
@@ -281,14 +325,22 @@ export type ClinicScalarWhereWithAggregatesInput = {
   studentId?: Prisma.IntWithAggregatesFilter<"Clinic"> | number
   weekday?: Prisma.IntWithAggregatesFilter<"Clinic"> | number
   time?: Prisma.StringWithAggregatesFilter<"Clinic"> | string
+  endTime?: Prisma.StringNullableWithAggregatesFilter<"Clinic"> | string | null
   subject?: Prisma.StringWithAggregatesFilter<"Clinic"> | string
+  teacher?: Prisma.StringNullableWithAggregatesFilter<"Clinic"> | string | null
+  progress?: Prisma.StringNullableWithAggregatesFilter<"Clinic"> | string | null
+  note?: Prisma.StringNullableWithAggregatesFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Clinic"> | Date | string
 }
 
 export type ClinicCreateInput = {
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
   student: Prisma.StudentCreateNestedOneWithoutClinicsInput
 }
@@ -298,14 +350,22 @@ export type ClinicUncheckedCreateInput = {
   studentId: number
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
 }
 
 export type ClinicUpdateInput = {
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   student?: Prisma.StudentUpdateOneRequiredWithoutClinicsNestedInput
 }
@@ -315,7 +375,11 @@ export type ClinicUncheckedUpdateInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -324,14 +388,22 @@ export type ClinicCreateManyInput = {
   studentId: number
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
 }
 
 export type ClinicUpdateManyMutationInput = {
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -340,7 +412,11 @@ export type ClinicUncheckedUpdateManyInput = {
   studentId?: Prisma.IntFieldUpdateOperationsInput | number
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -365,7 +441,11 @@ export type ClinicCountOrderByAggregateInput = {
   studentId?: Prisma.SortOrder
   weekday?: Prisma.SortOrder
   time?: Prisma.SortOrder
+  endTime?: Prisma.SortOrder
   subject?: Prisma.SortOrder
+  teacher?: Prisma.SortOrder
+  progress?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -380,7 +460,11 @@ export type ClinicMaxOrderByAggregateInput = {
   studentId?: Prisma.SortOrder
   weekday?: Prisma.SortOrder
   time?: Prisma.SortOrder
+  endTime?: Prisma.SortOrder
   subject?: Prisma.SortOrder
+  teacher?: Prisma.SortOrder
+  progress?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -389,7 +473,11 @@ export type ClinicMinOrderByAggregateInput = {
   studentId?: Prisma.SortOrder
   weekday?: Prisma.SortOrder
   time?: Prisma.SortOrder
+  endTime?: Prisma.SortOrder
   subject?: Prisma.SortOrder
+  teacher?: Prisma.SortOrder
+  progress?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -444,7 +532,11 @@ export type ClinicUncheckedUpdateManyWithoutStudentNestedInput = {
 export type ClinicCreateWithoutStudentInput = {
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
 }
 
@@ -452,7 +544,11 @@ export type ClinicUncheckedCreateWithoutStudentInput = {
   id?: number
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
 }
 
@@ -490,7 +586,11 @@ export type ClinicScalarWhereInput = {
   studentId?: Prisma.IntFilter<"Clinic"> | number
   weekday?: Prisma.IntFilter<"Clinic"> | number
   time?: Prisma.StringFilter<"Clinic"> | string
+  endTime?: Prisma.StringNullableFilter<"Clinic"> | string | null
   subject?: Prisma.StringFilter<"Clinic"> | string
+  teacher?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  progress?: Prisma.StringNullableFilter<"Clinic"> | string | null
+  note?: Prisma.StringNullableFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
 }
 
@@ -498,14 +598,22 @@ export type ClinicCreateManyStudentInput = {
   id?: number
   weekday: number
   time: string
+  endTime?: string | null
   subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
   createdAt?: Date | string
 }
 
 export type ClinicUpdateWithoutStudentInput = {
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -513,7 +621,11 @@ export type ClinicUncheckedUpdateWithoutStudentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -521,7 +633,11 @@ export type ClinicUncheckedUpdateManyWithoutStudentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   weekday?: Prisma.IntFieldUpdateOperationsInput | number
   time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -532,7 +648,11 @@ export type ClinicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   studentId?: boolean
   weekday?: boolean
   time?: boolean
+  endTime?: boolean
   subject?: boolean
+  teacher?: boolean
+  progress?: boolean
+  note?: boolean
   createdAt?: boolean
   student?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["clinic"]>
@@ -544,11 +664,15 @@ export type ClinicSelectScalar = {
   studentId?: boolean
   weekday?: boolean
   time?: boolean
+  endTime?: boolean
   subject?: boolean
+  teacher?: boolean
+  progress?: boolean
+  note?: boolean
   createdAt?: boolean
 }
 
-export type ClinicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "weekday" | "time" | "subject" | "createdAt", ExtArgs["result"]["clinic"]>
+export type ClinicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "weekday" | "time" | "endTime" | "subject" | "teacher" | "progress" | "note" | "createdAt", ExtArgs["result"]["clinic"]>
 export type ClinicInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   student?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
 }
@@ -563,7 +687,11 @@ export type $ClinicPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     studentId: number
     weekday: number
     time: string
+    endTime: string | null
     subject: string
+    teacher: string | null
+    progress: string | null
+    note: string | null
     createdAt: Date
   }, ExtArgs["result"]["clinic"]>
   composites: {}
@@ -939,7 +1067,11 @@ export interface ClinicFieldRefs {
   readonly studentId: Prisma.FieldRef<"Clinic", 'Int'>
   readonly weekday: Prisma.FieldRef<"Clinic", 'Int'>
   readonly time: Prisma.FieldRef<"Clinic", 'String'>
+  readonly endTime: Prisma.FieldRef<"Clinic", 'String'>
   readonly subject: Prisma.FieldRef<"Clinic", 'String'>
+  readonly teacher: Prisma.FieldRef<"Clinic", 'String'>
+  readonly progress: Prisma.FieldRef<"Clinic", 'String'>
+  readonly note: Prisma.FieldRef<"Clinic", 'String'>
   readonly createdAt: Prisma.FieldRef<"Clinic", 'DateTime'>
 }
     

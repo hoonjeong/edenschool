@@ -61,13 +61,24 @@ export default function ClinicClient({ clinics, students }: any) {
           ) : (
             <div className="divide-y divide-line/70">
               {dayClinics.map((c: any) => (
-                <div key={c.id} className="flex items-center gap-4 px-5 py-3">
-                  <div className="w-16 font-bold tabular-nums text-brand-700">{c.time}</div>
-                  <Link href={`/reading/students/${c.studentId}`} className="font-semibold hover:text-brand-700">{c.studentName}</Link>
-                  <span className="text-[12px] text-faint">{c.grade}</span>
-                  <span className="text-[13px] text-muted">{c.subject}</span>
-                  <button onClick={() => remove(c.id)} disabled={pending}
-                    className="ml-auto grid size-7 place-items-center rounded-lg text-faint hover:bg-canvas hover:text-rose-500"><X className="size-4" /></button>
+                <div key={c.id} className="px-5 py-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 font-bold tabular-nums text-brand-700 shrink-0">
+                      {c.time}{c.endTime && <span className="text-faint font-semibold">~{c.endTime}</span>}
+                    </div>
+                    <Link href={`/reading/students/${c.studentId}`} className="font-semibold hover:text-brand-700">{c.studentName}</Link>
+                    <span className="text-[12px] text-faint">{c.grade}</span>
+                    <span className="text-[13px] text-muted">{c.subject}</span>
+                    {c.teacher && <span className="text-[12px] text-brand-700 bg-brand-50 rounded px-1.5 py-0.5">{c.teacher}</span>}
+                    <button onClick={() => remove(c.id)} disabled={pending}
+                      className="ml-auto grid size-7 place-items-center rounded-lg text-faint hover:bg-canvas hover:text-rose-500"><X className="size-4" /></button>
+                  </div>
+                  {(c.progress || c.note) && (
+                    <div className="mt-1.5 pl-24 text-[12.5px] text-muted space-y-0.5">
+                      {c.progress && <div><span className="text-faint">진도</span> · {c.progress}</div>}
+                      {c.note && <div><span className="text-faint">특이사항</span> · {c.note}</div>}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -84,13 +95,23 @@ export default function ClinicClient({ clinics, students }: any) {
           return (
             <div key={w.n}>
               <div className="font-bold border-b border-ink pb-1 mb-2">{w.label}요일</div>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+              <div className="space-y-1">
                 {list.map((c: any) => (
-                  <div key={c.id} className="flex gap-3 text-sm py-0.5">
-                    <span className="w-14 font-semibold tabular-nums">{c.time}</span>
-                    <span className="font-medium">{c.studentName}</span>
-                    <span className="text-faint">{c.grade}</span>
-                    <span className="ml-auto text-muted">{c.subject}</span>
+                  <div key={c.id} className="text-sm py-0.5">
+                    <div className="flex gap-3">
+                      <span className="w-24 font-semibold tabular-nums shrink-0">{c.time}{c.endTime && `~${c.endTime}`}</span>
+                      <span className="font-medium">{c.studentName}</span>
+                      <span className="text-faint">{c.grade}</span>
+                      <span className="text-muted">{c.subject}</span>
+                      {c.teacher && <span className="text-muted">· {c.teacher}</span>}
+                    </div>
+                    {(c.progress || c.note) && (
+                      <div className="pl-24 text-[12px] text-muted">
+                        {c.progress && <span>진도: {c.progress}</span>}
+                        {c.progress && c.note && <span> / </span>}
+                        {c.note && <span>특이사항: {c.note}</span>}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -109,7 +130,11 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
   const [q, setQ] = useState("");
   const [weekday, setWeekday] = useState(defaultDay);
   const [time, setTime] = useState("16:00");
+  const [endTime, setEndTime] = useState("17:00");
   const [subject, setSubject] = useState("독해 클리닉");
+  const [teacher, setTeacher] = useState("");
+  const [progress, setProgress] = useState("");
+  const [note, setNote] = useState("");
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
 
@@ -118,9 +143,13 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
 
   function save() {
     if (!studentId) return setErr("학생을 선택하세요.");
-    if (!/^\d{2}:\d{2}$/.test(time)) return setErr("시간을 HH:MM 형식으로 입력하세요.");
+    if (!/^\d{2}:\d{2}$/.test(time)) return setErr("시작 시간을 HH:MM 형식으로 입력하세요.");
+    if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) return setErr("끝나는 시간을 HH:MM 형식으로 입력하세요.");
     setErr("");
-    start(async () => { await addClinic({ studentId, weekday, time, subject }); onSaved(); });
+    start(async () => {
+      await addClinic({ studentId, weekday, time, endTime, subject, teacher, progress, note });
+      onSaved();
+    });
   }
 
   return (
@@ -155,9 +184,15 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
             </select>
           </div>
           <div>
-            <label className={labelCls}>시간</label>
+            <label className={labelCls}>시작 시간</label>
             <input type="time" className={inputCls} value={time} onChange={(e) => setTime(e.target.value)} />
           </div>
+          <div>
+            <label className={labelCls}>끝나는 시간</label>
+            <input type="time" className={inputCls} value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>과목</label>
             <select className={inputCls} value={subject} onChange={(e) => setSubject(e.target.value)}>
@@ -167,6 +202,19 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
               <option>클리닉</option>
             </select>
           </div>
+          <div>
+            <label className={labelCls}>담당 선생님</label>
+            <input className={inputCls} value={teacher} onChange={(e) => setTeacher(e.target.value)} placeholder="예: 김선생" />
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>진도</label>
+          <input className={inputCls} value={progress} onChange={(e) => setProgress(e.target.value)} placeholder="예: 3단원 독해 2차시" />
+        </div>
+        <div>
+          <label className={labelCls}>특이사항 (비고)</label>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2}
+            className={inputCls + " h-auto py-2 resize-none"} placeholder="숙제, 결석, 학부모 전달사항 등" />
         </div>
         {err && <p className="text-[13px] text-rose-500">{err}</p>}
       </div>
