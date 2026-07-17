@@ -31,6 +31,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   // 데이터
   const [studentId, setStudentId] = useState<number | null>(null);
   const [imgUrls, setImgUrls] = useState<string[]>([]);
+  const [processing, setProcessing] = useState(false);
   const [problem, setProblem] = useState("");
   const [answer, setAnswer] = useState("");
   const [confirmed, setConfirmed] = useState(false);
@@ -49,21 +50,25 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
 
   const MAX_IMAGES = 20;
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    Promise.all(
-      files.map(
-        (f) =>
-          new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(f);
-          }),
-      ),
-    ).then((urls) => setImgUrls((prev) => [...prev, ...urls].slice(0, MAX_IMAGES)));
     e.target.value = ""; // 같은 파일 다시 선택 가능하도록 초기화
+    if (files.length === 0) return;
+    setProcessing(true);
+    try {
+      const urls: string[] = [];
+      for (const f of files) {
+        if (!f.type.startsWith("image/")) continue;
+        try {
+          urls.push(await compressImage(f));
+        } catch (err) {
+          console.error("이미지 처리 실패:", f.name, err);
+        }
+      }
+      if (urls.length) setImgUrls((prev) => [...prev, ...urls].slice(0, MAX_IMAGES));
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function removeImg(i: number) {
@@ -204,8 +209,13 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
             </div>
           </div>
 
-          <div className="flex justify-end mt-6">
-            <Button onClick={recognize} disabled={pending}>
+          <div className="flex items-center justify-end gap-3 mt-6">
+            {processing && (
+              <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+                <Loader2 className="size-4 animate-spin" /> 이미지 준비 중…
+              </span>
+            )}
+            <Button onClick={recognize} disabled={pending || processing}>
               {pending ? <Loader2 className="size-4 animate-spin" /> : <ScanText className="size-4" />}
               문제·답안 자동 인식
             </Button>
@@ -438,6 +448,59 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
       )}
     </div>
   );
+}
+
+// 업로드 이미지를 클라이언트에서 리사이즈·압축(최대 1600px, JPEG)해 data URL로 변환.
+// 서버 액션 payload를 장당 수백 KB로 줄여 본문 한도 초과와 전송 지연을 방지한다.
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.82;
+
+async function compressImage(file: File): Promise<string> {
+  let src: CanvasImageSource | null = null;
+  let w = 0;
+  let h = 0;
+  let cleanup: (() => void) | undefined;
+
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: "from-image" } as ImageBitmapOptions);
+      src = bmp;
+      w = bmp.width;
+      h = bmp.height;
+      cleanup = () => bmp.close();
+    } catch {
+      src = null;
+    }
+  }
+
+  if (!src) {
+    const url = URL.createObjectURL(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error("이미지를 불러올 수 없습니다."));
+      im.src = url;
+    });
+    src = img;
+    w = img.naturalWidth;
+    h = img.naturalHeight;
+    cleanup = () => URL.revokeObjectURL(url);
+  }
+
+  try {
+    const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+    const cw = Math.max(1, Math.round(w * scale));
+    const ch = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("캔버스를 생성할 수 없습니다.");
+    ctx.drawImage(src, 0, 0, cw, ch);
+    return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  } finally {
+    cleanup?.();
+  }
 }
 
 // [[낮은신뢰도]] 하이라이트 미리보기

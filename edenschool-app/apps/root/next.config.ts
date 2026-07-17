@@ -14,7 +14,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['pdf-parse', 'cfb', 'exceljs', '@prisma/client', '@prisma/adapter-mariadb', 'mariadb'],
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      // 첨삭 답안 이미지를 여러 장(최대 20장) 서버 액션으로 전달하므로 한도 상향.
+      // 클라이언트에서 리사이즈·압축(최대 1600px JPEG)하지만 장수 대비 여유를 둔다.
+      bodySizeLimit: '16mb',
     },
   },
   async headers() {
