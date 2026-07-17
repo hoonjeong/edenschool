@@ -74,17 +74,6 @@ export async function deleteTemplate(id: number, teacherId: number): Promise<num
   return result.affectedRows;
 }
 
-// Batch send history (duplicate prevention)
-export async function selectSendHistoryBatch(phones: string[]): Promise<Record<string, any>[]> {
-  if (phones.length === 0) return [];
-  const placeholders = phones.map(() => '?').join(',');
-  const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT phone, message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time FROM sms_send_result_nine WHERE phone IN (${placeholders}) AND send_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) ORDER BY send_time DESC`,
-    phones
-  );
-  return rows;
-}
-
 // sms_send_result_renew: recent history by sender ID
 export async function selectSendHistoryBySenderId(sendId: number, limit: number = 20): Promise<Record<string, any>[]> {
   const [rows] = await pool.query<RowDataPacket[]>(

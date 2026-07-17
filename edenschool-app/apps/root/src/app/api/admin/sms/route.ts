@@ -3,7 +3,7 @@ import { sendSms } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
-import { selectSendHistoryByPhone, selectSendHistoryBatch, selectSendHistoryBySenderId } from '@edenschool/common/queries/sms-log';
+import { selectSendHistoryByPhone, selectSendHistoryBySenderId } from '@edenschool/common/queries/sms-log';
 
 // GET: Fetch send history for a phone number
 export const GET = withErrorHandler(async (req: NextRequest) => {
@@ -11,23 +11,11 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const phone = searchParams.get('phone');
-  const phones = searchParams.get('phones');
   const myHistory = searchParams.get('myHistory');
 
   // My send history: ?myHistory=true
   if (myHistory === 'true') {
     const rows = await selectSendHistoryBySenderId(session.user.id, 30);
-    return NextResponse.json({ history: rows });
-  }
-
-  // Batch mode: ?phones=010...,010...
-  if (phones) {
-    const phoneList = phones.split(',').map((p) => p.trim()).filter(Boolean);
-    if (phoneList.length === 0) return NextResponse.json({ history: [] });
-    if (phoneList.length > 200) {
-      return NextResponse.json({ error: '조회 가능한 최대 전화번호 수를 초과했습니다.' }, { status: 400 });
-    }
-    const rows = await selectSendHistoryBatch(phoneList);
     return NextResponse.json({ history: rows });
   }
 
