@@ -90,6 +90,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   const [open, setOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
   const [ym, setYm] = useState(""); // 인쇄 헤더용 "YYYY-MM" (마운트 후 현재 월로 설정)
+  const [printWeek, setPrintWeek] = useState(1); // 인쇄 기준 주차(1~4)
 
   useEffect(() => {
     const d = new Date();
@@ -139,7 +140,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   return (
     <div>
       {/* 툴바 */}
-      <div className="flex flex-wrap items-center gap-2 mb-4 print:hidden">
+      <div className="flex flex-wrap items-center gap-3 mb-4 print:hidden">
         <label className="inline-flex items-center gap-1.5 text-[13px] text-muted">
           인쇄 기준 월
           <input
@@ -149,6 +150,20 @@ function TimetableView({ clinics, students, onRefresh }: any) {
             className="h-9 rounded-lg border border-line bg-canvas px-2 text-sm"
           />
         </label>
+        <div className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+          기준 주차
+          <div className="flex gap-1">
+            {WEEKS.map((w) => (
+              <button
+                key={w}
+                onClick={() => setPrintWeek(w)}
+                className={`h-9 w-12 rounded-lg text-[13px] font-bold transition ${printWeek === w ? "bg-brand-600 text-white shadow-sm" : "bg-surface border border-line text-muted hover:bg-canvas"}`}
+              >
+                {w}주
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="ml-auto flex gap-2">
           <Button variant="secondary" onClick={() => window.print()}>
             <Printer className="size-4" /> 이 요일 인쇄
@@ -239,10 +254,10 @@ function TimetableView({ clinics, students, onRefresh }: any) {
         )}
       </Card>
 
-      {/* 인쇄 전용: 현재 요일 타임라인 + 주차별 진도 */}
+      {/* 인쇄 전용: 현재 요일 타임라인 + 시간대별 상세표 */}
       <div className="hidden print:block">
         <h1 className="text-lg font-extrabold mb-1">
-          이든 국어 독서교육원 · {ymLabel(ym) && `${ymLabel(ym)} · `}{weekdayLabel(day)}요일 클리닉 시간표
+          이든 국어 독서교육원 · {ymLabel(ym) && `${ymLabel(ym)} · `}{printWeek}주차 · {weekdayLabel(day)}요일 클리닉 시간표
         </h1>
         <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
           {teacherStats.list.map(([name]) => {
@@ -259,47 +274,49 @@ function TimetableView({ clinics, students, onRefresh }: any) {
           <ClinicTimeline clinics={dayClinics} colorMap={colorMap} activeTeacher="ALL" />
         )}
 
-        {/* 시간순 주차별 진도 목록 */}
+        {/* 시간대별 상세표: 이름 / 담당 / 등하원 시간 / 진도 / 비고 */}
         {dayByTime.length > 0 && (
-          <div className="mt-4">
-            <div className="text-[13px] font-bold border-b border-ink pb-1 mb-1.5">
-              주차별 진도 {ymLabel(ym) && `(${ymLabel(ym)})`}
-            </div>
-            <div>
+          <table className="mt-4 w-full border-collapse text-[11px]">
+            <thead>
+              <tr className="text-left">
+                {["시간(등하원)", "이름", "담당", `진도 (${printWeek}주차)`, "비고"].map((h, i) => (
+                  <th
+                    key={h}
+                    className="border border-ink/70 px-2 py-1 font-bold bg-canvas"
+                    style={{ width: ["16%", "14%", "12%", "34%", "24%"][i], ...printColor }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
               {dayByTime.map((c: any) => {
                 const color = teacherColorOf(c.teacher, colorMap);
-                const weeks = WEEKS.filter((w) => c.progress?.[w]);
                 return (
-                  <div
-                    key={c.id}
-                    className="flex gap-2 py-1 text-[11px] leading-snug border-b border-line/60"
-                    style={{ breakInside: "avoid" }}
-                  >
-                    <span className="w-12 shrink-0 tabular-nums font-semibold">{c.time}</span>
-                    <span className="inline-flex items-center gap-1 w-24 shrink-0">
-                      <span
-                        className="size-2 rounded-full shrink-0"
-                        style={{ backgroundColor: color.dot, ...printColor }}
-                      />
-                      <span className="font-semibold truncate">{c.studentName}</span>
-                    </span>
-                    <span className="w-14 shrink-0 text-faint truncate">{c.teacher ?? ""}</span>
-                    <span className="flex-1">
-                      {weeks.length === 0 ? (
-                        <span className="text-faint">진도 미입력</span>
-                      ) : (
-                        weeks.map((w) => (
-                          <span key={w} className="mr-3 inline-block">
-                            <b className="font-bold">{w}주차</b> {c.progress[w]}
-                          </span>
-                        ))
-                      )}
-                    </span>
-                  </div>
+                  <tr key={c.id} style={{ breakInside: "avoid" }}>
+                    <td className="border border-ink/60 px-2 py-1 tabular-nums whitespace-nowrap">
+                      {c.time}
+                      {c.endTime ? `~${c.endTime}` : ""}
+                    </td>
+                    <td className="border border-ink/60 px-2 py-1">
+                      <span className="inline-flex items-center gap-1">
+                        <span
+                          className="size-2 rounded-full shrink-0"
+                          style={{ backgroundColor: color.dot, ...printColor }}
+                        />
+                        <span className="font-semibold">{c.studentName}</span>
+                        {c.grade && <span className="text-faint">{c.grade}</span>}
+                      </span>
+                    </td>
+                    <td className="border border-ink/60 px-2 py-1">{c.teacher ?? ""}</td>
+                    <td className="border border-ink/60 px-2 py-1">{c.progress?.[printWeek] ?? ""}</td>
+                    <td className="border border-ink/60 px-2 py-1">{c.note ?? ""}</td>
+                  </tr>
                 );
               })}
-            </div>
-          </div>
+            </tbody>
+          </table>
         )}
       </div>
 
