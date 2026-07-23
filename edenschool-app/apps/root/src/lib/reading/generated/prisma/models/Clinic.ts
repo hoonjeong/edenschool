@@ -265,6 +265,7 @@ export type ClinicWhereInput = {
   note?: Prisma.StringNullableFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
+  progresses?: Prisma.ClinicProgressListRelationFilter
 }
 
 export type ClinicOrderByWithRelationInput = {
@@ -279,6 +280,7 @@ export type ClinicOrderByWithRelationInput = {
   note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   student?: Prisma.StudentOrderByWithRelationInput
+  progresses?: Prisma.ClinicProgressOrderByRelationAggregateInput
   _relevance?: Prisma.ClinicOrderByRelevanceInput
 }
 
@@ -297,6 +299,7 @@ export type ClinicWhereUniqueInput = Prisma.AtLeast<{
   note?: Prisma.StringNullableFilter<"Clinic"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
+  progresses?: Prisma.ClinicProgressListRelationFilter
 }, "id">
 
 export type ClinicOrderByWithAggregationInput = {
@@ -343,6 +346,7 @@ export type ClinicCreateInput = {
   note?: string | null
   createdAt?: Date | string
   student: Prisma.StudentCreateNestedOneWithoutClinicsInput
+  progresses?: Prisma.ClinicProgressCreateNestedManyWithoutClinicInput
 }
 
 export type ClinicUncheckedCreateInput = {
@@ -356,6 +360,7 @@ export type ClinicUncheckedCreateInput = {
   progress?: string | null
   note?: string | null
   createdAt?: Date | string
+  progresses?: Prisma.ClinicProgressUncheckedCreateNestedManyWithoutClinicInput
 }
 
 export type ClinicUpdateInput = {
@@ -368,6 +373,7 @@ export type ClinicUpdateInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   student?: Prisma.StudentUpdateOneRequiredWithoutClinicsNestedInput
+  progresses?: Prisma.ClinicProgressUpdateManyWithoutClinicNestedInput
 }
 
 export type ClinicUncheckedUpdateInput = {
@@ -381,6 +387,7 @@ export type ClinicUncheckedUpdateInput = {
   progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  progresses?: Prisma.ClinicProgressUncheckedUpdateManyWithoutClinicNestedInput
 }
 
 export type ClinicCreateManyInput = {
@@ -487,6 +494,11 @@ export type ClinicSumOrderByAggregateInput = {
   weekday?: Prisma.SortOrder
 }
 
+export type ClinicScalarRelationFilter = {
+  is?: Prisma.ClinicWhereInput
+  isNot?: Prisma.ClinicWhereInput
+}
+
 export type ClinicCreateNestedManyWithoutStudentInput = {
   create?: Prisma.XOR<Prisma.ClinicCreateWithoutStudentInput, Prisma.ClinicUncheckedCreateWithoutStudentInput> | Prisma.ClinicCreateWithoutStudentInput[] | Prisma.ClinicUncheckedCreateWithoutStudentInput[]
   connectOrCreate?: Prisma.ClinicCreateOrConnectWithoutStudentInput | Prisma.ClinicCreateOrConnectWithoutStudentInput[]
@@ -529,6 +541,20 @@ export type ClinicUncheckedUpdateManyWithoutStudentNestedInput = {
   deleteMany?: Prisma.ClinicScalarWhereInput | Prisma.ClinicScalarWhereInput[]
 }
 
+export type ClinicCreateNestedOneWithoutProgressesInput = {
+  create?: Prisma.XOR<Prisma.ClinicCreateWithoutProgressesInput, Prisma.ClinicUncheckedCreateWithoutProgressesInput>
+  connectOrCreate?: Prisma.ClinicCreateOrConnectWithoutProgressesInput
+  connect?: Prisma.ClinicWhereUniqueInput
+}
+
+export type ClinicUpdateOneRequiredWithoutProgressesNestedInput = {
+  create?: Prisma.XOR<Prisma.ClinicCreateWithoutProgressesInput, Prisma.ClinicUncheckedCreateWithoutProgressesInput>
+  connectOrCreate?: Prisma.ClinicCreateOrConnectWithoutProgressesInput
+  upsert?: Prisma.ClinicUpsertWithoutProgressesInput
+  connect?: Prisma.ClinicWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ClinicUpdateToOneWithWhereWithoutProgressesInput, Prisma.ClinicUpdateWithoutProgressesInput>, Prisma.ClinicUncheckedUpdateWithoutProgressesInput>
+}
+
 export type ClinicCreateWithoutStudentInput = {
   weekday: number
   time: string
@@ -538,6 +564,7 @@ export type ClinicCreateWithoutStudentInput = {
   progress?: string | null
   note?: string | null
   createdAt?: Date | string
+  progresses?: Prisma.ClinicProgressCreateNestedManyWithoutClinicInput
 }
 
 export type ClinicUncheckedCreateWithoutStudentInput = {
@@ -550,6 +577,7 @@ export type ClinicUncheckedCreateWithoutStudentInput = {
   progress?: string | null
   note?: string | null
   createdAt?: Date | string
+  progresses?: Prisma.ClinicProgressUncheckedCreateNestedManyWithoutClinicInput
 }
 
 export type ClinicCreateOrConnectWithoutStudentInput = {
@@ -594,6 +622,72 @@ export type ClinicScalarWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Clinic"> | Date | string
 }
 
+export type ClinicCreateWithoutProgressesInput = {
+  weekday: number
+  time: string
+  endTime?: string | null
+  subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
+  createdAt?: Date | string
+  student: Prisma.StudentCreateNestedOneWithoutClinicsInput
+}
+
+export type ClinicUncheckedCreateWithoutProgressesInput = {
+  id?: number
+  studentId: number
+  weekday: number
+  time: string
+  endTime?: string | null
+  subject?: string
+  teacher?: string | null
+  progress?: string | null
+  note?: string | null
+  createdAt?: Date | string
+}
+
+export type ClinicCreateOrConnectWithoutProgressesInput = {
+  where: Prisma.ClinicWhereUniqueInput
+  create: Prisma.XOR<Prisma.ClinicCreateWithoutProgressesInput, Prisma.ClinicUncheckedCreateWithoutProgressesInput>
+}
+
+export type ClinicUpsertWithoutProgressesInput = {
+  update: Prisma.XOR<Prisma.ClinicUpdateWithoutProgressesInput, Prisma.ClinicUncheckedUpdateWithoutProgressesInput>
+  create: Prisma.XOR<Prisma.ClinicCreateWithoutProgressesInput, Prisma.ClinicUncheckedCreateWithoutProgressesInput>
+  where?: Prisma.ClinicWhereInput
+}
+
+export type ClinicUpdateToOneWithWhereWithoutProgressesInput = {
+  where?: Prisma.ClinicWhereInput
+  data: Prisma.XOR<Prisma.ClinicUpdateWithoutProgressesInput, Prisma.ClinicUncheckedUpdateWithoutProgressesInput>
+}
+
+export type ClinicUpdateWithoutProgressesInput = {
+  weekday?: Prisma.IntFieldUpdateOperationsInput | number
+  time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  student?: Prisma.StudentUpdateOneRequiredWithoutClinicsNestedInput
+}
+
+export type ClinicUncheckedUpdateWithoutProgressesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  studentId?: Prisma.IntFieldUpdateOperationsInput | number
+  weekday?: Prisma.IntFieldUpdateOperationsInput | number
+  time?: Prisma.StringFieldUpdateOperationsInput | string
+  endTime?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  teacher?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type ClinicCreateManyStudentInput = {
   id?: number
   weekday: number
@@ -615,6 +709,7 @@ export type ClinicUpdateWithoutStudentInput = {
   progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  progresses?: Prisma.ClinicProgressUpdateManyWithoutClinicNestedInput
 }
 
 export type ClinicUncheckedUpdateWithoutStudentInput = {
@@ -627,6 +722,7 @@ export type ClinicUncheckedUpdateWithoutStudentInput = {
   progress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  progresses?: Prisma.ClinicProgressUncheckedUpdateManyWithoutClinicNestedInput
 }
 
 export type ClinicUncheckedUpdateManyWithoutStudentInput = {
@@ -642,6 +738,35 @@ export type ClinicUncheckedUpdateManyWithoutStudentInput = {
 }
 
 
+/**
+ * Count Type ClinicCountOutputType
+ */
+
+export type ClinicCountOutputType = {
+  progresses: number
+}
+
+export type ClinicCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  progresses?: boolean | ClinicCountOutputTypeCountProgressesArgs
+}
+
+/**
+ * ClinicCountOutputType without action
+ */
+export type ClinicCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClinicCountOutputType
+   */
+  select?: Prisma.ClinicCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ClinicCountOutputType without action
+ */
+export type ClinicCountOutputTypeCountProgressesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ClinicProgressWhereInput
+}
+
 
 export type ClinicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -655,6 +780,8 @@ export type ClinicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   note?: boolean
   createdAt?: boolean
   student?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  progresses?: boolean | Prisma.Clinic$progressesArgs<ExtArgs>
+  _count?: boolean | Prisma.ClinicCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["clinic"]>
 
 
@@ -675,12 +802,15 @@ export type ClinicSelectScalar = {
 export type ClinicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "weekday" | "time" | "endTime" | "subject" | "teacher" | "progress" | "note" | "createdAt", ExtArgs["result"]["clinic"]>
 export type ClinicInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   student?: boolean | Prisma.StudentDefaultArgs<ExtArgs>
+  progresses?: boolean | Prisma.Clinic$progressesArgs<ExtArgs>
+  _count?: boolean | Prisma.ClinicCountOutputTypeDefaultArgs<ExtArgs>
 }
 
 export type $ClinicPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Clinic"
   objects: {
     student: Prisma.$StudentPayload<ExtArgs>
+    progresses: Prisma.$ClinicProgressPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1034,6 +1164,7 @@ readonly fields: ClinicFieldRefs;
 export interface Prisma__ClinicClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   student<T extends Prisma.StudentDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentDefaultArgs<ExtArgs>>): Prisma.Prisma__StudentClient<runtime.Types.Result.GetResult<Prisma.$StudentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  progresses<T extends Prisma.Clinic$progressesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Clinic$progressesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1418,6 +1549,30 @@ export type ClinicDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Limit how many Clinics to delete.
    */
   limit?: number
+}
+
+/**
+ * Clinic.progresses
+ */
+export type Clinic$progressesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ClinicProgress
+   */
+  select?: Prisma.ClinicProgressSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ClinicProgress
+   */
+  omit?: Prisma.ClinicProgressOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ClinicProgressInclude<ExtArgs> | null
+  where?: Prisma.ClinicProgressWhereInput
+  orderBy?: Prisma.ClinicProgressOrderByWithRelationInput | Prisma.ClinicProgressOrderByWithRelationInput[]
+  cursor?: Prisma.ClinicProgressWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ClinicProgressScalarFieldEnum | Prisma.ClinicProgressScalarFieldEnum[]
 }
 
 /**

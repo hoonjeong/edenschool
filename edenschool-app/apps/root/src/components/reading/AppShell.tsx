@@ -37,7 +37,7 @@ export default function AppShell({
       <aside
         className={`${
           collapsed ? "w-[76px]" : "w-[248px]"
-        } shrink-0 border-r border-line bg-surface flex flex-col sticky top-0 h-screen transition-[width] duration-200`}
+        } shrink-0 border-r border-line bg-surface flex flex-col sticky top-0 h-screen transition-[width] duration-200 print:hidden`}
       >
         <div className="h-16 flex items-center gap-2.5 px-4 border-b border-line">
           <div className="grid size-9 place-items-center rounded-xl bg-brand-600 text-white shadow-sm shrink-0">
@@ -123,7 +123,7 @@ export default function AppShell({
 
       {/* ── 메인 ────────────────────────────────── */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="h-16 sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-surface/85 backdrop-blur px-5">
+        <header className="h-16 sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-surface/85 backdrop-blur px-5 print:hidden">
           <button
             onClick={() => setCollapsed((c) => !c)}
             className="grid size-9 place-items-center rounded-lg text-muted hover:bg-canvas hover:text-ink transition-colors"
@@ -151,7 +151,7 @@ export default function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 p-5 lg:p-7 max-w-[1400px] w-full mx-auto animate-fadeUp">
+        <main className="flex-1 p-5 lg:p-7 max-w-[1400px] w-full mx-auto animate-fadeUp print:p-0 print:max-w-none">
           {children}
         </main>
       </div>

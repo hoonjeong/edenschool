@@ -72,3 +72,8 @@ export type AppSetting = Prisma.AppSettingModel
  * 
  */
 export type Clinic = Prisma.ClinicModel
+/**
+ * Model ClinicProgress
+ * 
+ */
+export type ClinicProgress = Prisma.ClinicProgressModel

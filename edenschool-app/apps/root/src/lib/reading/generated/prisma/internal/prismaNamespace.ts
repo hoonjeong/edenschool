@@ -394,7 +394,8 @@ export const ModelName = {
   Correction: 'Correction',
   NoticeTemplate: 'NoticeTemplate',
   AppSetting: 'AppSetting',
-  Clinic: 'Clinic'
+  Clinic: 'Clinic',
+  ClinicProgress: 'ClinicProgress'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "smsLog" | "class" | "student" | "attendance" | "observation" | "counsel" | "correction" | "noticeTemplate" | "appSetting" | "clinic"
+    modelProps: "user" | "smsLog" | "class" | "student" | "attendance" | "observation" | "counsel" | "correction" | "noticeTemplate" | "appSetting" | "clinic" | "clinicProgress"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1140,6 +1141,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ClinicProgress: {
+      payload: Prisma.$ClinicProgressPayload<ExtArgs>
+      fields: Prisma.ClinicProgressFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ClinicProgressFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ClinicProgressFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        findFirst: {
+          args: Prisma.ClinicProgressFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ClinicProgressFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        findMany: {
+          args: Prisma.ClinicProgressFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>[]
+        }
+        create: {
+          args: Prisma.ClinicProgressCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        createMany: {
+          args: Prisma.ClinicProgressCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.ClinicProgressDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        update: {
+          args: Prisma.ClinicProgressUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        deleteMany: {
+          args: Prisma.ClinicProgressDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ClinicProgressUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.ClinicProgressUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ClinicProgressPayload>
+        }
+        aggregate: {
+          args: Prisma.ClinicProgressAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateClinicProgress>
+        }
+        groupBy: {
+          args: Prisma.ClinicProgressGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicProgressGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ClinicProgressCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ClinicProgressCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1333,6 +1400,17 @@ export const ClinicScalarFieldEnum = {
 export type ClinicScalarFieldEnum = (typeof ClinicScalarFieldEnum)[keyof typeof ClinicScalarFieldEnum]
 
 
+export const ClinicProgressScalarFieldEnum = {
+  id: 'id',
+  clinicId: 'clinicId',
+  week: 'week',
+  content: 'content',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicProgressScalarFieldEnum = (typeof ClinicProgressScalarFieldEnum)[keyof typeof ClinicProgressScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1484,6 +1562,13 @@ export const ClinicOrderByRelevanceFieldEnum = {
 } as const
 
 export type ClinicOrderByRelevanceFieldEnum = (typeof ClinicOrderByRelevanceFieldEnum)[keyof typeof ClinicOrderByRelevanceFieldEnum]
+
+
+export const ClinicProgressOrderByRelevanceFieldEnum = {
+  content: 'content'
+} as const
+
+export type ClinicProgressOrderByRelevanceFieldEnum = (typeof ClinicProgressOrderByRelevanceFieldEnum)[keyof typeof ClinicProgressOrderByRelevanceFieldEnum]
 
 
 
@@ -1696,6 +1781,7 @@ export type GlobalOmitConfig = {
   noticeTemplate?: Prisma.NoticeTemplateOmit
   appSetting?: Prisma.AppSettingOmit
   clinic?: Prisma.ClinicOmit
+  clinicProgress?: Prisma.ClinicProgressOmit
 }
 
 /* Types for Logging */

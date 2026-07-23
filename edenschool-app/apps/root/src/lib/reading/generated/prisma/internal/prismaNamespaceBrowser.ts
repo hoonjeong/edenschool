@@ -61,7 +61,8 @@ export const ModelName = {
   Correction: 'Correction',
   NoticeTemplate: 'NoticeTemplate',
   AppSetting: 'AppSetting',
-  Clinic: 'Clinic'
+  Clinic: 'Clinic',
+  ClinicProgress: 'ClinicProgress'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -234,6 +235,17 @@ export const ClinicScalarFieldEnum = {
 export type ClinicScalarFieldEnum = (typeof ClinicScalarFieldEnum)[keyof typeof ClinicScalarFieldEnum]
 
 
+export const ClinicProgressScalarFieldEnum = {
+  id: 'id',
+  clinicId: 'clinicId',
+  week: 'week',
+  content: 'content',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ClinicProgressScalarFieldEnum = (typeof ClinicProgressScalarFieldEnum)[keyof typeof ClinicProgressScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -385,4 +397,11 @@ export const ClinicOrderByRelevanceFieldEnum = {
 } as const
 
 export type ClinicOrderByRelevanceFieldEnum = (typeof ClinicOrderByRelevanceFieldEnum)[keyof typeof ClinicOrderByRelevanceFieldEnum]
+
+
+export const ClinicProgressOrderByRelevanceFieldEnum = {
+  content: 'content'
+} as const
+
+export type ClinicProgressOrderByRelevanceFieldEnum = (typeof ClinicProgressOrderByRelevanceFieldEnum)[keyof typeof ClinicProgressOrderByRelevanceFieldEnum]
 

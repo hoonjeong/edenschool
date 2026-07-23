@@ -204,9 +204,25 @@ model Clinic {
   endTime   String? // 끝나는 시간 "17:00"
   subject   String   @default("클리닉")
   teacher   String? // 담당 선생님
-  progress  String? // 진도
+  progress  String? // (레거시) 단일 진도 — 주차별 진도는 ClinicProgress 사용
   note      String?  @db.Text // 특이사항(비고)
   createdAt DateTime @default(now())
 
+  progresses ClinicProgress[]
+
   @@index([weekday])
+}
+
+// ── 클리닉 주차별 진도 ──────────────────────────────────
+// 월 구분 없는 1~4주차 순환. (clinicId, week) 유일. 클리닉 삭제 시 동반 삭제.
+model ClinicProgress {
+  id        Int      @id @default(autoincrement())
+  clinicId  Int
+  clinic    Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  week      Int // 1~4
+  content   String?  @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@unique([clinicId, week])
+  @@index([clinicId])
 }
