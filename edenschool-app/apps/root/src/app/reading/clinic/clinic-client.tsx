@@ -22,6 +22,12 @@ function weekdayLabel(n: number) {
   return WEEKDAYS_MON_SAT.find((w) => w.n === n)?.label ?? "";
 }
 
+// "YYYY-MM" → "YYYY년 M월"
+function ymLabel(ym: string) {
+  const m = /^(\d{4})-(\d{2})$/.exec(ym);
+  return m ? `${m[1]}년 ${Number(m[2])}월` : "";
+}
+
 // 동시간대 최대 겹침 수
 function maxConcurrent(clinics: any[]): number {
   const events: { t: number; d: number }[] = [];
@@ -83,10 +89,27 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   const [activeTeacher, setActiveTeacher] = useState("ALL");
   const [open, setOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
+  const [ym, setYm] = useState(""); // 인쇄 헤더용 "YYYY-MM" (마운트 후 현재 월로 설정)
+
+  useEffect(() => {
+    const d = new Date();
+    setYm(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }, []);
 
   const dayClinics = useMemo(
     () => clinics.filter((c: any) => c.weekday === day),
     [clinics, day],
+  );
+
+  // 인쇄 진도 목록용: 시간순 정렬
+  const dayByTime = useMemo(
+    () =>
+      [...dayClinics].sort(
+        (a: any, b: any) =>
+          (hhmmToMinutes(a.time) ?? 0) - (hhmmToMinutes(b.time) ?? 0) ||
+          a.studentName.localeCompare(b.studentName, "ko"),
+      ),
+    [dayClinics],
   );
 
   // 담당 선생님 색상 맵 (해당 요일 기준)
@@ -116,7 +139,16 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   return (
     <div>
       {/* 툴바 */}
-      <div className="flex items-center gap-2 mb-4 print:hidden">
+      <div className="flex flex-wrap items-center gap-2 mb-4 print:hidden">
+        <label className="inline-flex items-center gap-1.5 text-[13px] text-muted">
+          인쇄 기준 월
+          <input
+            type="month"
+            value={ym}
+            onChange={(e) => setYm(e.target.value)}
+            className="h-9 rounded-lg border border-line bg-canvas px-2 text-sm"
+          />
+        </label>
         <div className="ml-auto flex gap-2">
           <Button variant="secondary" onClick={() => window.print()}>
             <Printer className="size-4" /> 이 요일 인쇄
@@ -207,9 +239,11 @@ function TimetableView({ clinics, students, onRefresh }: any) {
         )}
       </Card>
 
-      {/* 인쇄 전용: 현재 요일 타임라인 (한 페이지) */}
+      {/* 인쇄 전용: 현재 요일 타임라인 + 주차별 진도 */}
       <div className="hidden print:block">
-        <h1 className="text-lg font-extrabold mb-1">이든 국어 독서교육원 · {weekdayLabel(day)}요일 클리닉 시간표</h1>
+        <h1 className="text-lg font-extrabold mb-1">
+          이든 국어 독서교육원 · {ymLabel(ym) && `${ymLabel(ym)} · `}{weekdayLabel(day)}요일 클리닉 시간표
+        </h1>
         <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
           {teacherStats.list.map(([name]) => {
             const color = teacherColorOf(name, colorMap);
@@ -223,6 +257,49 @@ function TimetableView({ clinics, students, onRefresh }: any) {
         </div>
         {dayClinics.length > 0 && (
           <ClinicTimeline clinics={dayClinics} colorMap={colorMap} activeTeacher="ALL" />
+        )}
+
+        {/* 시간순 주차별 진도 목록 */}
+        {dayByTime.length > 0 && (
+          <div className="mt-4">
+            <div className="text-[13px] font-bold border-b border-ink pb-1 mb-1.5">
+              주차별 진도 {ymLabel(ym) && `(${ymLabel(ym)})`}
+            </div>
+            <div>
+              {dayByTime.map((c: any) => {
+                const color = teacherColorOf(c.teacher, colorMap);
+                const weeks = WEEKS.filter((w) => c.progress?.[w]);
+                return (
+                  <div
+                    key={c.id}
+                    className="flex gap-2 py-1 text-[11px] leading-snug border-b border-line/60"
+                    style={{ breakInside: "avoid" }}
+                  >
+                    <span className="w-12 shrink-0 tabular-nums font-semibold">{c.time}</span>
+                    <span className="inline-flex items-center gap-1 w-24 shrink-0">
+                      <span
+                        className="size-2 rounded-full shrink-0"
+                        style={{ backgroundColor: color.dot, ...printColor }}
+                      />
+                      <span className="font-semibold truncate">{c.studentName}</span>
+                    </span>
+                    <span className="w-14 shrink-0 text-faint truncate">{c.teacher ?? ""}</span>
+                    <span className="flex-1">
+                      {weeks.length === 0 ? (
+                        <span className="text-faint">진도 미입력</span>
+                      ) : (
+                        weeks.map((w) => (
+                          <span key={w} className="mr-3 inline-block">
+                            <b className="font-bold">{w}주차</b> {c.progress[w]}
+                          </span>
+                        ))
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
 
