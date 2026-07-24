@@ -388,6 +388,7 @@ export const ModelName = {
   SmsLog: 'SmsLog',
   Class: 'Class',
   Student: 'Student',
+  MakeupClass: 'MakeupClass',
   Attendance: 'Attendance',
   Observation: 'Observation',
   Counsel: 'Counsel',
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "smsLog" | "class" | "student" | "attendance" | "observation" | "counsel" | "correction" | "noticeTemplate" | "appSetting" | "clinic" | "clinicProgress"
+    modelProps: "user" | "smsLog" | "class" | "student" | "makeupClass" | "attendance" | "observation" | "counsel" | "correction" | "noticeTemplate" | "appSetting" | "clinic" | "clinicProgress"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -676,6 +677,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.StudentCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.StudentCountAggregateOutputType> | number
+        }
+      }
+    }
+    MakeupClass: {
+      payload: Prisma.$MakeupClassPayload<ExtArgs>
+      fields: Prisma.MakeupClassFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MakeupClassFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MakeupClassFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        findFirst: {
+          args: Prisma.MakeupClassFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MakeupClassFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        findMany: {
+          args: Prisma.MakeupClassFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>[]
+        }
+        create: {
+          args: Prisma.MakeupClassCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        createMany: {
+          args: Prisma.MakeupClassCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.MakeupClassDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        update: {
+          args: Prisma.MakeupClassUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        deleteMany: {
+          args: Prisma.MakeupClassDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MakeupClassUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.MakeupClassUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MakeupClassPayload>
+        }
+        aggregate: {
+          args: Prisma.MakeupClassAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMakeupClass>
+        }
+        groupBy: {
+          args: Prisma.MakeupClassGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MakeupClassGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MakeupClassCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MakeupClassCountAggregateOutputType> | number
         }
       }
     }
@@ -1303,6 +1370,25 @@ export const StudentScalarFieldEnum = {
 export type StudentScalarFieldEnum = (typeof StudentScalarFieldEnum)[keyof typeof StudentScalarFieldEnum]
 
 
+export const MakeupClassScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  absentDate: 'absentDate',
+  makeupDate: 'makeupDate',
+  weekday: 'weekday',
+  time: 'time',
+  attended: 'attended',
+  session: 'session',
+  progress: 'progress',
+  teacher: 'teacher',
+  teacherNote: 'teacherNote',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type MakeupClassScalarFieldEnum = (typeof MakeupClassScalarFieldEnum)[keyof typeof MakeupClassScalarFieldEnum]
+
+
 export const AttendanceScalarFieldEnum = {
   id: 'id',
   studentId: 'studentId',
@@ -1480,6 +1566,19 @@ export const StudentOrderByRelevanceFieldEnum = {
 } as const
 
 export type StudentOrderByRelevanceFieldEnum = (typeof StudentOrderByRelevanceFieldEnum)[keyof typeof StudentOrderByRelevanceFieldEnum]
+
+
+export const MakeupClassOrderByRelevanceFieldEnum = {
+  time: 'time',
+  attended: 'attended',
+  session: 'session',
+  progress: 'progress',
+  teacher: 'teacher',
+  teacherNote: 'teacherNote',
+  note: 'note'
+} as const
+
+export type MakeupClassOrderByRelevanceFieldEnum = (typeof MakeupClassOrderByRelevanceFieldEnum)[keyof typeof MakeupClassOrderByRelevanceFieldEnum]
 
 
 export const AttendanceOrderByRelevanceFieldEnum = {
@@ -1774,6 +1873,7 @@ export type GlobalOmitConfig = {
   smsLog?: Prisma.SmsLogOmit
   class?: Prisma.ClassOmit
   student?: Prisma.StudentOmit
+  makeupClass?: Prisma.MakeupClassOmit
   attendance?: Prisma.AttendanceOmit
   observation?: Prisma.ObservationOmit
   counsel?: Prisma.CounselOmit

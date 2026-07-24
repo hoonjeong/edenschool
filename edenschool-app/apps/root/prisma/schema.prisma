@@ -85,9 +85,32 @@ model Student {
   counsels     Counsel[]
   corrections  Correction[]
   clinics      Clinic[]
+  makeups      MakeupClass[]
 
   @@index([phoneLast4])
   @@index([status])
+}
+
+// ── 보강 수업 ──────────────────────────────────────────
+// 정규수업 결석에 대한 보강 내역 기록. 학생별 여러 건 누적.
+model MakeupClass {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  absentDate  DateTime @db.Date // 결석일
+  makeupDate  DateTime @db.Date // 보강일
+  weekday     Int // 보강요일 0=일 ... 6=토
+  time        String? // 시간 (예: 16:00~17:00)
+  attended    String? // 출석여부 (자유 입력)
+  session     String? // 보강 차시
+  progress    String?  @db.Text // 진도 외
+  teacher     String? // 보강 담당T
+  teacherNote String? // 보강 담당T 의견
+  note        String? // 비고
+  createdAt   DateTime @default(now())
+
+  @@index([studentId])
+  @@index([makeupDate])
 }
 
 // ── 출결 ───────────────────────────────────────────────

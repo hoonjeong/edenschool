@@ -62,6 +62,11 @@ export type Class = Prisma.ClassModel
  */
 export type Student = Prisma.StudentModel
 /**
+ * Model MakeupClass
+ * 
+ */
+export type MakeupClass = Prisma.MakeupClassModel
+/**
  * Model Attendance
  * 
  */

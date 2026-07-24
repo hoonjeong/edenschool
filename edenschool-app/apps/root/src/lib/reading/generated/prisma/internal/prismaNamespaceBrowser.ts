@@ -55,6 +55,7 @@ export const ModelName = {
   SmsLog: 'SmsLog',
   Class: 'Class',
   Student: 'Student',
+  MakeupClass: 'MakeupClass',
   Attendance: 'Attendance',
   Observation: 'Observation',
   Counsel: 'Counsel',
@@ -136,6 +137,25 @@ export const StudentScalarFieldEnum = {
 } as const
 
 export type StudentScalarFieldEnum = (typeof StudentScalarFieldEnum)[keyof typeof StudentScalarFieldEnum]
+
+
+export const MakeupClassScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  absentDate: 'absentDate',
+  makeupDate: 'makeupDate',
+  weekday: 'weekday',
+  time: 'time',
+  attended: 'attended',
+  session: 'session',
+  progress: 'progress',
+  teacher: 'teacher',
+  teacherNote: 'teacherNote',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type MakeupClassScalarFieldEnum = (typeof MakeupClassScalarFieldEnum)[keyof typeof MakeupClassScalarFieldEnum]
 
 
 export const AttendanceScalarFieldEnum = {
@@ -315,6 +335,19 @@ export const StudentOrderByRelevanceFieldEnum = {
 } as const
 
 export type StudentOrderByRelevanceFieldEnum = (typeof StudentOrderByRelevanceFieldEnum)[keyof typeof StudentOrderByRelevanceFieldEnum]
+
+
+export const MakeupClassOrderByRelevanceFieldEnum = {
+  time: 'time',
+  attended: 'attended',
+  session: 'session',
+  progress: 'progress',
+  teacher: 'teacher',
+  teacherNote: 'teacherNote',
+  note: 'note'
+} as const
+
+export type MakeupClassOrderByRelevanceFieldEnum = (typeof MakeupClassOrderByRelevanceFieldEnum)[keyof typeof MakeupClassOrderByRelevanceFieldEnum]
 
 
 export const AttendanceOrderByRelevanceFieldEnum = {

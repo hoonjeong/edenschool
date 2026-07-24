@@ -258,6 +258,7 @@ export type StudentWhereInput = {
   counsels?: Prisma.CounselListRelationFilter
   corrections?: Prisma.CorrectionListRelationFilter
   clinics?: Prisma.ClinicListRelationFilter
+  makeups?: Prisma.MakeupClassListRelationFilter
 }
 
 export type StudentOrderByWithRelationInput = {
@@ -276,6 +277,7 @@ export type StudentOrderByWithRelationInput = {
   counsels?: Prisma.CounselOrderByRelationAggregateInput
   corrections?: Prisma.CorrectionOrderByRelationAggregateInput
   clinics?: Prisma.ClinicOrderByRelationAggregateInput
+  makeups?: Prisma.MakeupClassOrderByRelationAggregateInput
   _relevance?: Prisma.StudentOrderByRelevanceInput
 }
 
@@ -298,6 +300,7 @@ export type StudentWhereUniqueInput = Prisma.AtLeast<{
   counsels?: Prisma.CounselListRelationFilter
   corrections?: Prisma.CorrectionListRelationFilter
   clinics?: Prisma.ClinicListRelationFilter
+  makeups?: Prisma.MakeupClassListRelationFilter
 }, "id">
 
 export type StudentOrderByWithAggregationInput = {
@@ -346,6 +349,7 @@ export type StudentCreateInput = {
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateInput = {
@@ -363,6 +367,7 @@ export type StudentUncheckedCreateInput = {
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUpdateInput = {
@@ -379,6 +384,7 @@ export type StudentUpdateInput = {
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateInput = {
@@ -396,6 +402,7 @@ export type StudentUncheckedUpdateInput = {
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateManyInput = {
@@ -550,6 +557,20 @@ export type EnumStudentStatusFieldUpdateOperationsInput = {
   set?: $Enums.StudentStatus
 }
 
+export type StudentCreateNestedOneWithoutMakeupsInput = {
+  create?: Prisma.XOR<Prisma.StudentCreateWithoutMakeupsInput, Prisma.StudentUncheckedCreateWithoutMakeupsInput>
+  connectOrCreate?: Prisma.StudentCreateOrConnectWithoutMakeupsInput
+  connect?: Prisma.StudentWhereUniqueInput
+}
+
+export type StudentUpdateOneRequiredWithoutMakeupsNestedInput = {
+  create?: Prisma.XOR<Prisma.StudentCreateWithoutMakeupsInput, Prisma.StudentUncheckedCreateWithoutMakeupsInput>
+  connectOrCreate?: Prisma.StudentCreateOrConnectWithoutMakeupsInput
+  upsert?: Prisma.StudentUpsertWithoutMakeupsInput
+  connect?: Prisma.StudentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudentUpdateToOneWithWhereWithoutMakeupsInput, Prisma.StudentUpdateWithoutMakeupsInput>, Prisma.StudentUncheckedUpdateWithoutMakeupsInput>
+}
+
 export type StudentCreateNestedOneWithoutAttendancesInput = {
   create?: Prisma.XOR<Prisma.StudentCreateWithoutAttendancesInput, Prisma.StudentUncheckedCreateWithoutAttendancesInput>
   connectOrCreate?: Prisma.StudentCreateOrConnectWithoutAttendancesInput
@@ -635,6 +656,7 @@ export type StudentCreateWithoutClassInput = {
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutClassInput = {
@@ -651,6 +673,7 @@ export type StudentUncheckedCreateWithoutClassInput = {
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutClassInput = {
@@ -694,6 +717,88 @@ export type StudentScalarWhereInput = {
   classId?: Prisma.IntNullableFilter<"Student"> | number | null
 }
 
+export type StudentCreateWithoutMakeupsInput = {
+  name: string
+  grade: string
+  phone: string
+  phoneLast4: string
+  status?: $Enums.StudentStatus
+  registeredAt?: Date | string
+  memo?: string | null
+  class?: Prisma.ClassCreateNestedOneWithoutStudentsInput
+  attendances?: Prisma.AttendanceCreateNestedManyWithoutStudentInput
+  observations?: Prisma.ObservationCreateNestedManyWithoutStudentInput
+  counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
+  corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
+  clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+}
+
+export type StudentUncheckedCreateWithoutMakeupsInput = {
+  id?: number
+  name: string
+  grade: string
+  phone: string
+  phoneLast4: string
+  status?: $Enums.StudentStatus
+  registeredAt?: Date | string
+  memo?: string | null
+  classId?: number | null
+  attendances?: Prisma.AttendanceUncheckedCreateNestedManyWithoutStudentInput
+  observations?: Prisma.ObservationUncheckedCreateNestedManyWithoutStudentInput
+  counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
+  corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
+  clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+}
+
+export type StudentCreateOrConnectWithoutMakeupsInput = {
+  where: Prisma.StudentWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudentCreateWithoutMakeupsInput, Prisma.StudentUncheckedCreateWithoutMakeupsInput>
+}
+
+export type StudentUpsertWithoutMakeupsInput = {
+  update: Prisma.XOR<Prisma.StudentUpdateWithoutMakeupsInput, Prisma.StudentUncheckedUpdateWithoutMakeupsInput>
+  create: Prisma.XOR<Prisma.StudentCreateWithoutMakeupsInput, Prisma.StudentUncheckedCreateWithoutMakeupsInput>
+  where?: Prisma.StudentWhereInput
+}
+
+export type StudentUpdateToOneWithWhereWithoutMakeupsInput = {
+  where?: Prisma.StudentWhereInput
+  data: Prisma.XOR<Prisma.StudentUpdateWithoutMakeupsInput, Prisma.StudentUncheckedUpdateWithoutMakeupsInput>
+}
+
+export type StudentUpdateWithoutMakeupsInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  grade?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneLast4?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStudentStatusFieldUpdateOperationsInput | $Enums.StudentStatus
+  registeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  class?: Prisma.ClassUpdateOneWithoutStudentsNestedInput
+  attendances?: Prisma.AttendanceUpdateManyWithoutStudentNestedInput
+  observations?: Prisma.ObservationUpdateManyWithoutStudentNestedInput
+  counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
+  corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
+  clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+}
+
+export type StudentUncheckedUpdateWithoutMakeupsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  grade?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneLast4?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStudentStatusFieldUpdateOperationsInput | $Enums.StudentStatus
+  registeredAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  memo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  classId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  attendances?: Prisma.AttendanceUncheckedUpdateManyWithoutStudentNestedInput
+  observations?: Prisma.ObservationUncheckedUpdateManyWithoutStudentNestedInput
+  counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
+  corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
+  clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+}
+
 export type StudentCreateWithoutAttendancesInput = {
   name: string
   grade: string
@@ -707,6 +812,7 @@ export type StudentCreateWithoutAttendancesInput = {
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutAttendancesInput = {
@@ -723,6 +829,7 @@ export type StudentUncheckedCreateWithoutAttendancesInput = {
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutAttendancesInput = {
@@ -754,6 +861,7 @@ export type StudentUpdateWithoutAttendancesInput = {
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutAttendancesInput = {
@@ -770,6 +878,7 @@ export type StudentUncheckedUpdateWithoutAttendancesInput = {
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateWithoutObservationsInput = {
@@ -785,6 +894,7 @@ export type StudentCreateWithoutObservationsInput = {
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutObservationsInput = {
@@ -801,6 +911,7 @@ export type StudentUncheckedCreateWithoutObservationsInput = {
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutObservationsInput = {
@@ -832,6 +943,7 @@ export type StudentUpdateWithoutObservationsInput = {
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutObservationsInput = {
@@ -848,6 +960,7 @@ export type StudentUncheckedUpdateWithoutObservationsInput = {
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateWithoutCounselsInput = {
@@ -863,6 +976,7 @@ export type StudentCreateWithoutCounselsInput = {
   observations?: Prisma.ObservationCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutCounselsInput = {
@@ -879,6 +993,7 @@ export type StudentUncheckedCreateWithoutCounselsInput = {
   observations?: Prisma.ObservationUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutCounselsInput = {
@@ -910,6 +1025,7 @@ export type StudentUpdateWithoutCounselsInput = {
   observations?: Prisma.ObservationUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutCounselsInput = {
@@ -926,6 +1042,7 @@ export type StudentUncheckedUpdateWithoutCounselsInput = {
   observations?: Prisma.ObservationUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateWithoutCorrectionsInput = {
@@ -941,6 +1058,7 @@ export type StudentCreateWithoutCorrectionsInput = {
   observations?: Prisma.ObservationCreateNestedManyWithoutStudentInput
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutCorrectionsInput = {
@@ -957,6 +1075,7 @@ export type StudentUncheckedCreateWithoutCorrectionsInput = {
   observations?: Prisma.ObservationUncheckedCreateNestedManyWithoutStudentInput
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   clinics?: Prisma.ClinicUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutCorrectionsInput = {
@@ -988,6 +1107,7 @@ export type StudentUpdateWithoutCorrectionsInput = {
   observations?: Prisma.ObservationUpdateManyWithoutStudentNestedInput
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutCorrectionsInput = {
@@ -1004,6 +1124,7 @@ export type StudentUncheckedUpdateWithoutCorrectionsInput = {
   observations?: Prisma.ObservationUncheckedUpdateManyWithoutStudentNestedInput
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateWithoutClinicsInput = {
@@ -1019,6 +1140,7 @@ export type StudentCreateWithoutClinicsInput = {
   observations?: Prisma.ObservationCreateNestedManyWithoutStudentInput
   counsels?: Prisma.CounselCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassCreateNestedManyWithoutStudentInput
 }
 
 export type StudentUncheckedCreateWithoutClinicsInput = {
@@ -1035,6 +1157,7 @@ export type StudentUncheckedCreateWithoutClinicsInput = {
   observations?: Prisma.ObservationUncheckedCreateNestedManyWithoutStudentInput
   counsels?: Prisma.CounselUncheckedCreateNestedManyWithoutStudentInput
   corrections?: Prisma.CorrectionUncheckedCreateNestedManyWithoutStudentInput
+  makeups?: Prisma.MakeupClassUncheckedCreateNestedManyWithoutStudentInput
 }
 
 export type StudentCreateOrConnectWithoutClinicsInput = {
@@ -1066,6 +1189,7 @@ export type StudentUpdateWithoutClinicsInput = {
   observations?: Prisma.ObservationUpdateManyWithoutStudentNestedInput
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutClinicsInput = {
@@ -1082,6 +1206,7 @@ export type StudentUncheckedUpdateWithoutClinicsInput = {
   observations?: Prisma.ObservationUncheckedUpdateManyWithoutStudentNestedInput
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentCreateManyClassInput = {
@@ -1108,6 +1233,7 @@ export type StudentUpdateWithoutClassInput = {
   counsels?: Prisma.CounselUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateWithoutClassInput = {
@@ -1124,6 +1250,7 @@ export type StudentUncheckedUpdateWithoutClassInput = {
   counsels?: Prisma.CounselUncheckedUpdateManyWithoutStudentNestedInput
   corrections?: Prisma.CorrectionUncheckedUpdateManyWithoutStudentNestedInput
   clinics?: Prisma.ClinicUncheckedUpdateManyWithoutStudentNestedInput
+  makeups?: Prisma.MakeupClassUncheckedUpdateManyWithoutStudentNestedInput
 }
 
 export type StudentUncheckedUpdateManyWithoutClassInput = {
@@ -1148,6 +1275,7 @@ export type StudentCountOutputType = {
   counsels: number
   corrections: number
   clinics: number
+  makeups: number
 }
 
 export type StudentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1156,6 +1284,7 @@ export type StudentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extension
   counsels?: boolean | StudentCountOutputTypeCountCounselsArgs
   corrections?: boolean | StudentCountOutputTypeCountCorrectionsArgs
   clinics?: boolean | StudentCountOutputTypeCountClinicsArgs
+  makeups?: boolean | StudentCountOutputTypeCountMakeupsArgs
 }
 
 /**
@@ -1203,6 +1332,13 @@ export type StudentCountOutputTypeCountClinicsArgs<ExtArgs extends runtime.Types
   where?: Prisma.ClinicWhereInput
 }
 
+/**
+ * StudentCountOutputType without action
+ */
+export type StudentCountOutputTypeCountMakeupsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MakeupClassWhereInput
+}
+
 
 export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1220,6 +1356,7 @@ export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   counsels?: boolean | Prisma.Student$counselsArgs<ExtArgs>
   corrections?: boolean | Prisma.Student$correctionsArgs<ExtArgs>
   clinics?: boolean | Prisma.Student$clinicsArgs<ExtArgs>
+  makeups?: boolean | Prisma.Student$makeupsArgs<ExtArgs>
   _count?: boolean | Prisma.StudentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["student"]>
 
@@ -1245,6 +1382,7 @@ export type StudentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   counsels?: boolean | Prisma.Student$counselsArgs<ExtArgs>
   corrections?: boolean | Prisma.Student$correctionsArgs<ExtArgs>
   clinics?: boolean | Prisma.Student$clinicsArgs<ExtArgs>
+  makeups?: boolean | Prisma.Student$makeupsArgs<ExtArgs>
   _count?: boolean | Prisma.StudentCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -1257,6 +1395,7 @@ export type $StudentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     counsels: Prisma.$CounselPayload<ExtArgs>[]
     corrections: Prisma.$CorrectionPayload<ExtArgs>[]
     clinics: Prisma.$ClinicPayload<ExtArgs>[]
+    makeups: Prisma.$MakeupClassPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1614,6 +1753,7 @@ export interface Prisma__StudentClient<T, Null = never, ExtArgs extends runtime.
   counsels<T extends Prisma.Student$counselsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Student$counselsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CounselPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   corrections<T extends Prisma.Student$correctionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Student$correctionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CorrectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   clinics<T extends Prisma.Student$clinicsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Student$clinicsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClinicPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  makeups<T extends Prisma.Student$makeupsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Student$makeupsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MakeupClassPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2136,6 +2276,30 @@ export type Student$clinicsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.ClinicScalarFieldEnum | Prisma.ClinicScalarFieldEnum[]
+}
+
+/**
+ * Student.makeups
+ */
+export type Student$makeupsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MakeupClass
+   */
+  select?: Prisma.MakeupClassSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MakeupClass
+   */
+  omit?: Prisma.MakeupClassOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MakeupClassInclude<ExtArgs> | null
+  where?: Prisma.MakeupClassWhereInput
+  orderBy?: Prisma.MakeupClassOrderByWithRelationInput | Prisma.MakeupClassOrderByWithRelationInput[]
+  cursor?: Prisma.MakeupClassWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MakeupClassScalarFieldEnum | Prisma.MakeupClassScalarFieldEnum[]
 }
 
 /**

@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   CalendarCheck,
+  CalendarPlus,
   Users,
   School,
   ClipboardList,
@@ -33,6 +34,7 @@ export const NAV: NavGroup[] = [
     title: "학생 · 수업",
     items: [
       { href: "/reading/attendance", label: "출결 관리", icon: CalendarCheck },
+      { href: "/reading/makeup", label: "보강 수업", icon: CalendarPlus },
       { href: "/reading/students", label: "학생", icon: Users },
       { href: "/reading/classes", label: "반 관리", icon: School },
     ],
