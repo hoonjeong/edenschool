@@ -11,7 +11,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@edenschool/common'],
-  serverExternalPackages: ['pdf-parse', 'cfb', 'exceljs', 'cheerio', '@prisma/client', '@prisma/adapter-mariadb', 'mariadb'],
+  serverExternalPackages: ['pdf-parse', 'cfb', 'exceljs', '@prisma/client', '@prisma/adapter-mariadb', 'mariadb'],
   experimental: {
     serverActions: {
       // 첨삭 답안 이미지를 여러 장(최대 20장) 서버 액션으로 전달하므로 한도 상향.
