@@ -34,6 +34,9 @@ export async function AdminSidebar() {
           <a href="/admin/teacher-lecture" className="admin-sidebar-link">
             <i className="fas fa-video"></i> 내영상보기
           </a>
+          <a href="/admin/lesson-material" className="admin-sidebar-link">
+            <i className="fas fa-magic"></i> 수업자료생성
+          </a>
         </AdminSidebarSection>
 
         {/* 내신기출문제 메뉴 (모두) */}

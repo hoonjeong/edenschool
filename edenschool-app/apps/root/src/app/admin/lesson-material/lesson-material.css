@@ -1,0 +1,396 @@
+/*
+ * 수업자료생성 화면 전용 스타일 (AIFT public/styles.css 이식).
+ * 관리자 레이아웃(Bootstrap 4)과 섞이지 않도록 전부 .lm-root 아래로 스코프하고,
+ * 클래스명에 lm- 접두사를 붙였다. body/html 전역 규칙은 쓰지 않는다.
+ */
+.lm-root {
+  --lm-accent: #2f6b4f;
+  --lm-accent-mid: #4a9e73;
+  --lm-accent-dark: #26302c;
+  --lm-accent-soft: #eaf2ed;
+  --lm-ink: #1a1a1a;
+  --lm-sub: #5c6660;
+  --lm-line: #dcdfdd;
+  --lm-panel: #fff;
+  --lm-warn: #a8541a;
+  --lm-danger: #a33b30;
+
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--lm-ink);
+  border: 1px solid var(--lm-line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e7e9e7;
+}
+.lm-root *,
+.lm-root *::before,
+.lm-root *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- 헤더 ---------- */
+.lm-header {
+  background: var(--lm-accent-dark);
+  color: #fff;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lm-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-right: auto;
+}
+.lm-title small {
+  font-weight: 400;
+  color: #a9bbb2;
+  font-size: 12px;
+  margin-left: 8px;
+}
+.lm-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #3a4842;
+  border: 1px solid #4b5c54;
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  color: #c3d2cb;
+}
+.lm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a6a3a;
+  flex: none;
+}
+.lm-dot.ok { background: var(--lm-accent-mid); }
+.lm-dot.bad { background: #a05149; }
+.lm-header button {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #3a4842;
+  border: 1px solid #4b5c54;
+  color: #dce6e1;
+  cursor: pointer;
+}
+.lm-header button:hover { background: #4a5c54; border-color: #5f7268; }
+
+/* ---------- 레이아웃 ---------- */
+.lm-main {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: 640px;
+}
+.lm-left {
+  background: var(--lm-panel);
+  border-right: 1px solid var(--lm-line);
+  padding: 16px 16px 28px;
+  overflow-y: auto;
+  max-height: 78vh;
+}
+.lm-left section { margin-bottom: 22px; }
+.lm-right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lm-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lm-accent);
+  margin: 0 0 9px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid var(--lm-accent-soft);
+}
+.lm-step i {
+  font-style: normal;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--lm-accent);
+  color: #fff;
+  font-size: 11.5px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.lm-cnt {
+  margin-left: auto;
+  font-weight: 400;
+  color: var(--lm-sub);
+  font-size: 11.5px;
+}
+
+/* ---------- 버튼 ---------- */
+.lm-btn {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--lm-line);
+  background: #f6f8f7;
+  color: #33413a;
+  cursor: pointer;
+  transition: 0.13s;
+}
+.lm-btn:hover:not(:disabled) { background: var(--lm-accent-soft); border-color: var(--lm-accent-mid); }
+.lm-btn:disabled { opacity: 0.4; cursor: default; }
+.lm-btn.primary { background: var(--lm-accent); border-color: var(--lm-accent); color: #fff; }
+.lm-btn.primary:hover:not(:disabled) { background: #3a8461; border-color: #3a8461; }
+.lm-btn.big { width: 100%; padding: 12px; font-size: 14px; }
+
+.lm-mini {
+  font-family: inherit;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid var(--lm-line);
+  background: #f6f8f7;
+  color: #33413a;
+  cursor: pointer;
+  flex: none;
+}
+.lm-mini:hover:not(:disabled) { background: var(--lm-accent-soft); border-color: var(--lm-accent-mid); }
+.lm-mini:disabled { opacity: 0.4; cursor: default; }
+.lm-mini.danger { color: var(--lm-danger); border-color: #e4cdc9; background: #fff; }
+.lm-mini.danger:hover:not(:disabled) { background: #fbeeec; border-color: var(--lm-danger); }
+
+/* ---------- 드롭존 ---------- */
+.lm-drop {
+  border: 2px dashed #c6cec9;
+  border-radius: 9px;
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--lm-sub);
+  font-size: 12.5px;
+  cursor: pointer;
+  background: #fafcfb;
+  transition: 0.13s;
+}
+.lm-drop:hover,
+.lm-drop.over {
+  border-color: var(--lm-accent-mid);
+  background: var(--lm-accent-soft);
+  color: var(--lm-accent);
+}
+.lm-drop b { display: block; color: var(--lm-ink); font-size: 13px; margin-bottom: 3px; }
+
+/* ---------- 리스트 ---------- */
+.lm-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.lm-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--lm-line);
+  border-radius: 7px;
+  padding: 9px 10px;
+  margin-bottom: 6px;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.13s;
+}
+.lm-list li:hover { border-color: var(--lm-accent-mid); }
+.lm-list li.sel {
+  border-color: var(--lm-accent);
+  background: var(--lm-accent-soft);
+  box-shadow: inset 3px 0 0 var(--lm-accent);
+}
+.lm-list li.static { cursor: default; }
+.lm-list li.static:hover { border-color: var(--lm-line); }
+
+.lm-info { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.lm-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lm-meta {
+  font-size: 11px;
+  color: var(--lm-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lm-empty {
+  color: #93a09a;
+  font-size: 12px;
+  text-align: center;
+  padding: 14px 0;
+  display: block;
+  width: 100%;
+}
+.lm-kind {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: var(--lm-accent-soft);
+  color: var(--lm-accent);
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.lm-kind.err { background: #fbeeec; color: var(--lm-danger); }
+
+.lm-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.6;
+  border: 1px solid var(--lm-line);
+  border-radius: 7px;
+  padding: 9px 10px;
+  resize: vertical;
+  min-height: 62px;
+  color: var(--lm-ink);
+  background: #fafcfb;
+}
+.lm-textarea:focus { outline: 2px solid var(--lm-accent-mid); outline-offset: -1px; background: #fff; }
+
+.lm-note {
+  background: #fff8f3;
+  border-left: 3px solid #d98c3f;
+  border-radius: 0 6px 6px 0;
+  padding: 9px 11px;
+  font-size: 11.5px;
+  color: #5a3d20;
+  line-height: 1.7;
+  margin-top: 14px;
+}
+.lm-note b { color: var(--lm-warn); }
+
+/* ---------- 결과 영역 ---------- */
+.lm-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--lm-line);
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lm-status {
+  font-size: 12.5px;
+  color: var(--lm-sub);
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.lm-status.err { color: var(--lm-danger); }
+.lm-spin {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--lm-accent-soft);
+  border-top-color: var(--lm-accent);
+  border-radius: 50%;
+  animation: lm-sp 0.7s linear infinite;
+  flex: none;
+}
+@keyframes lm-sp { to { transform: rotate(360deg); } }
+
+.lm-stage { flex: 1; position: relative; min-height: 0; }
+.lm-preview { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.lm-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  color: #8d9a94;
+  text-align: center;
+  padding: 20px;
+  font-size: 12.5px;
+}
+.lm-stream {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  margin: 0;
+  background: #1e2622;
+  color: #9fd8b8;
+  font-family: 'D2Coding', 'Consolas', monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.lm-print-frame { position: fixed; width: 0; height: 0; border: 0; left: -9999px; top: 0; }
+
+/* ---------- 생성 이력 모달 ---------- */
+.lm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 26, 24, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1080;
+  padding: 20px;
+}
+.lm-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: min(720px, 100%);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+.lm-modal-head {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--lm-line);
+  font-size: 13px;
+}
+.lm-modal-head b { margin-right: auto; }
+.lm-modal-body { overflow-y: auto; padding: 12px 16px 16px; }
+
+.lm-hist {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--lm-line);
+  border-radius: 7px;
+  padding: 9px 10px;
+  margin-bottom: 6px;
+}
+.lm-badge {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--lm-accent-soft);
+  color: var(--lm-accent);
+}
+.lm-badge.err { background: #fbeeec; color: var(--lm-danger); }
+
+@media (max-width: 992px) {
+  .lm-main { grid-template-columns: 1fr; }
+  .lm-left { border-right: 0; border-bottom: 1px solid var(--lm-line); max-height: 46vh; }
+  .lm-stage { min-height: 420px; }
+}
