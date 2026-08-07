@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 function todayDate() {
   const d = new Date();
@@ -18,6 +19,7 @@ export interface Match {
 
 /** 뒷자리 4자리로 재원생 조회. 중복 시 다건 반환. */
 export async function lookupByLast4(last4: string): Promise<Match[]> {
+  await requireSession();
   const digits = last4.replace(/\D/g, "");
   if (digits.length !== 4) return [];
 
@@ -53,6 +55,7 @@ export interface CheckInResult {
 
 /** 등원 체크인 기록 (당일 1회) */
 export async function checkIn(studentId: number): Promise<CheckInResult> {
+  await requireSession();
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: { class: true },

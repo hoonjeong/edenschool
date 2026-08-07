@@ -142,6 +142,24 @@ export const EDEN_PHILOSOPHY_DEFAULT = `이든 국어 독서교육원은 아이�
 3) 읽기와 쓰기를 잇는다 — 책에서 얻은 생각을 자기 언어로 표현하게 한다.
 4) 한 걸음 더 — 첨삭에서 끝내지 않고 '다시 써보면 좋을 방향'을 제시한다.`;
 
+// ── 7. 첨삭 요청/응답 형태 ─────────────────────────────
+export interface GenInput {
+  answerText: string;
+  problemText?: string;
+  gradeLevel: string;
+  genre: string;
+  tone: string;
+  metrics: string[];
+  custom?: string;
+  edenDirection: string;
+}
+
+export interface GenOutput {
+  scores: Record<string, number>; // metricKey → 0~100
+  resultText: string;
+  summary: string;
+}
+
 export const DEFAULT_CORRECTION_OPTIONS = {
   gradeLevel: "초4",
   genre: "review",

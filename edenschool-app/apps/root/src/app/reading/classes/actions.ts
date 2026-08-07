@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 export interface ClassInput {
   name: string;
@@ -12,6 +13,7 @@ export interface ClassInput {
 }
 
 export async function createClass(input: ClassInput) {
+  await requireSession();
   await prisma.class.create({
     data: {
       name: input.name.trim(),
@@ -26,6 +28,7 @@ export async function createClass(input: ClassInput) {
 }
 
 export async function updateClass(id: number, input: ClassInput) {
+  await requireSession();
   await prisma.class.update({
     where: { id },
     data: {
@@ -41,6 +44,7 @@ export async function updateClass(id: number, input: ClassInput) {
 }
 
 export async function deleteClass(id: number) {
+  await requireSession();
   // 소속 학생은 미배정으로 (이력/학생 보존)
   await prisma.student.updateMany({ where: { classId: id }, data: { classId: null } });
   await prisma.class.delete({ where: { id } });
@@ -50,6 +54,7 @@ export async function deleteClass(id: number) {
 }
 
 export async function moveStudent(studentId: number, classId: number | null) {
+  await requireSession();
   await prisma.student.update({ where: { id: studentId }, data: { classId } });
   revalidatePath("/reading/classes");
   revalidatePath("/reading/students");

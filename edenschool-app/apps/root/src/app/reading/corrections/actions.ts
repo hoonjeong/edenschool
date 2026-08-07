@@ -2,64 +2,97 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
-import { generateCorrection, type GenInput } from "@/lib/reading/correction-engine";
+import type { GenInput, GenOutput } from "@/lib/reading/correction-config";
 import { getEdenPhilosophy } from "@/lib/reading/settings";
 import { hasClaudeKey } from "@/lib/reading/claude";
 import { recognizeImageWithClaude, analyzeAnswerWithClaude } from "@/lib/reading/correction-ai";
+import { requireSession } from "@/lib/reading/session";
+import {
+  saveCorrectionImages,
+  deleteCorrectionImages,
+  MAX_CORRECTION_IMAGES,
+} from "@/lib/reading/correction-images";
 
-// ── ② 자동 인식 (OCR 목업) ──
-// 실제로는 업로드 이미지 → OCR. 여기서는 예시 답안을 반환하고, 신뢰도 낮은 글자는 [[ ]]로 표시.
-const SAMPLES = [
-  {
-    problem: "책을 읽고 가장 기억에 남는 장면과 그 까닭을 써 봅시다.",
-    answer:
-      "내가 가장 기억에 남는 장면은 주인공이 [[친구]]를 도와주는 장면이다. 왜냐하면 나도 친구를 도와준 적이 있어서 [[공감]]이 갔기 때문이다. 그리고 주인공이 용기를 내는 모습이 멋있었다.",
-  },
-  {
-    problem: "우리 반에 필요한 규칙 한 가지를 정하고, 그 까닭을 설명해 봅시다.",
-    answer:
-      "우리 반에는 [[복도]]에서 뛰지 않기 규칙이 필요하다. 왜냐하면 뛰다가 부딪히면 다칠 수 있기 때문이다. 규칙을 지키면 모두가 안전하게 지낼 수 있다.",
-  },
-  {
-    problem: "겨울 방학에 있었던 일 중 가장 즐거웠던 일을 일기로 써 봅시다.",
-    answer:
-      "오늘은 가족과 함께 [[눈썰매장]]에 갔다. 처음에는 무서웠지만 타 보니 정말 재미있었다. 다음에도 또 가고 싶다는 생각이 들었다.",
-  },
-];
-
-export async function recognizeMock(seedIndex?: number) {
-  const i = seedIndex != null ? seedIndex % SAMPLES.length : Math.floor(Math.random() * SAMPLES.length);
-  return SAMPLES[i];
+function errorMessage(e: unknown, fallback: string): string {
+  return e instanceof Error && e.message ? e.message : fallback;
 }
 
-// 업로드 이미지가 있고 Claude 키가 있으면 실제 비전 OCR, 아니면 샘플 목업
-// 여러 장을 받으면 순서대로 이어진 하나의 답안으로 인식한다.
-export async function recognizeImage(dataUrls?: string | string[]) {
-  const imgs = (Array.isArray(dataUrls) ? dataUrls : dataUrls ? [dataUrls] : []).filter(Boolean);
-  if (imgs.length > 0 && hasClaudeKey()) {
-    try {
-      return { ...(await recognizeImageWithClaude(imgs)), ai: true };
-    } catch (e) {
-      console.error("Claude OCR 실패, 샘플로 대체:", e);
-    }
+// ── ② 답안 이미지 인식 (Claude 비전 OCR) ──
+// 실패하면 실패라고 알린다. 예시 답안으로 대체하지 않는다.
+export type RecognizeResult =
+  | { ok: true; problem: string; answer: string }
+  | { ok: false; error: string };
+
+export async function recognizeImage(dataUrls: string[]): Promise<RecognizeResult> {
+  await requireSession();
+
+  const imgs = (dataUrls ?? []).filter(Boolean);
+  if (imgs.length === 0) {
+    return { ok: false, error: "인식할 답안 이미지가 없습니다. 이미지를 먼저 올려 주세요." };
   }
-  return { ...(await recognizeMock()), ai: false };
+  if (imgs.length > MAX_CORRECTION_IMAGES) {
+    return { ok: false, error: `이미지는 최대 ${MAX_CORRECTION_IMAGES}장까지 인식할 수 있습니다.` };
+  }
+  if (!hasClaudeKey()) {
+    return {
+      ok: false,
+      error:
+        "AI 인식 기능이 설정되어 있지 않습니다(ANTHROPIC_API_KEY 미설정). 관리자에게 문의하시거나 '직접 입력'으로 진행해 주세요.",
+    };
+  }
+
+  try {
+    const r = await recognizeImageWithClaude(imgs);
+    if (!r.answer.trim()) {
+      return {
+        ok: false,
+        error:
+          "이미지에서 학생 답안을 찾지 못했습니다. 사진이 흐리거나 글씨가 잘렸는지 확인해 다시 촬영하거나, '직접 입력'으로 진행해 주세요.",
+      };
+    }
+    return { ok: true, problem: r.problem, answer: r.answer };
+  } catch (e) {
+    console.error("Claude OCR 실패:", e);
+    return {
+      ok: false,
+      error: `AI 인식에 실패했습니다. ${errorMessage(e, "잠시 후 다시 시도해 주세요.")}`,
+    };
+  }
 }
 
-// ── ⑤ 첨삭 실행 (미저장, 미리보기용) — 실제 Claude 우선, 실패 시 목업 ──
+// ── ⑤ 첨삭 실행 (미저장, 미리보기용) ──
+// 실패하면 실패라고 알린다. 가짜 분석지를 만들어 내지 않는다.
+export type RunCorrectionResult =
+  | ({ ok: true } & GenOutput)
+  | { ok: false; error: string };
+
 export async function runCorrection(
   input: Omit<GenInput, "edenDirection"> & { edenDirection?: string },
-) {
-  const edenDirection = input.edenDirection?.trim() || (await getEdenPhilosophy());
-  const full = { ...input, edenDirection };
-  if (hasClaudeKey()) {
-    try {
-      return { ...(await analyzeAnswerWithClaude(full)), ai: true };
-    } catch (e) {
-      console.error("Claude 첨삭 실패, 목업으로 대체:", e);
-    }
+): Promise<RunCorrectionResult> {
+  await requireSession();
+
+  if (!input.answerText?.trim()) {
+    return { ok: false, error: "학생 답안이 비어 있습니다. 인식 결과를 확인·입력한 뒤 진행해 주세요." };
   }
-  return { ...generateCorrection(full), ai: false };
+  if (!hasClaudeKey()) {
+    return {
+      ok: false,
+      error: "AI 첨삭 기능이 설정되어 있지 않습니다(ANTHROPIC_API_KEY 미설정). 관리자에게 문의해 주세요.",
+    };
+  }
+
+  const edenDirection = input.edenDirection?.trim() || (await getEdenPhilosophy());
+
+  try {
+    const out = await analyzeAnswerWithClaude({ ...input, edenDirection });
+    return { ok: true, ...out };
+  } catch (e) {
+    console.error("Claude 첨삭 실패:", e);
+    return {
+      ok: false,
+      error: `AI 첨삭에 실패했습니다. ${errorMessage(e, "잠시 후 다시 시도해 주세요.")}`,
+    };
+  }
 }
 
 // ── 저장 ──
@@ -76,7 +109,10 @@ export async function saveCorrection(input: {
   resultText: string;
   summary: string;
   scores: Record<string, number>;
+  images?: string[]; // 원본 답안 이미지 data URL
 }) {
+  await requireSession();
+
   const c = await prisma.correction.create({
     data: {
       studentId: input.studentId,
@@ -92,19 +128,44 @@ export async function saveCorrection(input: {
       status: "DONE",
     },
   });
+
+  // 원본 답안 이미지는 디스크에 저장하고 경로만 DB에 기록한다.
+  // 이미지 저장이 실패해도 첨삭 자체는 이미 저장됐으므로, 경고만 돌려주고 진행한다.
+  let imageWarning: string | undefined;
+  const imgs = (input.images ?? []).filter(Boolean);
+  if (imgs.length > 0) {
+    try {
+      const paths = await saveCorrectionImages(c.id, imgs);
+      await prisma.correction.update({ where: { id: c.id }, data: { images: paths } });
+    } catch (e) {
+      console.error("첨삭 원본 이미지 저장 실패:", e);
+      imageWarning = `첨삭은 저장됐지만 원본 이미지 보관에 실패했습니다. ${errorMessage(e, "")}`.trim();
+    }
+  }
+
   revalidatePath("/reading/corrections");
   if (input.studentId) revalidatePath(`/reading/students/${input.studentId}`);
-  return { ok: true, id: c.id };
+  return { ok: true as const, id: c.id, imageWarning };
 }
 
 export async function updateCorrectionResult(id: number, resultText: string) {
+  await requireSession();
   await prisma.correction.update({ where: { id }, data: { resultText } });
   revalidatePath(`/reading/corrections/${id}`);
   return { ok: true };
 }
 
 export async function deleteCorrection(id: number) {
+  await requireSession();
+  const c = await prisma.correction.findUnique({ where: { id }, select: { studentId: true } });
   await prisma.correction.delete({ where: { id } });
+  // 원본 이미지 폴더도 함께 정리(실패해도 삭제 자체는 진행)
+  try {
+    await deleteCorrectionImages(id);
+  } catch (e) {
+    console.error("첨삭 원본 이미지 삭제 실패:", e);
+  }
   revalidatePath("/reading/corrections");
+  if (c?.studentId) revalidatePath(`/reading/students/${c.studentId}`);
   return { ok: true };
 }

@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { parseAndImport } from "@/lib/reading/student-import";
+import { getSession } from "@/lib/reading/session";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const form = await req.formData();
     const file = form.get("file");

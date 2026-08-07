@@ -186,7 +186,7 @@ model Correction {
   studentId   Int?
   student     Student?         @relation(fields: [studentId], references: [id])
   title       String           @default("첨삭")
-  imageUrl    String? // 원본 이미지(목업)
+  images      Json? // 원본 답안 이미지 상대경로 배열(업로드 폴더 기준). 예: ["reading/corrections/12/01.jpg"]
   problemText String?          @db.Text // 인식된 문제
   answerText  String?          @db.Text // 인식된 답안
   genre       String? // 글의 종류

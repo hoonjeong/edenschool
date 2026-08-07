@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 export async function createCounsel(input: {
   studentId: number;
@@ -11,6 +12,7 @@ export async function createCounsel(input: {
   nextDate?: string | null;
   observationId?: number | null;
 }) {
+  await requireSession();
   await prisma.counsel.create({
     data: {
       studentId: input.studentId,
@@ -27,6 +29,7 @@ export async function createCounsel(input: {
 }
 
 export async function deleteCounsel(id: number, studentId: number) {
+  await requireSession();
   await prisma.counsel.delete({ where: { id } });
   revalidatePath("/reading/counsels");
   revalidatePath(`/reading/students/${studentId}`);

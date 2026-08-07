@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Printer, Pencil, Save, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Printer, Pencil, Save, Trash2, Users, ImageIcon } from "lucide-react";
 import { Card, Badge, Button } from "@/components/reading/ui";
 import { METRICS } from "@/lib/reading/correction-config";
 import { fmtDate } from "@/lib/reading/utils";
@@ -78,6 +78,37 @@ export default function CorrectionDetail({ correction: c, peerAvg, peerCount }: 
               <span className="text-faint text-[12px] font-semibold">학생 답안</span><br />{c.answerText}
             </div>
           </Card>
+
+          {/* 원본 답안 이미지 — 인식/입력 결과를 원본과 대조할 수 있게 함께 보관 */}
+          {c.imageCount > 0 && (
+            <Card className="p-5">
+              <h3 className="font-bold text-[15px] mb-3 inline-flex items-center gap-1.5">
+                <ImageIcon className="size-4 text-brand-600" /> 원본 답안 이미지
+                <span className="font-normal text-faint">· {c.imageCount}장</span>
+              </h3>
+              <div className="space-y-3">
+                {Array.from({ length: c.imageCount }, (_, i) => (
+                  <a
+                    key={i}
+                    href={`/reading/api/corrections/${c.id}/image/${i}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block relative rounded-xl border border-line overflow-hidden bg-canvas"
+                  >
+                    <img
+                      src={`/reading/api/corrections/${c.id}/image/${i}`}
+                      alt={`원본 답안 ${i + 1}`}
+                      className="w-full object-contain"
+                      loading="lazy"
+                    />
+                    <span className="absolute top-2 left-2 rounded bg-black/60 text-white text-[11px] font-bold px-1.5 py-0.5">
+                      {i + 1}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </Card>
+          )}
 
           <Card className="p-5">
             <h3 className="font-bold text-[15px] mb-3">이든 서술형 분석지</h3>

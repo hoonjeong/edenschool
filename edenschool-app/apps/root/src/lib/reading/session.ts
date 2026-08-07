@@ -15,3 +15,12 @@ export async function getSession(): Promise<ReadingSession | null> {
   if (!user || user.code !== "R") return null;
   return { uid: user.id, name: user.name, role: "ADMIN" };
 }
+
+// 서버 액션·라우트 핸들러용 가드.
+// /reading 세그먼트는 미들웨어가 막지만, 서버 액션은 페이지와 별개로 호출될 수 있으므로
+// 데이터를 읽거나 바꾸는 액션마다 이 함수로 한 번 더 확인한다.
+export async function requireSession(): Promise<ReadingSession> {
+  const session = await getSession();
+  if (!session) throw new Error("권한이 없습니다. 다시 로그인해 주세요.");
+  return session;
+}

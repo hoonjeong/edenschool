@@ -40,7 +40,6 @@ export type CorrectionMinAggregateOutputType = {
   id: number | null
   studentId: number | null
   title: string | null
-  imageUrl: string | null
   problemText: string | null
   answerText: string | null
   genre: string | null
@@ -55,7 +54,6 @@ export type CorrectionMaxAggregateOutputType = {
   id: number | null
   studentId: number | null
   title: string | null
-  imageUrl: string | null
   problemText: string | null
   answerText: string | null
   genre: string | null
@@ -70,7 +68,7 @@ export type CorrectionCountAggregateOutputType = {
   id: number
   studentId: number
   title: number
-  imageUrl: number
+  images: number
   problemText: number
   answerText: number
   genre: number
@@ -99,7 +97,6 @@ export type CorrectionMinAggregateInputType = {
   id?: true
   studentId?: true
   title?: true
-  imageUrl?: true
   problemText?: true
   answerText?: true
   genre?: true
@@ -114,7 +111,6 @@ export type CorrectionMaxAggregateInputType = {
   id?: true
   studentId?: true
   title?: true
-  imageUrl?: true
   problemText?: true
   answerText?: true
   genre?: true
@@ -129,7 +125,7 @@ export type CorrectionCountAggregateInputType = {
   id?: true
   studentId?: true
   title?: true
-  imageUrl?: true
+  images?: true
   problemText?: true
   answerText?: true
   genre?: true
@@ -233,7 +229,7 @@ export type CorrectionGroupByOutputType = {
   id: number
   studentId: number | null
   title: string
-  imageUrl: string | null
+  images: runtime.JsonValue | null
   problemText: string | null
   answerText: string | null
   genre: string | null
@@ -273,7 +269,7 @@ export type CorrectionWhereInput = {
   id?: Prisma.IntFilter<"Correction"> | number
   studentId?: Prisma.IntNullableFilter<"Correction"> | number | null
   title?: Prisma.StringFilter<"Correction"> | string
-  imageUrl?: Prisma.StringNullableFilter<"Correction"> | string | null
+  images?: Prisma.JsonNullableFilter<"Correction">
   problemText?: Prisma.StringNullableFilter<"Correction"> | string | null
   answerText?: Prisma.StringNullableFilter<"Correction"> | string | null
   genre?: Prisma.StringNullableFilter<"Correction"> | string | null
@@ -291,7 +287,7 @@ export type CorrectionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
-  imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrderInput | Prisma.SortOrder
   problemText?: Prisma.SortOrderInput | Prisma.SortOrder
   answerText?: Prisma.SortOrderInput | Prisma.SortOrder
   genre?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -313,7 +309,7 @@ export type CorrectionWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.CorrectionWhereInput | Prisma.CorrectionWhereInput[]
   studentId?: Prisma.IntNullableFilter<"Correction"> | number | null
   title?: Prisma.StringFilter<"Correction"> | string
-  imageUrl?: Prisma.StringNullableFilter<"Correction"> | string | null
+  images?: Prisma.JsonNullableFilter<"Correction">
   problemText?: Prisma.StringNullableFilter<"Correction"> | string | null
   answerText?: Prisma.StringNullableFilter<"Correction"> | string | null
   genre?: Prisma.StringNullableFilter<"Correction"> | string | null
@@ -331,7 +327,7 @@ export type CorrectionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrder
-  imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  images?: Prisma.SortOrderInput | Prisma.SortOrder
   problemText?: Prisma.SortOrderInput | Prisma.SortOrder
   answerText?: Prisma.SortOrderInput | Prisma.SortOrder
   genre?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -356,7 +352,7 @@ export type CorrectionScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Correction"> | number
   studentId?: Prisma.IntNullableWithAggregatesFilter<"Correction"> | number | null
   title?: Prisma.StringWithAggregatesFilter<"Correction"> | string
-  imageUrl?: Prisma.StringNullableWithAggregatesFilter<"Correction"> | string | null
+  images?: Prisma.JsonNullableWithAggregatesFilter<"Correction">
   problemText?: Prisma.StringNullableWithAggregatesFilter<"Correction"> | string | null
   answerText?: Prisma.StringNullableWithAggregatesFilter<"Correction"> | string | null
   genre?: Prisma.StringNullableWithAggregatesFilter<"Correction"> | string | null
@@ -371,7 +367,7 @@ export type CorrectionScalarWhereWithAggregatesInput = {
 
 export type CorrectionCreateInput = {
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -389,7 +385,7 @@ export type CorrectionUncheckedCreateInput = {
   id?: number
   studentId?: number | null
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -404,7 +400,7 @@ export type CorrectionUncheckedCreateInput = {
 
 export type CorrectionUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -422,7 +418,7 @@ export type CorrectionUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   studentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -439,7 +435,7 @@ export type CorrectionCreateManyInput = {
   id?: number
   studentId?: number | null
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -454,7 +450,7 @@ export type CorrectionCreateManyInput = {
 
 export type CorrectionUpdateManyMutationInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -471,7 +467,7 @@ export type CorrectionUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   studentId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -504,7 +500,7 @@ export type CorrectionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  imageUrl?: Prisma.SortOrder
+  images?: Prisma.SortOrder
   problemText?: Prisma.SortOrder
   answerText?: Prisma.SortOrder
   genre?: Prisma.SortOrder
@@ -526,7 +522,6 @@ export type CorrectionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  imageUrl?: Prisma.SortOrder
   problemText?: Prisma.SortOrder
   answerText?: Prisma.SortOrder
   genre?: Prisma.SortOrder
@@ -541,7 +536,6 @@ export type CorrectionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  imageUrl?: Prisma.SortOrder
   problemText?: Prisma.SortOrder
   answerText?: Prisma.SortOrder
   genre?: Prisma.SortOrder
@@ -605,7 +599,7 @@ export type EnumCorrectionStatusFieldUpdateOperationsInput = {
 
 export type CorrectionCreateWithoutStudentInput = {
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -621,7 +615,7 @@ export type CorrectionCreateWithoutStudentInput = {
 export type CorrectionUncheckedCreateWithoutStudentInput = {
   id?: number
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -667,7 +661,7 @@ export type CorrectionScalarWhereInput = {
   id?: Prisma.IntFilter<"Correction"> | number
   studentId?: Prisma.IntNullableFilter<"Correction"> | number | null
   title?: Prisma.StringFilter<"Correction"> | string
-  imageUrl?: Prisma.StringNullableFilter<"Correction"> | string | null
+  images?: Prisma.JsonNullableFilter<"Correction">
   problemText?: Prisma.StringNullableFilter<"Correction"> | string | null
   answerText?: Prisma.StringNullableFilter<"Correction"> | string | null
   genre?: Prisma.StringNullableFilter<"Correction"> | string | null
@@ -683,7 +677,7 @@ export type CorrectionScalarWhereInput = {
 export type CorrectionCreateManyStudentInput = {
   id?: number
   title?: string
-  imageUrl?: string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: string | null
   answerText?: string | null
   genre?: string | null
@@ -698,7 +692,7 @@ export type CorrectionCreateManyStudentInput = {
 
 export type CorrectionUpdateWithoutStudentInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -714,7 +708,7 @@ export type CorrectionUpdateWithoutStudentInput = {
 export type CorrectionUncheckedUpdateWithoutStudentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -730,7 +724,7 @@ export type CorrectionUncheckedUpdateWithoutStudentInput = {
 export type CorrectionUncheckedUpdateManyWithoutStudentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  images?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   problemText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   answerText?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -749,7 +743,7 @@ export type CorrectionSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   id?: boolean
   studentId?: boolean
   title?: boolean
-  imageUrl?: boolean
+  images?: boolean
   problemText?: boolean
   answerText?: boolean
   genre?: boolean
@@ -769,7 +763,7 @@ export type CorrectionSelectScalar = {
   id?: boolean
   studentId?: boolean
   title?: boolean
-  imageUrl?: boolean
+  images?: boolean
   problemText?: boolean
   answerText?: boolean
   genre?: boolean
@@ -782,7 +776,7 @@ export type CorrectionSelectScalar = {
   createdAt?: boolean
 }
 
-export type CorrectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "title" | "imageUrl" | "problemText" | "answerText" | "genre" | "gradeLevel" | "options" | "scores" | "resultText" | "summary" | "status" | "createdAt", ExtArgs["result"]["correction"]>
+export type CorrectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentId" | "title" | "images" | "problemText" | "answerText" | "genre" | "gradeLevel" | "options" | "scores" | "resultText" | "summary" | "status" | "createdAt", ExtArgs["result"]["correction"]>
 export type CorrectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   student?: boolean | Prisma.Correction$studentArgs<ExtArgs>
 }
@@ -796,7 +790,7 @@ export type $CorrectionPayload<ExtArgs extends runtime.Types.Extensions.Internal
     id: number
     studentId: number | null
     title: string
-    imageUrl: string | null
+    images: runtime.JsonValue | null
     problemText: string | null
     answerText: string | null
     genre: string | null
@@ -1180,7 +1174,7 @@ export interface CorrectionFieldRefs {
   readonly id: Prisma.FieldRef<"Correction", 'Int'>
   readonly studentId: Prisma.FieldRef<"Correction", 'Int'>
   readonly title: Prisma.FieldRef<"Correction", 'String'>
-  readonly imageUrl: Prisma.FieldRef<"Correction", 'String'>
+  readonly images: Prisma.FieldRef<"Correction", 'Json'>
   readonly problemText: Prisma.FieldRef<"Correction", 'String'>
   readonly answerText: Prisma.FieldRef<"Correction", 'String'>
   readonly genre: Prisma.FieldRef<"Correction", 'String'>

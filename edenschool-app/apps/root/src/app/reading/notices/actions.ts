@@ -4,9 +4,11 @@ import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
 import { sendBulk } from "@/lib/reading/sms";
 import { areaScores, type ObsItem } from "@/lib/reading/data";
+import { requireSession } from "@/lib/reading/session";
 
 // ── 템플릿 CRUD ──
 export async function createTemplate(input: { title: string; body: string }) {
+  await requireSession();
   const variables = extractVars(input.body);
   await prisma.noticeTemplate.create({
     data: { title: input.title.trim(), body: input.body, variables },
@@ -15,6 +17,7 @@ export async function createTemplate(input: { title: string; body: string }) {
   return { ok: true };
 }
 export async function updateTemplate(id: number, input: { title: string; body: string }) {
+  await requireSession();
   const variables = extractVars(input.body);
   await prisma.noticeTemplate.update({
     where: { id },
@@ -24,6 +27,7 @@ export async function updateTemplate(id: number, input: { title: string; body: s
   return { ok: true };
 }
 export async function deleteTemplate(id: number) {
+  await requireSession();
   await prisma.noticeTemplate.delete({ where: { id } });
   revalidatePath("/reading/notices");
   return { ok: true };
@@ -78,6 +82,7 @@ function substitute(body: string, vars: Record<string, string>): string {
 
 // ── 미리보기 (개인별 치환 결과) ──
 export async function previewNotices(templateBody: string, studentIds: number[]) {
+  await requireSession();
   const data = await buildVarsForStudents(studentIds);
   return data.map((d) => ({
     id: d.id,
@@ -89,6 +94,7 @@ export async function previewNotices(templateBody: string, studentIds: number[])
 
 // ── 발송 (알리고 · 자격증명 없으면 드라이런) ──
 export async function sendNotices(templateBody: string, studentIds: number[], templateId?: number) {
+  await requireSession();
   const data = await buildVarsForStudents(studentIds);
   const items = data.map((d) => ({ phone: d.phone, message: substitute(templateBody, d.vars) }));
   const result = await sendBulk(items, { templateId });

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 export interface MakeupInput {
   studentId: number;
@@ -23,6 +24,7 @@ function clean(v?: string) {
 }
 
 export async function createMakeup(input: MakeupInput) {
+  await requireSession();
   await prisma.makeupClass.create({
     data: {
       studentId: input.studentId,
@@ -44,6 +46,7 @@ export async function createMakeup(input: MakeupInput) {
 }
 
 export async function updateMakeup(id: number, input: MakeupInput) {
+  await requireSession();
   await prisma.makeupClass.update({
     where: { id },
     data: {
@@ -66,6 +69,7 @@ export async function updateMakeup(id: number, input: MakeupInput) {
 }
 
 export async function deleteMakeup(id: number, studentId: number) {
+  await requireSession();
   await prisma.makeupClass.delete({ where: { id } });
   revalidatePath("/reading/makeup");
   revalidatePath(`/reading/students/${studentId}`);

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 export interface ObsItemInput {
   area: string;
@@ -18,6 +19,7 @@ export async function createObservation(input: {
   items: ObsItemInput[];
   memo?: string;
 }) {
+  await requireSession();
   let round = input.round;
   if (!round) {
     const last = await prisma.observation.findFirst({
@@ -43,6 +45,7 @@ export async function createObservation(input: {
 }
 
 export async function deleteObservation(id: number, studentId: number) {
+  await requireSession();
   await prisma.observation.delete({ where: { id } });
   revalidatePath("/reading/observations");
   revalidatePath(`/reading/students/${studentId}`);

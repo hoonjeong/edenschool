@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, ArrowRight, Upload, ScanText, SlidersHorizontal, Sparkles,
-  Check, Loader2, ImageIcon, Save, Info, X, Plus,
+  Check, Loader2, ImageIcon, Save, Info, X, Plus, AlertTriangle, PencilLine, Eraser,
 } from "lucide-react";
 import {
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -13,14 +13,23 @@ import {
 import { Card, Button, Badge } from "@/components/reading/ui";
 import { inputCls, labelCls } from "@/components/reading/Modal";
 import { GRADE_INTENSITY, GENRES, TONES, METRICS } from "@/lib/reading/correction-config";
+import { CLAUDE_MODEL_LABEL } from "@/lib/reading/claude-label";
 import { recognizeImage, runCorrection, saveCorrection } from "../actions";
 
 const STEPS = [
   { icon: Upload, label: "업로드" },
-  { icon: ScanText, label: "인식 확인" },
+  { icon: ScanText, label: "인식 확인·수정" },
   { icon: SlidersHorizontal, label: "옵션 설정" },
   { icon: Sparkles, label: "첨삭 결과" },
 ];
+
+// 인식 신뢰도가 낮은 낱말 마커 [[ ]]
+const MARKER_RE = /\[\[(.*?)\]\]/g;
+const stripMarkers = (t: string) => t.replace(/\[\[|\]\]/g, "");
+const countMarkers = (t: string) => (t.match(MARKER_RE) ?? []).length;
+
+const msgOf = (e: unknown, fallback: string) =>
+  e instanceof Error && e.message ? e.message : fallback;
 
 export default function WizardClient({ students, edenPhilosophy, defaults }: any) {
   const router = useRouter();
@@ -35,6 +44,8 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   const [problem, setProblem] = useState("");
   const [answer, setAnswer] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [source, setSource] = useState<"ai" | "manual">("ai");
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   // 옵션
   const [gradeLevel, setGradeLevel] = useState(defaults.gradeLevel);
@@ -44,17 +55,25 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   const [custom, setCustom] = useState("");
 
   // 결과
-  const [result, setResult] = useState<{ resultText: string; summary: string; scores: Record<string, number>; ai?: boolean } | null>(null);
+  const [result, setResult] = useState<{ resultText: string; summary: string; scores: Record<string, number> } | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const selStudent = students.find((s: any) => s.id === studentId);
 
   const MAX_IMAGES = 20;
+
+  // 사람이 확인·수정을 마쳐야만 첨삭으로 넘어갈 수 있다.
+  const answerReady = stripMarkers(answer).trim().length > 0;
+  const pendingMarkers = countMarkers(problem) + countMarkers(answer);
+  const canProceed = confirmed && answerReady;
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     e.target.value = ""; // 같은 파일 다시 선택 가능하도록 초기화
     if (files.length === 0) return;
     setProcessing(true);
+    setOcrError(null);
     try {
       const urls: string[] = [];
       for (const f of files) {
@@ -75,47 +94,94 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
     setImgUrls((prev) => prev.filter((_, idx) => idx !== i));
   }
 
+  // AI 인식. 실패하면 실패라고 알리고 STEP 0에 머문다(예시 답안으로 대체하지 않음).
   function recognize() {
+    setOcrError(null);
     start(async () => {
-      const r = await recognizeImage(imgUrls.length ? imgUrls : undefined);
-      setProblem(r.problem);
-      setAnswer(r.answer);
-      setStep(1);
+      try {
+        const r = await recognizeImage(imgUrls);
+        if (!r.ok) {
+          setOcrError(r.error);
+          return;
+        }
+        setProblem(r.problem);
+        setAnswer(r.answer);
+        setSource("ai");
+        setConfirmed(false);
+        setStep(1);
+      } catch (e) {
+        setOcrError(msgOf(e, "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
+      }
     });
   }
 
+  // AI 없이 선생님이 직접 옮겨 적는 경로
+  function manualEntry() {
+    setOcrError(null);
+    setProblem("");
+    setAnswer("");
+    setSource("manual");
+    setConfirmed(false);
+    setStep(1);
+  }
+
+  function clearMarkers() {
+    setProblem((p) => stripMarkers(p));
+    setAnswer((a) => stripMarkers(a));
+  }
+
   function run() {
+    if (!canProceed) return;
+    setRunError(null);
+    setResult(null);
     setStep(3);
     start(async () => {
-      const out = await runCorrection({
-        answerText: answer.replace(/\[\[|\]\]/g, ""),
-        problemText: problem.replace(/\[\[|\]\]/g, ""),
-        gradeLevel, genre, tone, metrics, custom,
-      });
-      setResult(out);
+      try {
+        const out = await runCorrection({
+          answerText: stripMarkers(answer),
+          problemText: stripMarkers(problem),
+          gradeLevel, genre, tone, metrics, custom,
+        });
+        if (!out.ok) {
+          setRunError(out.error);
+          return;
+        }
+        setResult({ resultText: out.resultText, summary: out.summary, scores: out.scores });
+      } catch (e) {
+        setRunError(msgOf(e, "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
+      }
     });
   }
 
   function save() {
     if (!result) return;
+    setSaveError(null);
     start(async () => {
-      const grd = students.find((s: any) => s.id === studentId)?.grade ?? gradeLevel;
-      const r = await saveCorrection({
-        studentId,
-        title: `${GENRES.find((g) => g.key === genre)?.label ?? "첨삭"}${selStudent ? ` · ${selStudent.name}` : ""}`,
-        genre: GENRES.find((g) => g.key === genre)?.label ?? genre,
-        gradeLevel,
-        tone,
-        metrics,
-        custom,
-        problemText: problem.replace(/\[\[|\]\]/g, ""),
-        answerText: answer.replace(/\[\[|\]\]/g, ""),
-        resultText: result.resultText,
-        summary: result.summary,
-        scores: result.scores,
-      });
-      router.push(`/reading/corrections/${r.id}`);
-      router.refresh();
+      try {
+        const r = await saveCorrection({
+          studentId,
+          title: `${GENRES.find((g) => g.key === genre)?.label ?? "첨삭"}${selStudent ? ` · ${selStudent.name}` : ""}`,
+          genre: GENRES.find((g) => g.key === genre)?.label ?? genre,
+          gradeLevel,
+          tone,
+          metrics,
+          custom,
+          problemText: stripMarkers(problem),
+          answerText: stripMarkers(answer),
+          resultText: result.resultText,
+          summary: result.summary,
+          scores: result.scores,
+          images: imgUrls,
+        });
+        if (r.imageWarning) {
+          // 저장 자체는 성공. 원본 보관만 실패한 경우 알려 준다.
+          alert(r.imageWarning);
+        }
+        router.push(`/reading/corrections/${r.id}`);
+        router.refresh();
+      } catch (e) {
+        setSaveError(msgOf(e, "저장에 실패했습니다. 잠시 후 다시 시도해 주세요."));
+      }
     });
   }
 
@@ -204,32 +270,64 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
 
               <div className="mt-4 rounded-xl bg-amber-50 text-amber-700 text-[13px] px-4 py-3 leading-relaxed">
                 <Info className="inline size-4 mr-1 -mt-0.5" />
-                손글씨 인식은 완벽하지 않습니다. 다음 단계에서 <b>인식 결과를 반드시 확인·교정</b>한 뒤 첨삭이 진행됩니다.
+                손글씨 인식은 완벽하지 않습니다. 다음 단계에서 <b>인식 결과를 직접 확인·수정</b>한 뒤에야 첨삭을 실행할 수 있습니다.
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-6">
+          {/* 인식 실패 안내 — 예시 답안으로 대체하지 않는다 */}
+          {ocrError && (
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-[13px] px-4 py-3 leading-relaxed">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="size-4 mt-0.5 shrink-0" />
+                <div>
+                  <b>인식에 실패했습니다.</b>
+                  <div className="mt-1">{ocrError}</div>
+                  <div className="mt-1.5 text-rose-600/80">
+                    같은 이미지로 다시 시도하거나, 아래 <b>직접 입력</b>으로 답안을 옮겨 적어 진행할 수 있습니다.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-end gap-3 mt-6">
             {processing && (
               <span className="inline-flex items-center gap-1.5 text-[13px] text-muted">
                 <Loader2 className="size-4 animate-spin" /> 이미지 준비 중…
               </span>
             )}
-            <Button onClick={recognize} disabled={pending || processing}>
+            <Button variant="secondary" onClick={manualEntry} disabled={pending || processing}>
+              <PencilLine className="size-4" /> 직접 입력
+            </Button>
+            <Button onClick={recognize} disabled={pending || processing || imgUrls.length === 0}>
               {pending ? <Loader2 className="size-4 animate-spin" /> : <ScanText className="size-4" />}
-              문제·답안 자동 인식
+              {ocrError ? "다시 인식" : "문제·답안 자동 인식"}
             </Button>
           </div>
+          {imgUrls.length === 0 && (
+            <p className="text-[12px] text-faint text-right mt-2">
+              자동 인식을 하려면 답안 이미지를 먼저 올려 주세요.
+            </p>
+          )}
         </Card>
       )}
 
-      {/* STEP 1: 인식 확인 */}
+      {/* STEP 1: 인식 확인·수정 (사람이 반드시 거치는 단계) */}
       {step === 1 && (
         <Card className="p-6">
-          <h3 className="font-bold text-lg mb-1">② 인식 결과 확인·교정</h3>
+          <h3 className="font-bold text-lg mb-1">② 인식 결과 확인·수정</h3>
           <p className="text-[13px] text-muted mb-5">
-            <span className="bg-amber-200/70 px-1 rounded">노란색</span>으로 표시된 부분은 인식 신뢰도가 낮습니다. 원본과 대조해 교정하세요.
+            {source === "ai" ? (
+              <>
+                아래 상자의 글을 <b>원본과 대조해 직접 고쳐 주세요.</b> AI가 옮겨 적은 초안이므로 틀린 글자가 있을 수 있습니다.
+                {" "}<span className="bg-amber-200/70 px-1 rounded">노란색</span>은 인식 신뢰도가 낮은 낱말입니다.
+              </>
+            ) : (
+              <>문제와 학생 답안을 직접 옮겨 적어 주세요. 답안은 학생이 쓴 그대로(맞춤법 포함) 입력합니다.</>
+            )}
           </p>
+
           <div className="grid md:grid-cols-2 gap-5">
             <div>
               <div className="text-[13px] font-semibold mb-1.5">
@@ -237,14 +335,14 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
               </div>
               {imgUrls.length === 0 ? (
                 <div className="aspect-[4/3] rounded-xl border border-line bg-canvas grid place-items-center">
-                  <span className="text-faint text-sm">이미지 없음 (샘플 인식)</span>
+                  <span className="text-faint text-sm">업로드한 이미지 없음 (직접 입력)</span>
                 </div>
               ) : imgUrls.length === 1 ? (
                 <div className="aspect-[4/3] rounded-xl border border-line bg-canvas grid place-items-center overflow-hidden">
                   <img src={imgUrls[0]} className="w-full h-full object-contain" alt="원본 답안" />
                 </div>
               ) : (
-                <div className="rounded-xl border border-line bg-canvas p-2 max-h-[420px] overflow-y-auto space-y-2">
+                <div className="rounded-xl border border-line bg-canvas p-2 max-h-[520px] overflow-y-auto space-y-2">
                   {imgUrls.map((u, i) => (
                     <div key={i} className="relative">
                       <img src={u} className="w-full rounded-lg object-contain" alt={`원본 답안 ${i + 1}`} />
@@ -256,29 +354,71 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
                 </div>
               )}
             </div>
+
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>문제 (인식됨)</label>
-                <HighlightPreview text={problem} />
-                <textarea value={problem.replace(/\[\[|\]\]/g, "")} onChange={(e) => setProblem(e.target.value)}
-                  rows={2} className={inputCls + " h-auto py-2 mt-1.5 resize-none"} />
+                <label className={labelCls}>문제 {source === "ai" && <span className="font-normal text-faint">(AI 인식 초안 — 수정 가능)</span>}</label>
+                {source === "ai" && problem && <HighlightPreview text={problem} />}
+                <textarea
+                  value={problem}
+                  onChange={(e) => setProblem(e.target.value)}
+                  rows={3}
+                  placeholder="예) 책을 읽고 가장 기억에 남는 장면과 그 까닭을 써 봅시다."
+                  className={inputCls + " h-auto py-2 mt-1.5 resize-y leading-relaxed"}
+                />
               </div>
+
               <div>
-                <label className={labelCls}>학생 답안 (인식됨)</label>
-                <HighlightPreview text={answer} />
-                <textarea value={answer.replace(/\[\[|\]\]/g, "")} onChange={(e) => setAnswer(e.target.value)}
-                  rows={5} className={inputCls + " h-auto py-2 mt-1.5 resize-none"} />
+                <label className={labelCls}>
+                  학생 답안 {source === "ai" && <span className="font-normal text-faint">(AI 인식 초안 — 수정 가능)</span>}
+                  <span className="text-rose-500"> *</span>
+                </label>
+                {source === "ai" && answer && <HighlightPreview text={answer} />}
+                <textarea
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  rows={9}
+                  placeholder="학생이 쓴 답안을 그대로 입력하세요."
+                  className={inputCls + " h-auto py-2 mt-1.5 resize-y leading-relaxed"}
+                />
+                {!answerReady && (
+                  <p className="text-[12px] text-rose-500 mt-1.5">
+                    학생 답안이 비어 있으면 첨삭을 진행할 수 없습니다.
+                  </p>
+                )}
               </div>
-              <label className="flex items-center gap-2 text-[13px] font-medium cursor-pointer">
+
+              {pendingMarkers > 0 && (
+                <div className="rounded-xl bg-amber-50 text-amber-700 text-[13px] px-4 py-3 leading-relaxed">
+                  <AlertTriangle className="inline size-4 mr-1 -mt-0.5" />
+                  신뢰도가 낮아 <b>[[ ]]</b>로 표시된 낱말이 <b>{pendingMarkers}곳</b> 남아 있습니다.
+                  원본과 대조해 고친 뒤 대괄호를 지워 주세요.
+                  <button
+                    type="button"
+                    onClick={clearMarkers}
+                    className="ml-2 inline-flex items-center gap-1 rounded-md border border-amber-300 px-2 py-0.5 text-[12px] font-semibold hover:bg-amber-100"
+                  >
+                    <Eraser className="size-3" /> 표시만 일괄 삭제
+                  </button>
+                </div>
+              )}
+
+              <label className="flex items-start gap-2 text-[13px] font-medium cursor-pointer rounded-xl border border-line px-4 py-3">
                 <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)}
-                  className="size-4 accent-brand-600" />
-                인식 결과가 원본과 일치함을 확인했습니다.
+                  className="size-4 accent-brand-600 mt-0.5" />
+                <span>
+                  위 문제·답안을 원본과 대조해 확인했으며, 이 내용으로 첨삭을 진행합니다.
+                  <span className="block text-[12px] font-normal text-faint mt-0.5">
+                    체크해야 다음 단계로 넘어갈 수 있습니다.
+                  </span>
+                </span>
               </label>
             </div>
           </div>
+
           <div className="flex justify-between mt-6">
             <Button variant="secondary" onClick={() => setStep(0)}><ArrowLeft className="size-4" /> 이전</Button>
-            <Button onClick={() => setStep(2)} disabled={!confirmed}>
+            <Button onClick={() => setStep(2)} disabled={!canProceed}>
               확정하고 옵션 설정 <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -374,11 +514,16 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
             </div>
           </div>
 
-          <div className="flex justify-between mt-6">
+          <div className="flex items-center justify-between mt-6">
             <Button variant="secondary" onClick={() => setStep(1)}><ArrowLeft className="size-4" /> 이전</Button>
-            <Button onClick={run} disabled={pending || metrics.length === 0}>
-              <Sparkles className="size-4" /> 첨삭 실행
-            </Button>
+            <div className="flex items-center gap-2">
+              {!canProceed && (
+                <span className="text-[12px] text-rose-500">인식 결과 확인 단계를 먼저 완료해 주세요.</span>
+              )}
+              <Button onClick={run} disabled={pending || metrics.length === 0 || !canProceed}>
+                <Sparkles className="size-4" /> 첨삭 실행
+              </Button>
+            </div>
           </div>
         </Card>
       )}
@@ -386,7 +531,21 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
       {/* STEP 3: 결과 */}
       {step === 3 && (
         <div className="space-y-5">
-          {!result ? (
+          {runError ? (
+            <Card className="p-10 text-center">
+              <AlertTriangle className="size-10 mx-auto text-rose-500 mb-4" />
+              <div className="font-bold text-lg">첨삭에 실패했습니다</div>
+              <p className="text-[13px] text-muted mt-2 max-w-lg mx-auto leading-relaxed">{runError}</p>
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <Button variant="secondary" onClick={() => setStep(2)}>
+                  <ArrowLeft className="size-4" /> 옵션으로 돌아가기
+                </Button>
+                <Button onClick={run} disabled={pending}>
+                  {pending ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} 다시 시도
+                </Button>
+              </div>
+            </Card>
+          ) : !result ? (
             <Card className="p-16 text-center">
               <Loader2 className="size-10 mx-auto animate-spin text-brand-500 mb-4" />
               <div className="font-bold text-lg">AI가 첨삭 중입니다…</div>
@@ -399,9 +558,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
                   <div className="flex items-center gap-2 mb-3">
                     <h3 className="font-bold text-[15px]">이든 서술형 분석지</h3>
                     <Badge tone="mint">첨삭 완료</Badge>
-                    <Badge tone={result.ai ? "brand" : "slate"}>
-                      {result.ai ? "Claude Opus 4.8" : "샘플(오프라인)"}
-                    </Badge>
+                    <Badge tone="brand">{CLAUDE_MODEL_LABEL}</Badge>
                     <span className="ml-auto text-[12px] text-faint">아래 내용은 자유롭게 편집할 수 있습니다.</span>
                   </div>
                   <textarea value={result.resultText} onChange={(e) => setResult({ ...result, resultText: e.target.value })}
@@ -432,6 +589,12 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
                   </div>
                 </Card>
               </div>
+
+              {saveError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-[13px] px-4 py-3">
+                  <AlertTriangle className="inline size-4 mr-1 -mt-0.5" /> {saveError}
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <Button variant="secondary" onClick={() => setStep(2)}><ArrowLeft className="size-4" /> 옵션 수정</Button>
@@ -503,7 +666,7 @@ async function compressImage(file: File): Promise<string> {
   }
 }
 
-// [[낮은신뢰도]] 하이라이트 미리보기
+// [[낮은신뢰도]] 하이라이트 미리보기 — textarea와 같은 상태를 그리므로 수정하면 즉시 반영된다.
 function HighlightPreview({ text }: { text: string }) {
   const parts = text.split(/(\[\[.*?\]\])/g);
   return (

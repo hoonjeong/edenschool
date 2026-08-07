@@ -1434,7 +1434,7 @@ export const CorrectionScalarFieldEnum = {
   id: 'id',
   studentId: 'studentId',
   title: 'title',
-  imageUrl: 'imageUrl',
+  images: 'images',
   problemText: 'problemText',
   answerText: 'answerText',
   genre: 'genre',
@@ -1623,7 +1623,6 @@ export type CounselOrderByRelevanceFieldEnum = (typeof CounselOrderByRelevanceFi
 
 export const CorrectionOrderByRelevanceFieldEnum = {
   title: 'title',
-  imageUrl: 'imageUrl',
   problemText: 'problemText',
   answerText: 'answerText',
   genre: 'genre',

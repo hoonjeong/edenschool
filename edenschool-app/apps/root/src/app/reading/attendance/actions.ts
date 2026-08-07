@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/reading/session";
 
 type Status = "PRESENT" | "LATE" | "ABSENT" | "MAKEUP";
 
@@ -12,6 +13,7 @@ function parseDate(dateStr: string) {
 
 /** 관리자 수동 출결 지정/변경 (upsert) */
 export async function setAttendance(studentId: number, dateStr: string, status: Status) {
+  await requireSession();
   const date = parseDate(dateStr);
   await prisma.attendance.upsert({
     where: { studentId_date: { studentId, date } },
@@ -25,6 +27,7 @@ export async function setAttendance(studentId: number, dateStr: string, status: 
 
 /** 출결 기록 삭제 (미등원으로 되돌림) */
 export async function clearAttendance(studentId: number, dateStr: string) {
+  await requireSession();
   const date = parseDate(dateStr);
   await prisma.attendance.deleteMany({ where: { studentId, date } });
   revalidatePath("/reading/attendance");
