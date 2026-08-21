@@ -22,7 +22,8 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { Card, Badge, LevelChip, EmptyState } from "@/components/reading/ui";
+import { Card, Badge, EmptyState } from "@/components/reading/ui";
+import ObservationItems from "@/components/reading/ObservationItems";
 import { STUDENT_STATUS, ATTENDANCE_STATUS, CORRECTION_STATUS } from "@/lib/reading/labels";
 import { AREA_NAMES, AREA_COLORS } from "@/lib/reading/rubric";
 import { fmtDate, fmtDateShort, WEEKDAYS_MON_SAT, relativeDay } from "@/lib/reading/utils";
@@ -220,18 +221,14 @@ function ObservationTab({ observations, counsels, growth }: any) {
                     <Badge tone="brand">{o.round}회차</Badge>
                     <span className="text-[13px] text-muted">{fmtDate(o.date)}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(o.items as ObsItem[]).slice(0, 8).map((it, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 rounded-md bg-canvas px-2 py-1 text-[12px]">
-                        <LevelChip level={it.level} />
-                        {it.item}
-                      </span>
-                    ))}
-                    {(o.items as ObsItem[]).length > 8 && (
-                      <span className="text-[12px] text-faint self-center">+{(o.items as ObsItem[]).length - 8}</span>
-                    )}
-                  </div>
-                  {o.memo && <p className="mt-2 text-[13px] text-muted">{o.memo}</p>}
+                  {/* 등급에 따라 자동으로 채워진 관찰 문장을 그대로 보여 준다. */}
+                  <ObservationItems items={o.items as ObsItem[]} collapsible={false} />
+                  {o.memo && (
+                    <p className="mt-3 rounded-lg bg-canvas px-3 py-2 text-[13px] text-muted">
+                      <span className="font-semibold text-ink">종합 </span>
+                      {o.memo}
+                    </p>
+                  )}
                 </Card>
               ))}
             </div>

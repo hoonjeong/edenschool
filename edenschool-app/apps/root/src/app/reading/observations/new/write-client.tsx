@@ -4,7 +4,7 @@ import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, Save, RotateCcw } from "lucide-react";
-import { Card, Button } from "@/components/reading/ui";
+import { Card, Button, LevelChip } from "@/components/reading/ui";
 import { RUBRIC, type Level } from "@/lib/reading/rubric";
 import { createObservation, type ObsItemInput } from "../actions";
 
@@ -146,6 +146,38 @@ export default function WriteClient({ student, nextRound }: { student: any; next
           }),
         )}
       </div>
+
+      {/* 선택한 문장 모아보기 — 영역 탭을 넘나들지 않아도 한 화면에서 확인할 수 있다. */}
+      {count > 0 && (
+        <Card className="p-4 mt-4">
+          <h3 className="text-[13px] font-semibold mb-3">
+            선택한 문장 모아보기 <span className="font-normal text-faint">{count}항목</span>
+          </h3>
+          <ul className="space-y-2.5">
+            {RUBRIC.flatMap((a) =>
+              a.items.filter((it) => sel[it.key]).map((it) => ({ area: a.area, color: a.color, it })),
+            ).map(({ area, color, it }) => {
+              const v = sel[it.key];
+              return (
+                <li key={it.key} className="flex gap-2">
+                  <LevelChip level={v.level} />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13px] font-semibold">
+                      {it.item}
+                      <span className="ml-1.5 inline-flex items-center gap-1 text-[11px] font-normal text-faint">
+                        <span className="size-1.5 rounded-full" style={{ background: color }} />
+                        {area}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{v.text}</p>
+                    {v.note && <p className="mt-0.5 text-[12px] text-faint">메모 · {v.note}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
       {/* 전체 메모 */}
       <Card className="p-4 mt-4">

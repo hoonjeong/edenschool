@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Plus, Search, ChevronRight } from "lucide-react";
-import { Card, PageIntro, Badge, Button, EmptyState, LevelChip } from "@/components/reading/ui";
+import { Card, PageIntro, Badge, Button, EmptyState } from "@/components/reading/ui";
+import ObservationItems from "@/components/reading/ObservationItems";
 import Modal from "@/components/reading/Modal";
 import { fmtDate } from "@/lib/reading/utils";
 
@@ -54,15 +55,13 @@ export default function ObservationsClient({ observations, students }: { observa
                   <ChevronRight className="size-4" />
                 </Link>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(o.items as any[]).slice(0, 10).map((it: any, i: number) => (
-                  <span key={i} className="inline-flex items-center gap-1 rounded-md bg-canvas px-2 py-1 text-[12px]">
-                    <LevelChip level={it.level} />{it.item}
-                  </span>
-                ))}
-                {o.itemCount > 10 && <span className="text-[12px] text-faint self-center">+{o.itemCount - 10}</span>}
-              </div>
-              {o.memo && <p className="mt-2 text-[13px] text-muted">{o.memo}</p>}
+              <ObservationItems items={o.items as any[]} previewCount={4} />
+              {o.memo && (
+                <p className="mt-3 rounded-lg bg-canvas px-3 py-2 text-[13px] text-muted">
+                  <span className="font-semibold text-ink">종합 </span>
+                  {o.memo}
+                </p>
+              )}
             </Card>
           ))}
         </div>

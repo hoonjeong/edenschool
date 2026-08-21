@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/reading/prisma";
+import { parseWeekdays, formatWeekdays } from "@/lib/reading/schedule";
 import AttendanceClient from "./attendance-client";
 
 export const dynamic = "force-dynamic";
@@ -74,30 +75,32 @@ export default async function AttendancePage({
     .filter((s) => s.absent >= 3)
     .sort((a, b) => b.absent - a.absent);
 
-  const rows = students.map((s) => ({
-    id: s.id,
-    name: s.name,
-    grade: s.grade,
-    className: s.class?.name ?? null,
-    classColor: s.class?.color ?? null,
-    status: dayMap.get(s.id) ?? null,
-  }));
+  // 반 시간표 텍스트('월·목 15:00')에서 요일을 뽑아 선택한 날짜에 수업이 있는 반만 가려낸다.
+  const dow = selDate.getDay();
+  const classDays = new Map(classes.map((c) => [c.id, parseWeekdays(c.schedule)]));
 
-  const summary = {
-    total: students.length,
-    checked: dayAtt.length,
-    present: dayAtt.filter((a) => a.status === "PRESENT").length,
-    late: dayAtt.filter((a) => a.status === "LATE").length,
-    absent: dayAtt.filter((a) => a.status === "ABSENT").length,
-    makeup: dayAtt.filter((a) => a.status === "MAKEUP").length,
-  };
+  const rows = students.map((s) => {
+    const days = s.classId != null ? classDays.get(s.classId) ?? [] : [];
+    return {
+      id: s.id,
+      name: s.name,
+      grade: s.grade,
+      className: s.class?.name ?? null,
+      classColor: s.class?.color ?? null,
+      classSchedule: s.class?.schedule ?? null,
+      // 시간표에서 요일을 읽어 낸 반인지 (반 미배정·시간표 미입력이면 false)
+      scheduleKnown: days.length > 0,
+      classDays: formatWeekdays(days),
+      scheduled: days.includes(dow),
+      status: dayMap.get(s.id) ?? null,
+    };
+  });
 
   return (
     <AttendanceClient
       dateStr={ymd(selDate)}
       isToday={ymd(selDate) === ymd(today)}
       rows={rows}
-      summary={summary}
       classStats={classStats}
       absentAlerts={absentAlerts}
     />

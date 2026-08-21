@@ -46,6 +46,8 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   const [confirmed, setConfirmed] = useState(false);
   const [source, setSource] = useState<"ai" | "manual">("ai");
   const [ocrError, setOcrError] = useState<string | null>(null);
+  // 오류 성격(재시도 가능 / 관리자 조치 필요)에 따라 안내 문구를 다르게 보여 준다.
+  const [ocrHelp, setOcrHelp] = useState<{ retryable: boolean; needsAdmin: boolean } | null>(null);
 
   // 옵션
   const [gradeLevel, setGradeLevel] = useState(defaults.gradeLevel);
@@ -57,6 +59,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   // 결과
   const [result, setResult] = useState<{ resultText: string; summary: string; scores: Record<string, number> } | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [runHelp, setRunHelp] = useState<{ retryable: boolean; needsAdmin: boolean } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const selStudent = students.find((s: any) => s.id === studentId);
@@ -74,6 +77,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
     if (files.length === 0) return;
     setProcessing(true);
     setOcrError(null);
+    setOcrHelp(null);
     try {
       const urls: string[] = [];
       for (const f of files) {
@@ -97,11 +101,13 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   // AI 인식. 실패하면 실패라고 알리고 STEP 0에 머문다(예시 답안으로 대체하지 않음).
   function recognize() {
     setOcrError(null);
+    setOcrHelp(null);
     start(async () => {
       try {
         const r = await recognizeImage(imgUrls);
         if (!r.ok) {
           setOcrError(r.error);
+          setOcrHelp({ retryable: r.retryable !== false, needsAdmin: !!r.needsAdmin });
           return;
         }
         setProblem(r.problem);
@@ -111,6 +117,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
         setStep(1);
       } catch (e) {
         setOcrError(msgOf(e, "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
+        setOcrHelp({ retryable: true, needsAdmin: false });
       }
     });
   }
@@ -118,6 +125,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   // AI 없이 선생님이 직접 옮겨 적는 경로
   function manualEntry() {
     setOcrError(null);
+    setOcrHelp(null);
     setProblem("");
     setAnswer("");
     setSource("manual");
@@ -133,6 +141,7 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
   function run() {
     if (!canProceed) return;
     setRunError(null);
+    setRunHelp(null);
     setResult(null);
     setStep(3);
     start(async () => {
@@ -144,11 +153,13 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
         });
         if (!out.ok) {
           setRunError(out.error);
+          setRunHelp({ retryable: out.retryable !== false, needsAdmin: !!out.needsAdmin });
           return;
         }
         setResult({ resultText: out.resultText, summary: out.summary, scores: out.scores });
       } catch (e) {
         setRunError(msgOf(e, "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
+        setRunHelp({ retryable: true, needsAdmin: false });
       }
     });
   }
@@ -284,7 +295,14 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
                   <b>인식에 실패했습니다.</b>
                   <div className="mt-1">{ocrError}</div>
                   <div className="mt-1.5 text-rose-600/80">
-                    같은 이미지로 다시 시도하거나, 아래 <b>직접 입력</b>으로 답안을 옮겨 적어 진행할 수 있습니다.
+                    {ocrHelp?.needsAdmin ? (
+                      <>
+                        서비스 설정·결제 문제라 같은 이미지로 다시 눌러도 같은 오류가 납니다. 조치가 끝난 뒤 다시 인식하거나,
+                        지금은 아래 <b>직접 입력</b>으로 답안을 옮겨 적어 진행해 주세요.
+                      </>
+                    ) : (
+                      <>같은 이미지로 다시 시도하거나, 아래 <b>직접 입력</b>으로 답안을 옮겨 적어 진행할 수 있습니다.</>
+                    )}
                   </div>
                 </div>
               </div>
@@ -536,6 +554,11 @@ export default function WizardClient({ students, edenPhilosophy, defaults }: any
               <AlertTriangle className="size-10 mx-auto text-rose-500 mb-4" />
               <div className="font-bold text-lg">첨삭에 실패했습니다</div>
               <p className="text-[13px] text-muted mt-2 max-w-lg mx-auto leading-relaxed">{runError}</p>
+              {runHelp?.needsAdmin && (
+                <p className="text-[12px] text-faint mt-2 max-w-lg mx-auto leading-relaxed">
+                  서비스 설정·결제 문제입니다. 조치 전에는 다시 시도해도 같은 오류가 납니다.
+                </p>
+              )}
               <div className="flex items-center justify-center gap-2 mt-6">
                 <Button variant="secondary" onClick={() => setStep(2)}>
                   <ArrowLeft className="size-4" /> 옵션으로 돌아가기
