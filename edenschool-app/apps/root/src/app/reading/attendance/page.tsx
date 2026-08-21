@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/reading/prisma";
 import { parseWeekdays, formatWeekdays } from "@/lib/reading/schedule";
+import { toYmd } from "@/lib/reading/utils";
 import AttendanceClient from "./attendance-client";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export default async function AttendancePage({
   const monthAgo = new Date(today);
   monthAgo.setDate(monthAgo.getDate() - 30);
 
-  const [students, dayAtt, monthAtt] = await Promise.all([
+  const [students, dayAtt, monthAtt, dayMakeups] = await Promise.all([
     prisma.student.findMany({
       where: { status: "ENROLLED" },
       include: { class: true },
@@ -32,9 +33,16 @@ export default async function AttendancePage({
       where: { date: { gte: monthAgo, lte: today } },
       select: { studentId: true, status: true },
     }),
+    // 이 날짜 결석에 대해 잡힌 보강 기록 (보강 예정/완료 표시용)
+    prisma.makeupClass.findMany({
+      where: { absentDate: selDate },
+      select: { studentId: true, makeupDate: true },
+      orderBy: { makeupDate: "asc" },
+    }),
   ]);
 
   const dayMap = new Map(dayAtt.map((a) => [a.studentId, a.status]));
+  const makeupMap = new Map(dayMakeups.map((m) => [m.studentId, toYmd(m.makeupDate)]));
 
   // 반별 30일 출석률
   const clsStat = new Map<number, { total: number; present: number }>();
@@ -93,6 +101,8 @@ export default async function AttendancePage({
       classDays: formatWeekdays(days),
       scheduled: days.includes(dow),
       status: dayMap.get(s.id) ?? null,
+      // 이 날 결석에 대한 보강일(yyyy-mm-dd). 기록이 없으면 null
+      makeupDate: makeupMap.get(s.id) ?? null,
     };
   });
 

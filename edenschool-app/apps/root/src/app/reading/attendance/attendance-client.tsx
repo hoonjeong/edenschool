@@ -3,9 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, ScanLine, CalendarDays, AlertTriangle, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, ScanLine, CalendarDays, AlertTriangle, Users, CalendarPlus } from "lucide-react";
 import { Card, PageIntro, StatCard, Badge, Button, EmptyState } from "@/components/reading/ui";
 import { ATTENDANCE_STATUS } from "@/lib/reading/labels";
+import { fmtDateShort } from "@/lib/reading/utils";
 import { setAttendance, clearAttendance } from "./actions";
 
 const STATUS_ORDER = ["PRESENT", "LATE", "ABSENT", "MAKEUP"] as const;
@@ -165,6 +166,25 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
                         </span>
                       )}
                     </Link>
+                    {/* 결석 -> 보강 연결. 기록이 없으면 바로 등록 화면으로 넘긴다. */}
+                    {(r.status === "ABSENT" || r.status === "MAKEUP") &&
+                      (r.makeupDate ? (
+                        <Link
+                          href="/reading/makeup"
+                          className="shrink-0 inline-flex items-center gap-1 rounded-md bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-600 hover:bg-sky-100"
+                        >
+                          <CalendarPlus className="size-3" />
+                          보강 {fmtDateShort(r.makeupDate)}
+                          {r.status === "MAKEUP" ? " 완료" : ""}
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/reading/makeup?studentId=${r.id}&absentDate=${dateStr}`}
+                          className="shrink-0 inline-flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] font-semibold text-rose-600 hover:bg-rose-100"
+                        >
+                          <CalendarPlus className="size-3" /> 보강 등록
+                        </Link>
+                      ))}
                     {!r.scheduled && (
                       <span
                         className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${

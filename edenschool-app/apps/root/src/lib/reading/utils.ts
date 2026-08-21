@@ -44,6 +44,16 @@ export function relativeDay(d: Date | string) {
   return `${diff}일 후`;
 }
 
+/** Date → 'yyyy-mm-dd' (로컬 기준).
+    DB의 @db.Date 값을 키로 맞추거나 <input type="date"> 에 넣을 때 사용.
+    toISOString() 은 UTC 로 하루가 밀릴 수 있어 쓰지 않는다. */
+export function toYmd(d: Date | string): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+}
+
 export const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 export const WEEKDAYS_MON_SAT = [
   { n: 1, label: "월" },

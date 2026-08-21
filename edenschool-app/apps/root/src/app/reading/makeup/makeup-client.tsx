@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CalendarPlus, Plus, Search, X } from "lucide-react";
+import { AlertTriangle, CalendarPlus, Check, Plus, Search, X } from "lucide-react";
 import { Card, PageIntro, Badge, Button, EmptyState } from "@/components/reading/ui";
 import Modal, { inputCls, labelCls } from "@/components/reading/Modal";
-import { fmtDate, WEEKDAYS } from "@/lib/reading/utils";
-import { createMakeup, updateMakeup, deleteMakeup, type MakeupInput } from "./actions";
+import { fmtDate, fmtDateShort, WEEKDAYS } from "@/lib/reading/utils";
+import {
+  createMakeup,
+  updateMakeup,
+  deleteMakeup,
+  completeMakeup,
+  reopenMakeup,
+  type MakeupInput,
+} from "./actions";
 
 interface StudentOpt {
   id: number;
@@ -16,14 +23,25 @@ interface StudentOpt {
   classId: number | null;
   className: string | null;
 }
+interface PendingAbsence {
+  studentId: number;
+  studentName: string;
+  grade: string;
+  className: string | null;
+  absentDate: string; // yyyy-mm-dd
+}
+interface Prefill {
+  studentId: number;
+  absentDate: string;
+}
 interface MakeupRow {
   id: number;
   studentId: number;
   studentName: string;
   grade: string;
   className: string | null;
-  absentDate: string;
-  makeupDate: string;
+  absentDate: string; // yyyy-mm-dd
+  makeupDate: string; // yyyy-mm-dd
   weekday: number;
   time: string | null;
   attended: string | null;
@@ -32,6 +50,8 @@ interface MakeupRow {
   teacher: string | null;
   teacherNote: string | null;
   note: string | null;
+  /** 결석일 출결이 '보강'으로 바뀌어 있으면 완료된 보강 */
+  done: boolean;
 }
 
 const dash = (v: string | null) => (v && v.trim() ? v : "—");
@@ -40,14 +60,30 @@ export default function MakeupClient({
   makeups,
   students,
   classes,
+  pendingAbsences,
+  prefill,
 }: {
   makeups: MakeupRow[];
   students: StudentOpt[];
   classes: { id: number; name: string }[];
+  pendingAbsences: PendingAbsence[];
+  prefill: Prefill | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<MakeupRow | null>(null);
+  const [draft, setDraft] = useState<Prefill | null>(null);
+  const [busy, start] = useTransition();
+
+  // 출결 관리에서 '보강 등록'으로 넘어온 경우 바로 작성창을 연다.
+  useEffect(() => {
+    if (!prefill) return;
+    setEditing(null);
+    setDraft(prefill);
+    setOpen(true);
+    router.replace("/reading/makeup", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 리스트 필터: 이름 검색 + 보강일 날짜 선택
   const [q, setQ] = useState("");
@@ -61,18 +97,29 @@ export default function MakeupClient({
     });
   }, [makeups, q, date]);
 
-  function openNew() {
+  function openNew(from?: Prefill) {
     setEditing(null);
+    setDraft(from ?? null);
     setOpen(true);
   }
   function openEdit(row: MakeupRow) {
     setEditing(row);
+    setDraft(null);
     setOpen(true);
   }
   function onSaved() {
     setOpen(false);
     setEditing(null);
+    setDraft(null);
     router.refresh();
+  }
+  // 보강 완료 <-> 완료 취소. 결석일 출결이 '보강/결석'으로 함께 바뀐다.
+  function toggleDone(row: MakeupRow) {
+    start(async () => {
+      if (row.done) await reopenMakeup(row.id);
+      else await completeMakeup(row.id);
+      router.refresh();
+    });
   }
   function del(row: MakeupRow) {
     if (!confirm(`${row.studentName} 학생의 보강 기록을 삭제할까요?`)) return;
@@ -85,11 +132,43 @@ export default function MakeupClient({
         title="보강 수업 관리"
         desc="정규수업 결석에 대한 보강 내역을 기록하고 조회합니다."
         action={
-          <Button onClick={openNew}>
+          <Button onClick={() => openNew()}>
             <Plus className="size-4" /> 보강 기록
           </Button>
         }
       />
+
+      {/* 보강 대기 - 결석 처리됐지만 보강 기록이 없는 건 */}
+      {pendingAbsences.length > 0 && (
+        <Card className="p-4 mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <AlertTriangle className="size-4 text-rose-500" />
+            <h3 className="font-bold text-[15px]">
+              보강 대기 <span className="font-normal text-faint text-[13px]">({pendingAbsences.length}건)</span>
+            </h3>
+            <span className="text-[12px] text-faint">
+              최근 90일 결석 중 보강 기록이 없는 학생입니다. 눌러서 바로 기록하세요.
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {pendingAbsences.map((a) => (
+              <button
+                key={`${a.studentId}-${a.absentDate}`}
+                onClick={() => openNew({ studentId: a.studentId, absentDate: a.absentDate })}
+                className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[13px] transition hover:bg-rose-100"
+              >
+                <span className="font-semibold text-rose-700">{a.studentName}</span>
+                <span className="text-[12px] text-rose-400">
+                  {a.grade}
+                  {a.className ? ` · ${a.className}` : ""}
+                </span>
+                <span className="text-[12px] text-rose-500 tabular-nums">{fmtDateShort(a.absentDate)} 결석</span>
+                <Plus className="size-3.5 text-rose-500" />
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* 필터 */}
       <Card className="p-4 mb-4">
@@ -148,12 +227,13 @@ export default function MakeupClient({
                   <Th>보강 담당T</Th>
                   <Th>보강담당T 의견</Th>
                   <Th>비고</Th>
+                  <Th>보강 완료</Th>
                   <Th> </Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line/60">
                 {filtered.map((m) => (
-                  <tr key={m.id} className="hover:bg-brand-50/40">
+                  <tr key={m.id} className={m.done ? "bg-sky-50/50 hover:bg-sky-50" : "hover:bg-brand-50/40"}>
                     <Td>{m.grade}</Td>
                     <Td>
                       <Link href={`/reading/students/${m.studentId}`} className="font-semibold hover:text-brand-700">
@@ -172,6 +252,21 @@ export default function MakeupClient({
                     <Td>{dash(m.teacher)}</Td>
                     <Td className="max-w-[200px] whitespace-normal">{dash(m.teacherNote)}</Td>
                     <Td>{dash(m.note)}</Td>
+                    <Td>
+                      <button
+                        onClick={() => toggleDone(m)}
+                        disabled={busy}
+                        title={m.done ? "완료 취소 (출결을 다시 결석으로)" : "출결 관리에서도 '보강'으로 표시됩니다"}
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] font-semibold transition disabled:opacity-50 ${
+                          m.done
+                            ? "bg-sky-500 text-white hover:bg-sky-600"
+                            : "border border-line text-muted hover:border-sky-300 hover:bg-sky-50 hover:text-sky-600"
+                        }`}
+                      >
+                        {m.done && <Check className="size-3.5" />}
+                        {m.done ? "완료" : "보강 완료"}
+                      </button>
+                    </Td>
                     <Td>
                       <div className="flex items-center gap-2">
                         <button onClick={() => openEdit(m)} className="text-[12px] text-brand-600 hover:underline">
@@ -195,9 +290,11 @@ export default function MakeupClient({
           students={students}
           classes={classes}
           editing={editing}
+          prefill={draft}
           onClose={() => {
             setOpen(false);
             setEditing(null);
+            setDraft(null);
           }}
           onSaved={onSaved}
         />
@@ -222,24 +319,26 @@ function MakeupModal({
   students,
   classes,
   editing,
+  prefill,
   onClose,
   onSaved,
 }: {
   students: StudentOpt[];
   classes: { id: number; name: string }[];
   editing: MakeupRow | null;
+  prefill: Prefill | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [studentId, setStudentId] = useState<number | null>(editing?.studentId ?? null);
+  const [studentId, setStudentId] = useState<number | null>(editing?.studentId ?? prefill?.studentId ?? null);
 
   // 학생 선택 필터 (검색 / 학년 / 반)
   const [q, setQ] = useState("");
   const [gradeFilter, setGradeFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
 
-  const [absentDate, setAbsentDate] = useState(editing ? editing.absentDate.slice(0, 10) : "");
-  const [makeupDate, setMakeupDate] = useState(editing ? editing.makeupDate.slice(0, 10) : "");
+  const [absentDate, setAbsentDate] = useState(editing?.absentDate ?? prefill?.absentDate ?? "");
+  const [makeupDate, setMakeupDate] = useState(editing?.makeupDate ?? "");
   const [weekday, setWeekday] = useState<number>(editing?.weekday ?? 1);
   const [time, setTime] = useState(editing?.time ?? "");
   const [attended, setAttended] = useState(editing?.attended ?? "");
