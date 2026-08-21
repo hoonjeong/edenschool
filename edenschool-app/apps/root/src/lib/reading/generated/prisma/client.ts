@@ -106,3 +106,18 @@ export type Clinic = Prisma.ClinicModel
  * 
  */
 export type ClinicProgress = Prisma.ClinicProgressModel
+/**
+ * Model Exam
+ * 
+ */
+export type Exam = Prisma.ExamModel
+/**
+ * Model ExamItem
+ * 
+ */
+export type ExamItem = Prisma.ExamItemModel
+/**
+ * Model ExamResult
+ * 
+ */
+export type ExamResult = Prisma.ExamResultModel

@@ -63,7 +63,10 @@ export const ModelName = {
   NoticeTemplate: 'NoticeTemplate',
   AppSetting: 'AppSetting',
   Clinic: 'Clinic',
-  ClinicProgress: 'ClinicProgress'
+  ClinicProgress: 'ClinicProgress',
+  Exam: 'Exam',
+  ExamItem: 'ExamItem',
+  ExamResult: 'ExamResult'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -266,6 +269,44 @@ export const ClinicProgressScalarFieldEnum = {
 export type ClinicProgressScalarFieldEnum = (typeof ClinicProgressScalarFieldEnum)[keyof typeof ClinicProgressScalarFieldEnum]
 
 
+export const ExamScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  round: 'round',
+  createdAt: 'createdAt'
+} as const
+
+export type ExamScalarFieldEnum = (typeof ExamScalarFieldEnum)[keyof typeof ExamScalarFieldEnum]
+
+
+export const ExamItemScalarFieldEnum = {
+  id: 'id',
+  examId: 'examId',
+  no: 'no',
+  answer: 'answer',
+  score: 'score',
+  area: 'area',
+  ability: 'ability',
+  note: 'note'
+} as const
+
+export type ExamItemScalarFieldEnum = (typeof ExamItemScalarFieldEnum)[keyof typeof ExamItemScalarFieldEnum]
+
+
+export const ExamResultScalarFieldEnum = {
+  id: 'id',
+  examId: 'examId',
+  studentId: 'studentId',
+  takenAt: 'takenAt',
+  answers: 'answers',
+  totalScore: 'totalScore',
+  comment: 'comment',
+  createdAt: 'createdAt'
+} as const
+
+export type ExamResultScalarFieldEnum = (typeof ExamResultScalarFieldEnum)[keyof typeof ExamResultScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -436,4 +477,28 @@ export const ClinicProgressOrderByRelevanceFieldEnum = {
 } as const
 
 export type ClinicProgressOrderByRelevanceFieldEnum = (typeof ClinicProgressOrderByRelevanceFieldEnum)[keyof typeof ClinicProgressOrderByRelevanceFieldEnum]
+
+
+export const ExamOrderByRelevanceFieldEnum = {
+  type: 'type'
+} as const
+
+export type ExamOrderByRelevanceFieldEnum = (typeof ExamOrderByRelevanceFieldEnum)[keyof typeof ExamOrderByRelevanceFieldEnum]
+
+
+export const ExamItemOrderByRelevanceFieldEnum = {
+  area: 'area',
+  ability: 'ability',
+  note: 'note'
+} as const
+
+export type ExamItemOrderByRelevanceFieldEnum = (typeof ExamItemOrderByRelevanceFieldEnum)[keyof typeof ExamItemOrderByRelevanceFieldEnum]
+
+
+export const ExamResultOrderByRelevanceFieldEnum = {
+  answers: 'answers',
+  comment: 'comment'
+} as const
+
+export type ExamResultOrderByRelevanceFieldEnum = (typeof ExamResultOrderByRelevanceFieldEnum)[keyof typeof ExamResultOrderByRelevanceFieldEnum]
 

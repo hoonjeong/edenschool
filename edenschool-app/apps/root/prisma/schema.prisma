@@ -86,6 +86,7 @@ model Student {
   corrections  Correction[]
   clinics      Clinic[]
   makeups      MakeupClass[]
+  examResults  ExamResult[]
 
   @@index([phoneLast4])
   @@index([status])
@@ -248,4 +249,50 @@ model ClinicProgress {
 
   @@unique([clinicId, week])
   @@index([clinicId])
+}
+
+// ── 입학 테스트(문해력 진단 평가) ────────────────────────
+// 시험지 1개 = 종류(이서/이룸/이든) + 회차. 문항 30개가 딸린다.
+model Exam {
+  id        Int      @id @default(autoincrement())
+  type      String // ESEO(이서) | IROOM(이룸) | EDEN(이든) — lib/reading/exam.ts
+  round     Int // 회차
+  createdAt DateTime @default(now())
+
+  items   ExamItem[]
+  results ExamResult[]
+
+  @@unique([type, round])
+}
+
+// 문항 정보(정답·배점·영역·독해능력·설명). 시험지 삭제 시 동반 삭제.
+model ExamItem {
+  id      Int     @id @default(autoincrement())
+  examId  Int
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  no      Int // 문항 번호 1~30
+  answer  Int // 정답 1~5
+  score   Int // 배점
+  area    String // 영역 (듣기말하기/어휘/문법/읽기/쓰기/문학/매체)
+  ability String? // 독해능력 (사실적 독해/추론적 독해/수용과 생산/작품 이해)
+  note    String? @db.Text // 문항 설명
+
+  @@unique([examId, no])
+}
+
+// 학생 응시 결과. 학생 답은 문항 순서대로 JSON 배열로 보관한다(예: [3,1,null,...]).
+model ExamResult {
+  id         Int      @id @default(autoincrement())
+  examId     Int
+  exam       Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId  Int
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  takenAt    DateTime @db.Date // 응시일
+  answers    String   @db.Text // 학생 답 JSON 배열
+  totalScore Int      @default(0) // 채점 결과(캐시)
+  comment    String?  @db.Text // 종합의견
+  createdAt  DateTime @default(now())
+
+  @@unique([examId, studentId])
+  @@index([studentId])
 }

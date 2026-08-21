@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Sparkles,
   Megaphone,
+  FileText,
+  ClipboardCheck,
   CalendarClock,
   Settings,
   type LucideIcon,
@@ -45,6 +47,13 @@ export const NAV: NavGroup[] = [
       { href: "/reading/observations", label: "관찰일지", icon: ClipboardList },
       { href: "/reading/counsels", label: "상담 기록", icon: MessageSquareText },
       { href: "/reading/reports", label: "성장 리포트", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "입학 테스트",
+    items: [
+      { href: "/reading/exams", label: "시험지 관리", icon: FileText },
+      { href: "/reading/exam-results", label: "시험 결과", icon: ClipboardCheck },
     ],
   },
   {
