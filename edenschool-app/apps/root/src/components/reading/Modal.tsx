@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export default function Modal({
@@ -18,8 +19,16 @@ export default function Modal({
   size?: "sm" | "md" | "lg" | "xl";
   footer?: React.ReactNode;
 }) {
+  // 포털 대상: /reading 루트(폰트 클래스 유지). 없으면 body.
+  // ⚠️ 포털이 없으면 transform 이 걸린 조상(<main class="animate-fadeUp">)이
+  //    position:fixed 의 기준이 되어 모달이 화면이 아닌 문서 상단에 붙는다.
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    setHost(
+      (document.querySelector(".reading-root") as HTMLElement | null) ?? document.body,
+    );
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -29,7 +38,7 @@ export default function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !host) return null;
 
   const widths = {
     sm: "max-w-md",
@@ -38,17 +47,17 @@ export default function Modal({
     xl: "max-w-4xl",
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6">
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px]"
         onClick={onClose}
       />
       <div
-        className={`relative z-10 w-full ${widths[size]} my-8 rounded-2xl bg-surface shadow-[var(--shadow-pop)] animate-fadeUp`}
+        className={`relative z-10 my-auto flex max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] w-full ${widths[size]} flex-col rounded-2xl bg-surface shadow-[var(--shadow-pop)] animate-fadeUp`}
       >
         {title && (
-          <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+          <div className="flex shrink-0 items-center gap-3 border-b border-line px-5 py-4">
             <h3 className="text-base font-bold">{title}</h3>
             <button
               onClick={onClose}
@@ -58,14 +67,16 @@ export default function Modal({
             </button>
           </div>
         )}
-        <div className="px-5 py-4">{children}</div>
+        {/* 내용이 길면 모달 안에서만 스크롤 (헤더·버튼은 항상 화면 안에 유지) */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3.5">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-3.5">
             {footer}
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    host,
   );
 }
 

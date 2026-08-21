@@ -82,7 +82,9 @@ body {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-fadeUp { animation: fadeUp 0.25s ease both; }
+/* fill-mode: backwards — 애니메이션이 끝난 뒤 transform 이 남으면 그 요소가
+   position:fixed 자식(모달 등)의 기준(containing block)이 되어 화면 고정이 깨진다. */
+.animate-fadeUp { animation: fadeUp 0.25s ease backwards; }
 
 /* input reset within app */
 input, select, textarea, button { font-family: inherit; }

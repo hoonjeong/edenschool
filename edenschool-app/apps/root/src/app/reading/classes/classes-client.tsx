@@ -148,6 +148,7 @@ function ClassModal({ mode, row, teachers, onClose, onSaved }: any) {
     capacity: row?.capacity ?? 8,
     color: row?.color ?? COLORS[0],
     teacherId: row?.teacherId ?? null,
+    teacherName: row?.teacherName ?? "",
   });
   const [pending, start] = useTransition();
 
@@ -190,10 +191,19 @@ function ClassModal({ mode, row, teachers, onClose, onSaved }: any) {
         </div>
         <div>
           <label className={labelCls}>담당 선생님</label>
-          <select className={inputCls} value={form.teacherId ?? ""} onChange={(e) => setForm({ ...form, teacherId: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">미정</option>
-            {teachers.map((t: Teacher) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          <input
+            className={inputCls}
+            list="reading-teacher-options"
+            value={form.teacherName ?? ""}
+            onChange={(e) => setForm({ ...form, teacherName: e.target.value })}
+            placeholder="이름 입력 또는 목록에서 선택"
+          />
+          <datalist id="reading-teacher-options">
+            {teachers.map((t: Teacher) => <option key={t.id} value={t.name} />)}
+          </datalist>
+          <p className="mt-1 text-[12px] text-faint">
+            목록에 없는 이름을 입력하면 선생님으로 새로 등록됩니다. 비워 두면 ‘담당 미정’입니다.
+          </p>
         </div>
         <div>
           <label className={labelCls}>색상</label>
