@@ -28,6 +28,9 @@ export default function ClinicSection({ studentId, parentPhone, initialMemos }: 
   const [converting, setConverting] = useState(false);
   const [sending, setSending] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editText, setEditText] = useState('');
+  const [busyId, setBusyId] = useState<number | null>(null);
 
   const byteLength = getByteLength(message);
   const smsType = byteLength <= 90 ? 'SMS' : 'LMS';
@@ -121,6 +124,63 @@ export default function ClinicSection({ studentId, parentPhone, initialMemos }: 
     }
   };
 
+  // 히스토리 수정 시작
+  const startEdit = (m: StudentMemo) => {
+    setEditingId(m.id);
+    setEditText(m.content);
+    setExpandedId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  // 히스토리 수정 저장
+  const saveEdit = async (id: number) => {
+    const text = editText.trim();
+    if (!text) {
+      alert('상담 내용을 입력하세요.');
+      return;
+    }
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/admin/student/memo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, content: text }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || '수정에 실패했습니다.');
+        return;
+      }
+      setHistory((prev) => prev.map((m) => (m.id === id ? { ...m, content: text } : m)));
+      cancelEdit();
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // 히스토리 삭제
+  const removeMemo = async (id: number) => {
+    if (!confirm('이 상담 기록을 삭제할까요? 삭제 후에는 복구할 수 없습니다.')) return;
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/student/memo?id=${id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || '삭제에 실패했습니다.');
+        return;
+      }
+      setHistory((prev) => prev.filter((m) => m.id !== id));
+      if (editingId === id) cancelEdit();
+      if (expandedId === id) setExpandedId(null);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="card mb-4 border-primary">
       <div className="card-header bg-primary text-white">
@@ -178,27 +238,81 @@ export default function ClinicSection({ studentId, parentPhone, initialMemos }: 
             <tr>
               <th>내용</th>
               <th style={{ width: '150px' }}>날짜</th>
+              <th style={{ width: '130px' }}>관리</th>
             </tr>
           </thead>
           <tbody>
             {history.length === 0 ? (
               <tr>
-                <td colSpan={2} className="text-center">상담 기록이 없습니다.</td>
+                <td colSpan={3} className="text-center">상담 기록이 없습니다.</td>
               </tr>
             ) : (
               history.map((m) => {
                 const isLong = m.content.length > PREVIEW_LEN;
                 const expanded = expandedId === m.id;
+                const editing = editingId === m.id;
+                const busy = busyId === m.id;
                 return (
                   <tr key={m.id}>
                     <td
-                      style={{ cursor: isLong ? 'pointer' : 'default', whiteSpace: 'pre-wrap' }}
-                      onClick={() => isLong && setExpandedId(expanded ? null : m.id)}
-                      title={isLong ? '클릭하면 전체 내용이 표시됩니다.' : ''}
+                      style={{
+                        cursor: !editing && isLong ? 'pointer' : 'default',
+                        whiteSpace: 'pre-wrap',
+                      }}
+                      onClick={() => !editing && isLong && setExpandedId(expanded ? null : m.id)}
+                      title={!editing && isLong ? '클릭하면 전체 내용이 표시됩니다.' : ''}
                     >
-                      {expanded || !isLong ? m.content : `${m.content.slice(0, PREVIEW_LEN)}...`}
+                      {editing ? (
+                        <textarea
+                          className="form-control"
+                          rows={4}
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                        />
+                      ) : expanded || !isLong ? (
+                        m.content
+                      ) : (
+                        `${m.content.slice(0, PREVIEW_LEN)}...`
+                      )}
                     </td>
                     <td>{m.date}</td>
+                    <td>
+                      {editing ? (
+                        <>
+                          <button
+                            className="btn btn-sm btn-primary mr-1"
+                            onClick={() => saveEdit(m.id)}
+                            disabled={busy}
+                          >
+                            {busy ? '저장 중...' : '저장'}
+                          </button>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={cancelEdit}
+                            disabled={busy}
+                          >
+                            취소
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="btn btn-sm btn-outline-secondary mr-1"
+                            onClick={() => startEdit(m)}
+                            disabled={busy}
+                          >
+                            수정
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => removeMemo(m.id)}
+                            disabled={busy}
+                          >
+                            {busy ? '삭제 중...' : '삭제'}
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 );
               })

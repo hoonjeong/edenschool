@@ -5,6 +5,7 @@ import {
   selectStudentMemos,
   insertStudentMemo,
   deleteStudentMemo,
+  updateStudentMemo,
 } from '@edenschool/common/queries/student-record';
 
 // 메모 목록
@@ -35,6 +36,25 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   const id = await insertStudentMemo(studentId, content);
   return NextResponse.json({ ok: true, id });
+});
+
+// 메모 수정
+export const PUT = withErrorHandler(async (req: NextRequest) => {
+  await requireAdminApiSession();
+
+  const body = await req.json();
+  const id = Number(body.id);
+  const content = (body.content as string || '').trim();
+
+  if (!id || !content) {
+    return NextResponse.json({ error: '내용을 입력하세요.' }, { status: 400 });
+  }
+
+  const affected = await updateStudentMemo(id, content);
+  if (affected === 0) {
+    return NextResponse.json({ error: '해당 상담 기록을 찾을 수 없습니다.' }, { status: 404 });
+  }
+  return NextResponse.json({ ok: true });
 });
 
 // 메모 삭제

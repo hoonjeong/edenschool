@@ -36,3 +36,12 @@ export async function deleteStudentMemo(id: number): Promise<number> {
   );
   return result.affectedRows;
 }
+
+// 메모 수정
+export async function updateStudentMemo(id: number, content: string): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE student_memo SET content=? WHERE id=?`,
+    [content, id]
+  );
+  return result.affectedRows;
+}
