@@ -104,7 +104,7 @@ export default async function LectureViewPage({
           </div>
           <div className="eden-card-body">
             {lecture.description ? (
-              <div dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(lecture.description) }} />
+              <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(lecture.description) }} />
             ) : (
               <div className="eden-empty" style={{ padding: '20px 0' }}>내용이 없습니다.</div>
             )}

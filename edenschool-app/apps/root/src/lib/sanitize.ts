@@ -40,6 +40,9 @@ export function sanitizeAdminHtml(html: string): string {
     ]),
     allowedAttributes: {
       '*': ['style', 'class'],
+      // Quill 에디터는 목록 종류(bullet/ordered)를 li 의 data-list 에 담고 태그는 항상 <ol> 이다.
+      // 이 속성이 지워지면 글머리 기호가 숫자로 바뀐다.
+      'li': ['data-list'],
       'a': ['href', 'target', 'rel'],
       'img': ['src', 'alt', 'width', 'height'],
       'iframe': ['src', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen'],

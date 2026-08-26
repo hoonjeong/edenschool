@@ -99,7 +99,7 @@ export default async function QnaDetailPage({ params }: PageProps) {
           </span>
         </div>
         <div className="eden-card-body">
-          <div dangerouslySetInnerHTML={{ __html: safeContents }} />
+          <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: safeContents }} />
         </div>
       </div>
 

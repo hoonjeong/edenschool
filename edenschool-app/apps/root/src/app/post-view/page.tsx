@@ -87,7 +87,7 @@ export default async function PostViewPage({
           </span>
         </div>
         <div className="eden-card-body">
-          <div dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(sanitizeAdminHtml(post.contents), post.subject)) }} />
+          <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(sanitizeAdminHtml(post.contents), post.subject)) }} />
         </div>
       </div>
 

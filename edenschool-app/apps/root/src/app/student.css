@@ -1219,3 +1219,65 @@ body.eden-body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== 게시글 본문: 에디터(Quill)로 작성한 목록 =====
+   Quill 은 목록을 <ol><li data-list="bullet|ordered"> 로 저장하고 마커를
+   .ql-ui 가상요소로 직접 그린다. 게시글 화면에도 같은 규칙을 적용해야
+   글머리 기호가 숫자로 바뀌지 않고 에디터에서 본 대로 표시된다.
+   li[data-list] 가 붙은 목록에만 적용되므로 기존 글(붙여넣기 HTML 등)에는 영향이 없다. */
+.eden-post-body li[data-list] {
+  list-style-type: none;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+.eden-post-body li[data-list] > .ql-ui {
+  position: absolute;
+}
+
+.eden-post-body li[data-list] > .ql-ui::before {
+  display: inline-block;
+  margin-left: -1.5em;
+  margin-right: 0.3em;
+  text-align: right;
+  white-space: nowrap;
+  width: 1.2em;
+}
+
+.eden-post-body li[data-list='bullet'] > .ql-ui::before {
+  content: '\2022';
+}
+
+.eden-post-body li[data-list='checked'] > .ql-ui::before {
+  content: '\2611';
+}
+
+.eden-post-body li[data-list='unchecked'] > .ql-ui::before {
+  content: '\2610';
+}
+
+.eden-post-body li[data-list='ordered'] {
+  counter-increment: eden-post-list;
+}
+
+.eden-post-body li[data-list='ordered'] > .ql-ui::before {
+  content: counter(eden-post-list, decimal) '. ';
+}
+
+.eden-post-body ol:has(> li[data-list]) {
+  counter-reset: eden-post-list;
+  padding-left: 1.5em;
+}
+
+/* 에디터에서 지정한 정렬(Quill 은 class 로 저장한다) */
+.eden-post-body .ql-align-center {
+  text-align: center;
+}
+
+.eden-post-body .ql-align-right {
+  text-align: right;
+}
+
+.eden-post-body .ql-align-justify {
+  text-align: justify;
+}
