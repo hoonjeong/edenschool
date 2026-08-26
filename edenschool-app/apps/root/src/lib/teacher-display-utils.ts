@@ -16,6 +16,7 @@ export const SECTIONS = [
   { key: 'SUNEUNG', label: '수능올인반' },
   { key: 'ELEMENTARY', label: '초등부' },
   { key: 'STAFF', label: '운영진' },
+  { key: 'CONTENT_PLAN', label: '컨텐츠 기획' },
 ] as const;
 
 export const SECTION_LABELS: Record<string, string> = Object.fromEntries(

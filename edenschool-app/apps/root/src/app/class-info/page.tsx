@@ -90,6 +90,7 @@ const FALLBACK_ELEMENTARY: ElementaryTeacher[] = [
   { name: '서미정 원장님', photo: '/assets/teachers/서미정.png' },
   { name: '강지하 선생님', photo: '/assets/teachers/강지하.jpg' },
   { name: '민지연 선생님', photo: '/assets/teachers/민지연.jpg' },
+  { name: '백지원 선생님', photo: '/assets/teachers/백지원.jpg' },
 ];
 const FALLBACK_STAFF: StaffMember[] = [
   { name: '서효정', role: '대표원장', photo: '/assets/teachers/서효정.jpg' },
@@ -97,6 +98,10 @@ const FALLBACK_STAFF: StaffMember[] = [
   { name: '김진옥', role: '상담실장', photo: '/assets/teachers/김진옥.jpg' },
   { name: '장소연', role: '운영실장', photo: '/assets/teachers/장소연.jpg' },
   { name: '권나연', role: '운영실장', photo: '/assets/teachers/권나연.jpg' },
+];
+const FALLBACK_CONTENT: StaffMember[] = [
+  { name: '서효정', role: '대표원장', photo: '/assets/teachers/서효정.jpg' },
+  { name: '조성모', role: '선생님', photo: '/assets/teachers/조성모.jpg' },
 ];
 
 /* ===== 컴포넌트 ===== */
@@ -157,8 +162,9 @@ async function loadData() {
     const suneung = dbItems.filter(t => t.section === 'SUNEUNG').map(toSuneungTeacher);
     const elementary = dbItems.filter(t => t.section === 'ELEMENTARY').map(toElementaryTeacher);
     const staff = dbItems.filter(t => t.section === 'STAFF').map(toStaffMember);
+    const contentPlan = dbItems.filter(t => t.section === 'CONTENT_PLAN').map(toStaffMember);
 
-    return { highSchool, middleSchool, suneung, elementary, staff };
+    return { highSchool, middleSchool, suneung, elementary, staff, contentPlan };
   } catch {
     return null;
   }
@@ -172,6 +178,8 @@ export default async function ClassInfoPage() {
   const suneung = data?.suneung ?? FALLBACK_SUNEUNG;
   const elementary = data?.elementary ?? FALLBACK_ELEMENTARY;
   const staff = data?.staff ?? FALLBACK_STAFF;
+  // DB 전환 이후 컨텐츠 기획 파트가 비어 있으면 폴백을 쓰지 않고 섹션 자체를 숨긴다
+  const contentPlan = data ? data.contentPlan : FALLBACK_CONTENT;
 
   return (
     <div className="ci-page">
@@ -247,6 +255,26 @@ export default async function ClassInfoPage() {
           </div>
         </div>
       </section>
+
+      {/* 컨텐츠 기획 */}
+      {contentPlan.length > 0 && (
+        <section className="ci-section ci-section-gray">
+          <div className="ci-section-inner">
+            <h2 className="ci-section-title">컨텐츠 기획</h2>
+            <div className="ci-grid ci-grid-2">
+              {contentPlan.map((s) => (
+                <div className="ci-grid-card" key={s.name}>
+                  <img className="ci-grid-card-photo" src={s.photo} alt={s.name} />
+                  <div className="ci-grid-card-info">
+                    <p className="ci-grid-card-name">{s.name}</p>
+                    <p className="ci-grid-card-role">{s.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

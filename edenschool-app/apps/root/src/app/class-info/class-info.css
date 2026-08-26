@@ -208,6 +208,11 @@
   max-width: 780px;
 }
 
+.ci-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 520px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
   .ci-card {

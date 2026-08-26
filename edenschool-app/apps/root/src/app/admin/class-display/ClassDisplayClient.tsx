@@ -214,8 +214,9 @@ function EditForm({
 
   const showBranch = form.section === 'HIGH_SCHOOL' || form.section === 'MIDDLE_SCHOOL';
   const showSchool = form.section === 'HIGH_SCHOOL' || form.section === 'MIDDLE_SCHOOL';
-  const showRole = form.section === 'STAFF';
-  const showSchedule = form.section !== 'ELEMENTARY' && form.section !== 'STAFF';
+  const showRole = form.section === 'STAFF' || form.section === 'CONTENT_PLAN';
+  const showSchedule =
+    form.section !== 'ELEMENTARY' && form.section !== 'STAFF' && form.section !== 'CONTENT_PLAN';
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
