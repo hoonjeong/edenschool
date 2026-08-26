@@ -202,14 +202,14 @@ export interface TeacherDisplay {
 
 export async function selectTeacherDisplayList(): Promise<TeacherDisplay[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM teacher_display ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF'), sort_order ASC, id ASC`
+    `SELECT * FROM teacher_display ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF','CONTENT_PLAN'), sort_order ASC, id ASC`
   );
   return rows as TeacherDisplay[];
 }
 
 export async function selectTeacherDisplayListActive(): Promise<TeacherDisplay[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM teacher_display WHERE is_active=1 ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF'), sort_order ASC, id ASC`
+    `SELECT * FROM teacher_display WHERE is_active=1 ORDER BY FIELD(section,'HIGH_SCHOOL','MIDDLE_SCHOOL','SUNEUNG','ELEMENTARY','STAFF','CONTENT_PLAN'), sort_order ASC, id ASC`
   );
   return rows as TeacherDisplay[];
 }

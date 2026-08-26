@@ -105,6 +105,14 @@ const FALLBACK_CONTENT: StaffMember[] = [
 ];
 
 /* ===== 컴포넌트 ===== */
+/** 인원수에 맞춰 열 수를 정한다 (3명이면 3열, 4명이면 4열 …) — 마지막 줄에 한 명만 남는 것을 방지 */
+function gridClass(count: number): string {
+  if (count >= 5) return 'ci-grid ci-grid-5';
+  if (count === 4) return 'ci-grid';
+  if (count === 3) return 'ci-grid ci-grid-3';
+  return 'ci-grid ci-grid-2';
+}
+
 function ScheduleList({ items }: { items: ScheduleItem[] }) {
   return (
     <div className="ci-schedule">
@@ -207,7 +215,7 @@ export default async function ClassInfoPage() {
       <section className="ci-section">
         <div className="ci-section-inner">
           <h2 className="ci-section-title">수능올인반</h2>
-          <div className="ci-grid">
+          <div className={gridClass(suneung.length)}>
             {suneung.map((t) => (
               <div className="ci-grid-card" key={t.name}>
                 <img className="ci-grid-card-photo" src={t.photo} alt={t.name} />
@@ -225,7 +233,7 @@ export default async function ClassInfoPage() {
       <section className="ci-section ci-section-gray">
         <div className="ci-section-inner">
           <h2 className="ci-section-title">초등부</h2>
-          <div className="ci-grid ci-grid-3">
+          <div className={gridClass(elementary.length)}>
             {elementary.map((t) => (
               <div className="ci-grid-card" key={t.name}>
                 <img className="ci-grid-card-photo" src={t.photo} alt={t.name} />
@@ -242,7 +250,7 @@ export default async function ClassInfoPage() {
       <section className="ci-section ci-section-light">
         <div className="ci-section-inner">
           <h2 className="ci-section-title">운영진</h2>
-          <div className="ci-grid ci-grid-5">
+          <div className={gridClass(staff.length)}>
             {staff.map((s) => (
               <div className="ci-grid-card" key={s.name}>
                 <img className="ci-grid-card-photo" src={s.photo} alt={s.name} />
@@ -261,7 +269,7 @@ export default async function ClassInfoPage() {
         <section className="ci-section ci-section-gray">
           <div className="ci-section-inner">
             <h2 className="ci-section-title">컨텐츠 기획</h2>
-            <div className="ci-grid ci-grid-2">
+            <div className={gridClass(contentPlan.length)}>
               {contentPlan.map((s) => (
                 <div className="ci-grid-card" key={s.name}>
                   <img className="ci-grid-card-photo" src={s.photo} alt={s.name} />
