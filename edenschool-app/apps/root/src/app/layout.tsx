@@ -11,8 +11,24 @@ import { SITE_URL } from '@/lib/site';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: process.env.SITE_TITLE || '부천국어학원 이든배움국어학원',
-  description: process.env.SITE_DESCRIPTION || '부천국어학원 이든배움국어학원입니다.',
-  keywords: process.env.SITE_KEYWORDS || '부천국어학원,이든배움국어학원',
+  // 검색결과 스니펫으로 그대로 노출되는 문구. 학원 특징이 드러나도록 구체적으로 작성한다.
+  description:
+    process.env.SITE_DESCRIPTION ||
+    '부천 상동 국어 전문학원. 상원고·상동고·송내고·부명고·정명고 등 학교별 전담 선생님이 내신 시험 유형에 맞춰 지도합니다. 중·고등 국어, 수능올인반, 초등 독서논술 운영.',
+  keywords:
+    process.env.SITE_KEYWORDS ||
+    '부천국어학원,이든배움국어학원,상동국어학원,부천 고등국어,부천 중등국어,상원고 국어,상동고 국어,송내고 국어,부명고 국어,정명고 국어,상일고 국어,수능국어,초등 독서논술',
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    siteName: process.env.SITE_TITLE || '부천국어학원 이든배움국어학원',
+    title: process.env.SITE_TITLE || '부천국어학원 이든배움국어학원',
+    description:
+      process.env.SITE_DESCRIPTION ||
+      '부천 상동 국어 전문학원. 학교별 전담 선생님이 내신 시험 유형에 맞춰 지도합니다. 중·고등 국어, 수능올인반, 초등 독서논술 운영.',
+    url: SITE_URL,
+    images: [{ url: '/assets/img/logo.jpg' }],
+  },
   // 네이버 서치어드바이저 사이트 소유확인 (구글은 DNS TXT로 확인됨)
   verification: {
     other: { 'naver-site-verification': 'e8eda68484bfe78170300bf88ae39b63b9364c7a' },

@@ -1,5 +1,6 @@
 import './about/about.css';
 import { AboutClient } from './about/AboutClient';
+import { getSiteUrl, SITE_NAME } from '@/lib/site';
 
 const SCHOOLS = [
   '상원고', '상동고', '송내고', '부명고', '상일고',
@@ -13,9 +14,37 @@ const FOOTER = (
   </div>
 );
 
-export default function HomePage() {
+export default async function HomePage() {
+  const site = await getSiteUrl();
+
+  // 검색엔진/AI 검색용 구조화 데이터 — 학원 정보를 기계가 읽을 수 있게 제공
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'EducationalOrganization',
+    name: SITE_NAME,
+    alternateName: '이든배움진학지도보습학원',
+    description:
+      '부천 상동 국어 전문학원. 상원고·상동고·송내고·부명고·정명고 등 학교별 전담 선생님이 내신 시험 유형에 맞춰 지도합니다. 중·고등 국어, 수능올인반, 초등 독서논술 운영.',
+    url: site,
+    logo: `${site}/assets/img/logo.jpg`,
+    image: `${site}/assets/img/logo.jpg`,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: '소향로 29 (상동, 그린프라자) 503호, 504호',
+      addressLocality: '부천시',
+      addressRegion: '경기도',
+      addressCountry: 'KR',
+    },
+    areaServed: ['부천시', '부천 상동'],
+    knowsAbout: SCHOOLS.map((s) => `${s} 내신 국어`),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\u003c') }}
+      />
       <AboutClient />
 
       {/* Hero Section */}
