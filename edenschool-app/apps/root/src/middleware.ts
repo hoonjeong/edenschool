@@ -7,7 +7,7 @@ import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session'
 
 // Student protected paths
 const protectedPaths = ['/myinfo', '/lecture', '/lecture-view', '/free-lecture', '/special-lecture', '/school-lecture', '/test', '/test-view', '/carrer', '/carrer-view', '/major', '/major-view', '/my-dream', '/ai-career'];
-const publicPaths = ['/', '/login', '/join', '/join-step2', '/find-email', '/find-pass', '/board', '/post-view', '/error', '/api', '/about'];
+const publicPaths = ['/', '/login', '/join', '/join-step2', '/find-email', '/find-pass', '/board', '/post-view', '/class-video', '/error', '/api', '/about'];
 
 // Admin public paths (no auth required)
 const adminPublicPaths = ['/admin/login', '/admin/join', '/admin/find-admin-email', '/admin/find-admin-pass'];

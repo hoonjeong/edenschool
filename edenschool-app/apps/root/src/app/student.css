@@ -1154,6 +1154,14 @@ body.eden-body {
 }
 
 /* ===== Responsive ===== */
+/* 메뉴 항목이 많아 좁은 데스크톱 폭에서 넘치지 않도록 간격을 줄인다 */
+@media (max-width: 1080px) and (min-width: 769px) {
+  .eden-navbar-menu a {
+    padding: 8px 9px;
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 768px) {
   .eden-navbar-menu {
     display: none;

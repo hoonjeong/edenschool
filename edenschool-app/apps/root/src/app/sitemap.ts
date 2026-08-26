@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${site}/`, changeFrequency: 'weekly', priority: 1 },
     { url: `${site}/board`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${site}/qna`, changeFrequency: 'daily', priority: 0.6 },
+    { url: `${site}/class-video`, changeFrequency: 'monthly', priority: 0.7 },
   ];
 
   const postRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
