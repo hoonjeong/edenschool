@@ -20,7 +20,7 @@ export async function Navbar() {
             <li><a href="/lecture">동영상강의</a></li>
             <li><a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a></li>
             <li><a href="/class-video">수업 소개영상</a></li>
-            <li><a href="https://youtu.be/x0a4QVIBw28?si=lXpeHeJbYbFB06dV">수강후기</a></li>
+            <li><a href="/board?category=R">수강후기</a></li>
             <li><a href="https://blog.naver.com/edenschool/223955303630">교습비</a></li>
           </ul>
 
@@ -80,7 +80,7 @@ export async function Navbar() {
         <a href="/lecture">동영상강의</a>
         <a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a>
         <a href="/class-video">수업 소개영상</a>
-        <a href="https://youtu.be/x0a4QVIBw28?si=lXpeHeJbYbFB06dV">수강후기</a>
+        <a href="/board?category=R">수강후기</a>
         <a href="https://blog.naver.com/edenschool/223955303630">교습비</a>
         <div className="eden-mobile-divider"></div>
         {user ? (
