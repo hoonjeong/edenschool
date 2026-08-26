@@ -36,7 +36,7 @@ export default async function PostInfoPage() {
                       <td className="text-center">{post.id}</td>
                       <td>
                         <a
-                          href={`https://edenschool.kr/post-view.html?id=${post.id}`}
+                          href={`/post-view?id=${post.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

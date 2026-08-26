@@ -8,6 +8,8 @@ dist
 .env.local
 .env.production
 .env.*.local
+.env.*.bak
+.env.bak
 
 # OS 파일
 Thumbs.db

@@ -27,6 +27,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // 레거시(구 JSP) 게시글 URL: post-view.html?id=<id> → /post-view?id=<id>
+      // 검색엔진에 색인된 옛 주소의 유입을 살리기 위해 영구(301) 이동. 쿼리스트링은 자동 보존.
+      { source: '/post-view.html', destination: '/post-view', statusCode: 301 },
+    ];
+  },
   async rewrites() {
     return [
       // 레거시 게시물 본문 이미지: image-view.html?id=<file_info.id>
