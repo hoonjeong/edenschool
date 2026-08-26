@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: process.env.SITE_TITLE || '부천국어학원 이든배움국어학원',
   description: process.env.SITE_DESCRIPTION || '부천국어학원 이든배움국어학원입니다.',
   keywords: process.env.SITE_KEYWORDS || '부천국어학원,이든배움국어학원',
+  // 네이버 서치어드바이저 사이트 소유확인 (구글은 DNS TXT로 확인됨)
+  verification: {
+    other: { 'naver-site-verification': 'e8eda68484bfe78170300bf88ae39b63b9364c7a' },
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
