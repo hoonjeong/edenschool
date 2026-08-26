@@ -66,6 +66,8 @@ export default function SmsComposer({ mode }: Props) {
   const [message, setMessage] = useState('');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  // 발송 이력에서 클릭한 문자(전체 내용 보기용)
+  const [detailLog, setDetailLog] = useState<SendLog | null>(null);
   const [newTemplateTitle, setNewTemplateTitle] = useState('');
 
   /* ─── Card 4: 전송 ─── */
@@ -351,7 +353,12 @@ export default function SmsComposer({ mode }: Props) {
           </thead>
           <tbody>
             {list.map((h, i) => (
-              <tr key={i}>
+              <tr
+                key={i}
+                onClick={() => setDetailLog(h)}
+                style={{ cursor: 'pointer' }}
+                title="클릭하면 전체 내용을 볼 수 있습니다"
+              >
                 <td style={{ padding: '4px 10px', whiteSpace: 'nowrap' }}>{h.phone}</td>
                 <td style={{ padding: '4px 10px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {h.message}
@@ -685,7 +692,12 @@ export default function SmsComposer({ mode }: Props) {
 
         {/* ═══ Card 4: 발송 이력 (개별 / 전체 구분) ═══ */}
         <div className="card">
-          <div className="card-header">4. 발송 이력</div>
+          <div className="card-header">
+            4. 발송 이력
+            <span style={{ marginLeft: '8px', fontSize: '12px', fontWeight: 400, color: '#94a3b8' }}>
+              문자를 클릭하면 전체 내용이 표시됩니다
+            </span>
+          </div>
           <div className="card-body">
             {/* 개별 발송 이력 (선택한 번호) */}
             <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px' }}>
@@ -774,6 +786,92 @@ export default function SmsComposer({ mode }: Props) {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 발송 문자 전체 내용 Modal ═══ */}
+      {detailLog && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+          onClick={() => setDetailLog(null)}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '8px',
+              width: '520px',
+              maxWidth: '90vw',
+              maxHeight: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>발송 문자 내용</span>
+              <span onClick={() => setDetailLog(null)} style={{ cursor: 'pointer', fontSize: '18px', color: '#6b7280' }}>×</span>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr', rowGap: '6px', fontSize: '13px', marginBottom: '14px' }}>
+                <div style={{ color: '#64748b' }}>수신번호</div>
+                <div>{detailLog.phone}</div>
+                <div style={{ color: '#64748b' }}>발송시간</div>
+                <div>{detailLog.send_time}</div>
+                {detailLog.type && (
+                  <>
+                    <div style={{ color: '#64748b' }}>구분</div>
+                    <div>{detailLog.type}</div>
+                  </>
+                )}
+                {detailLog.result_message && (
+                  <>
+                    <div style={{ color: '#64748b' }}>발송결과</div>
+                    <div>{detailLog.result_message}</div>
+                  </>
+                )}
+              </div>
+              <div style={{ color: '#64748b', fontSize: '13px', marginBottom: '6px' }}>
+                내용 <span style={{ color: '#94a3b8' }}>({detailLog.message?.length ?? 0}자)</span>
+              </div>
+              <div
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '12px',
+                  fontSize: '14px',
+                  lineHeight: 1.6,
+                }}
+              >
+                {detailLog.message}
+              </div>
+            </div>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => {
+                  setMessage(detailLog.message);
+                  setDetailLog(null);
+                }}
+              >
+                이 내용으로 다시 작성
+              </button>
+              <button className="btn btn-sm btn-secondary" onClick={() => setDetailLog(null)}>
+                닫기
+              </button>
             </div>
           </div>
         </div>

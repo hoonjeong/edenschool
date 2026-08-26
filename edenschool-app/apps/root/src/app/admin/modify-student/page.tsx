@@ -32,7 +32,8 @@ export default async function ModifyStudentPage({
   return (
     <div>
       <h4 className="mb-3">학생 정보 수정</h4>
-      <form action="/api/admin/student/modify" method="POST">
+      {/* autoComplete="off": 비밀번호 칸이 있어 브라우저가 [특이사항]을 아이디 칸으로 오인해 저장값을 채우는 것을 막는다 */}
+      <form action="/api/admin/student/modify" method="POST" autoComplete="off">
         <input type="hidden" name="id" value={student.id} />
 
         <div className="form-group row mb-2">
@@ -172,6 +173,7 @@ export default async function ModifyStudentPage({
               type="text"
               className="form-control"
               name="specialty"
+              autoComplete="off"
               defaultValue={student.specialty}
             />
           </div>
@@ -184,6 +186,7 @@ export default async function ModifyStudentPage({
               type="password"
               className="form-control"
               name="pw"
+              autoComplete="new-password"
               placeholder="변경 시에만 입력"
             />
           </div>
