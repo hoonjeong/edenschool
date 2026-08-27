@@ -36,7 +36,97 @@ interface ObsItem {
   note?: string;
 }
 
-export default function StudentDetail({ student, attStat, attendances, observations, counsels, corrections, clinics, growth }: any) {
+
+// 서버 페이지(page.tsx)가 만들어 넘기는 모양 그대로. 날짜는 ISO 문자열로 온다.
+interface StudentInfo {
+  id: number;
+  name: string;
+  grade: string;
+  phone: string;
+  status: "ENROLLED" | "PAUSED" | "WITHDRAWN";
+  className: string | null;
+  classColor: string | null;
+  registeredAt: string;
+  memo: string | null;
+}
+
+interface AttStat {
+  total: number;
+  present: number;
+  late: number;
+  absent: number;
+  makeup: number;
+}
+
+interface AttendanceRow {
+  id: number;
+  date: string;
+  status: "PRESENT" | "LATE" | "ABSENT" | "MAKEUP";
+  checkInAt: string;
+  method: string;
+}
+
+interface ObservationRow {
+  id: number;
+  round: number;
+  date: string;
+  /** DB 상 Json 컬럼(관찰 항목 배열) */
+  items: unknown;
+  memo: string | null;
+}
+
+interface CounselRow {
+  id: number;
+  date: string;
+  type: string;
+  content: string;
+  nextAction: string | null;
+  nextDate: string | null;
+}
+
+interface CorrectionRow {
+  id: number;
+  title: string;
+  genre: string | null;
+  status: string;
+  createdAt: string;
+  /** DB 상 Json 컬럼(척도별 점수) */
+  scores: unknown;
+}
+
+interface ClinicRow {
+  id: number;
+  weekday: number;
+  time: string;
+  subject: string;
+}
+
+interface GrowthRow {
+  round: number;
+  /** 영역명 → 점수 */
+  scores: Record<string, number | null>;
+  count: number;
+}
+
+export default function StudentDetail({
+  student,
+  attStat,
+  attendances,
+  observations,
+  counsels,
+  corrections,
+  clinics,
+  growth,
+}: {
+  student: StudentInfo;
+  attStat: AttStat;
+  attendances: AttendanceRow[];
+  observations: ObservationRow[];
+  counsels: CounselRow[];
+  corrections: CorrectionRow[];
+  clinics: ClinicRow[];
+  growth: GrowthRow[];
+}) {
   const [tab, setTab] = useState("attendance");
   const st = STUDENT_STATUS[student.status];
   const rate =
@@ -72,7 +162,7 @@ export default function StudentDetail({ student, attStat, attendances, observati
               <span>{student.grade}</span>
               {student.className && (
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-2 rounded-full" style={{ background: student.classColor }} />
+                  <span className="size-2 rounded-full" style={{ background: student.classColor ?? undefined }} />
                   {student.className}
                 </span>
               )}
@@ -127,7 +217,7 @@ export default function StudentDetail({ student, attStat, attendances, observati
   );
 }
 
-function AttendanceTab({ attStat, attendances, rate }: any) {
+function AttendanceTab({ attStat, attendances, rate }: { attStat: AttStat; attendances: AttendanceRow[]; rate: number | null }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -149,7 +239,7 @@ function AttendanceTab({ attStat, attendances, rate }: any) {
           <EmptyState icon={<CalendarDays className="size-6" />} title="출결 기록이 없습니다" />
         ) : (
           <div className="divide-y divide-line/70">
-            {attendances.map((a: any) => {
+            {attendances.map((a) => {
               const s = ATTENDANCE_STATUS[a.status];
               return (
                 <div key={a.id} className="flex items-center gap-3 px-4 py-3">
@@ -168,9 +258,9 @@ function AttendanceTab({ attStat, attendances, rate }: any) {
   );
 }
 
-function ObservationTab({ observations, counsels, growth }: any) {
-  const chartData = growth.map((g: any) => {
-    const row: any = { name: `${g.round}회` };
+function ObservationTab({ observations, counsels, growth }: { observations: ObservationRow[]; counsels: CounselRow[]; growth: GrowthRow[]; studentId: number }) {
+  const chartData = growth.map((g) => {
+    const row: Record<string, string | number | null> = { name: `${g.round}회` };
     for (const area of AREA_NAMES) row[area] = g.scores[area] ?? null;
     return row;
   });
@@ -215,7 +305,7 @@ function ObservationTab({ observations, counsels, growth }: any) {
             <Card><EmptyState icon={<ClipboardList className="size-6" />} title="관찰일지가 없습니다" /></Card>
           ) : (
             <div className="space-y-3">
-              {observations.map((o: any) => (
+              {observations.map((o) => (
                 <Card key={o.id} className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge tone="brand">{o.round}회차</Badge>
@@ -241,7 +331,7 @@ function ObservationTab({ observations, counsels, growth }: any) {
             <Card><EmptyState icon={<MessageSquareText className="size-6" />} title="상담 기록이 없습니다" /></Card>
           ) : (
             <div className="space-y-3">
-              {counsels.map((c: any) => (
+              {counsels.map((c) => (
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center gap-2 mb-1.5">
                     <Badge tone="sky">{c.type}</Badge>
@@ -264,12 +354,12 @@ function ObservationTab({ observations, counsels, growth }: any) {
   );
 }
 
-function CorrectionTab({ corrections }: any) {
+function CorrectionTab({ corrections }: { corrections: CorrectionRow[]; studentId: number }) {
   if (corrections.length === 0)
     return <Card><EmptyState icon={<Sparkles className="size-6" />} title="첨삭 이력이 없습니다" desc="AI 첨삭 메뉴에서 답안을 업로드해 첨삭을 시작하세요." /></Card>;
   return (
     <div className="space-y-3">
-      {corrections.map((c: any) => {
+      {corrections.map((c) => {
         const st = CORRECTION_STATUS[c.status];
         return (
           <Link key={c.id} href={`/reading/corrections/${c.id}`}>
@@ -290,12 +380,12 @@ function CorrectionTab({ corrections }: any) {
   );
 }
 
-function ClinicTab({ clinics }: any) {
+function ClinicTab({ clinics }: { clinics: ClinicRow[] }) {
   if (clinics.length === 0)
     return <Card><EmptyState icon={<CalendarClock className="size-6" />} title="클리닉 일정이 없습니다" /></Card>;
   return (
     <div className="grid sm:grid-cols-2 gap-3">
-      {clinics.map((c: any) => (
+      {clinics.map((c) => (
         <Card key={c.id} className="p-4 flex items-center gap-3">
           <div className="grid size-11 place-items-center rounded-xl bg-mint-50 text-mint-600 font-bold">
             {WEEKDAYS_MON_SAT.find((w) => w.n === c.weekday)?.label}

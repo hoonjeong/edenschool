@@ -10,7 +10,16 @@ import { RUBRIC } from "@/lib/reading/rubric";
 import { GRADE_INTENSITY, TONES, METRICS, GENRES } from "@/lib/reading/correction-config";
 import { saveEdenPhilosophy, createUser, updateUserRole, toggleUserActive, resetUserPassword } from "./actions";
 
-export default function SettingsClient({ users, philosophy }: any) {
+// 서버 페이지(page.tsx)가 넘기는 모양 그대로.
+interface UserRow {
+  id: number;
+  name: string;
+  email: string;
+  role: "ADMIN" | "TEACHER" | "CLINIC";
+  active: boolean;
+}
+
+export default function SettingsClient({ users, philosophy }: { users: UserRow[]; philosophy: string }) {
   const [section, setSection] = useState("accounts");
   const SECTIONS = [
     { k: "accounts", label: "계정 · 권한", icon: Users },
@@ -39,7 +48,7 @@ export default function SettingsClient({ users, philosophy }: any) {
   );
 }
 
-function Accounts({ users }: any) {
+function Accounts({ users }: { users: UserRow[] }) {
   const router = useRouter();
   const [add, setAdd] = useState(false);
   const [pending, start] = useTransition();
@@ -59,7 +68,7 @@ function Accounts({ users }: any) {
         <Button size="sm" onClick={() => setAdd(true)}><Plus className="size-4" /> 계정 추가</Button>
       </div>
       <div className="divide-y divide-line/70">
-        {users.map((u: any) => (
+        {users.map((u) => (
           <div key={u.id} className="flex items-center gap-3 px-5 py-3">
             <div className="grid size-9 place-items-center rounded-full bg-brand-100 text-brand-700 font-bold text-[13px]">{u.name.slice(0, 2)}</div>
             <div className="min-w-0">
@@ -83,7 +92,7 @@ function Accounts({ users }: any) {
   );
 }
 
-function AddUserModal({ onClose, onSaved }: any) {
+function AddUserModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({ name: "", email: "", role: "TEACHER", password: "eden1234" });
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
@@ -115,7 +124,7 @@ function AddUserModal({ onClose, onSaved }: any) {
   );
 }
 
-function CorrectionDefaults({ philosophy }: any) {
+function CorrectionDefaults({ philosophy }: { philosophy: string }) {
   const router = useRouter();
   const [text, setText] = useState(philosophy);
   const [pending, start] = useTransition();

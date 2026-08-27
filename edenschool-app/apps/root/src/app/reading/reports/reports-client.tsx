@@ -12,13 +12,72 @@ import { Card, PageIntro, EmptyState, Badge, Button } from "@/components/reading
 import { AREA_NAMES, AREA_COLORS } from "@/lib/reading/rubric";
 import { fmtDate } from "@/lib/reading/utils";
 
-export default function ReportsClient({ students, selectedId, student, growth, examReports = [] }: any) {
+
+// 서버 페이지(page.tsx)가 만들어 넘기는 모양 그대로. 날짜는 ISO 문자열로 온다.
+interface StudentRow {
+  id: number;
+  name: string;
+  grade: string;
+  className: string | null;
+  obsCount: number;
+  examCount: number;
+}
+
+interface SelectedStudent {
+  id: number;
+  name: string;
+  grade: string;
+  className: string | null;
+}
+
+interface GrowthRow {
+  round: number;
+  date: string;
+  /** 영역명 → 점수 */
+  scores: Record<string, number | null>;
+  count: number;
+}
+
+/** 영역·능력별 득점 묶음 (lib/reading/exam 의 groupScores 결과 + 또래 평균) */
+interface ScoreGroup {
+  key: string;
+  full: number;
+  score: number;
+  avg: number;
+}
+
+interface ExamReport {
+  id: number;
+  examId: number;
+  title: string;
+  takenAt: string;
+  score: number;
+  full: number;
+  avg: number;
+  peerCount: number;
+  areas: ScoreGroup[];
+  abilities: ScoreGroup[];
+}
+
+export default function ReportsClient({
+  students,
+  selectedId,
+  student,
+  growth,
+  examReports = [],
+}: {
+  students: StudentRow[];
+  selectedId: number | null;
+  student: SelectedStudent | null;
+  growth: GrowthRow[];
+  examReports?: ExamReport[];
+}) {
   const router = useRouter();
   // 관찰일지 또는 시험 결과가 있는 학생
-  const withData = students.filter((s: any) => s.obsCount > 0 || s.examCount > 0);
+  const withData = students.filter((s) => s.obsCount > 0 || s.examCount > 0);
 
-  const trendData = growth.map((g: any) => {
-    const row: any = { name: `${g.round}회` };
+  const trendData = growth.map((g) => {
+    const row: Record<string, string | number | null> = { name: `${g.round}회` };
     for (const a of AREA_NAMES) row[a] = g.scores[a] ?? null;
     return row;
   });
@@ -63,7 +122,7 @@ export default function ReportsClient({ students, selectedId, student, growth, e
             <p className="text-[13px] text-faint p-3">관찰일지나 시험 결과가 있는 학생이 없습니다.</p>
           ) : (
             <div className="space-y-0.5 mt-1">
-              {withData.map((s: any) => (
+              {withData.map((s) => (
                 <button key={s.id} onClick={() => router.push(`/reading/reports?studentId=${s.id}`)}
                   className={`w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
                     selectedId === s.id ? "bg-brand-50 text-brand-700 font-semibold" : "hover:bg-canvas text-muted"
@@ -197,14 +256,14 @@ export default function ReportsClient({ students, selectedId, student, growth, e
 }
 
 /* ── 시험 성적 리포트 ─────────────────────────────────── */
-function ExamReportSection({ reports }: { reports: any[] }) {
+function ExamReportSection({ reports }: { reports: ExamReport[] }) {
   const [sel, setSel] = useState(reports.length - 1);
   const r = reports[Math.min(sel, reports.length - 1)];
   const pct = (v: number, f: number) => (f > 0 ? Math.round((v / f) * 100) : 0);
 
-  const areaRadar = r.areas.map((a: any) => ({ key: a.key, 평균: pct(a.avg, a.full), 학생점수: pct(a.score, a.full) }));
-  const abilityRadar = r.abilities.map((a: any) => ({ key: a.key, 평균: pct(a.avg, a.full), 학생점수: pct(a.score, a.full) }));
-  const trend = reports.map((x: any) => ({ name: x.title, 학생점수: x.score, 평균: x.avg }));
+  const areaRadar = r.areas.map((a) => ({ key: a.key, 평균: pct(a.avg, a.full), 학생점수: pct(a.score, a.full) }));
+  const abilityRadar = r.abilities.map((a) => ({ key: a.key, 평균: pct(a.avg, a.full), 학생점수: pct(a.score, a.full) }));
+  const trend = reports.map((x) => ({ name: x.title, 학생점수: x.score, 평균: x.avg }));
 
   return (
     <Card className="p-5">
@@ -213,7 +272,7 @@ function ExamReportSection({ reports }: { reports: any[] }) {
           <FileBarChart className="size-4 text-brand-600" /> 시험 성적 리포트
         </h3>
         <div className="ml-auto flex flex-wrap gap-1">
-          {reports.map((x: any, i: number) => (
+          {reports.map((x, i) => (
             <button
               key={x.id}
               onClick={() => setSel(i)}
@@ -299,7 +358,7 @@ function ExamReportSection({ reports }: { reports: any[] }) {
 
       {/* 영역별 막대 */}
       <div className="mt-4 grid sm:grid-cols-2 gap-x-6 gap-y-3">
-        {r.areas.map((a: any) => (
+        {r.areas.map((a) => (
           <div key={a.key}>
             <div className="flex justify-between text-[13px] mb-1">
               <span className="font-semibold">{a.key}</span>

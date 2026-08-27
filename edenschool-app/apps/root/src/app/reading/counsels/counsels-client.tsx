@@ -11,7 +11,42 @@ import { createCounsel, deleteCounsel } from "./actions";
 
 const TYPES = ["정기상담", "학습상담", "생활상담", "학부모상담", "진로상담"];
 
-export default function CounselsClient({ counsels, students, upcoming }: any) {
+// 서버 페이지(page.tsx)가 만들어 넘기는 모양 그대로. 날짜는 ISO 문자열로 온다.
+interface CounselRow {
+  id: number;
+  studentId: number;
+  studentName: string;
+  grade: string;
+  date: string;
+  type: string;
+  content: string;
+  nextAction: string | null;
+  nextDate: string | null;
+}
+
+interface UpcomingRow {
+  id: number;
+  studentId: number;
+  studentName: string;
+  nextDate: string;
+  nextAction: string | null;
+}
+
+interface StudentOption {
+  id: number;
+  name: string;
+  grade: string;
+}
+
+export default function CounselsClient({
+  counsels,
+  students,
+  upcoming,
+}: {
+  counsels: CounselRow[];
+  students: StudentOption[];
+  upcoming: UpcomingRow[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -29,7 +64,7 @@ export default function CounselsClient({ counsels, students, upcoming }: any) {
             <Card><EmptyState icon={<MessageSquareText className="size-6" />} title="상담 기록이 없습니다" /></Card>
           ) : (
             <div className="space-y-3">
-              {counsels.map((c: any) => (
+              {counsels.map((c) => (
                 <Card key={c.id} className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Link href={`/reading/students/${c.studentId}`} className="font-bold hover:text-brand-700">{c.studentName}</Link>
@@ -61,7 +96,7 @@ export default function CounselsClient({ counsels, students, upcoming }: any) {
               <p className="text-[13px] text-faint">예정된 상담이 없습니다.</p>
             ) : (
               <div className="space-y-2">
-                {upcoming.map((u: any) => (
+                {upcoming.map((u) => (
                   <Link key={u.id} href={`/reading/students/${u.studentId}`}
                     className="block rounded-lg bg-canvas px-3 py-2.5 hover:bg-brand-50">
                     <div className="flex items-center gap-2">
@@ -82,11 +117,11 @@ export default function CounselsClient({ counsels, students, upcoming }: any) {
   );
 }
 
-function startDel(id: number, studentId: number, router: any) {
+function startDel(id: number, studentId: number, router: ReturnType<typeof useRouter>) {
   deleteCounsel(id, studentId).then(() => router.refresh());
 }
 
-function CounselModal({ students, onClose, onSaved }: any) {
+function CounselModal({ students, onClose, onSaved }: { students: StudentOption[]; onClose: () => void; onSaved: () => void }) {
   const [studentId, setStudentId] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [type, setType] = useState(TYPES[0]);
@@ -96,8 +131,8 @@ function CounselModal({ students, onClose, onSaved }: any) {
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
 
-  const filtered = students.filter((s: any) => !q || s.name.includes(q));
-  const selected = students.find((s: any) => s.id === studentId);
+  const filtered = students.filter((s) => !q || s.name.includes(q));
+  const selected = students.find((s) => s.id === studentId);
 
   function save() {
     if (!studentId) return setErr("학생을 선택하세요.");
@@ -128,7 +163,7 @@ function CounselModal({ students, onClose, onSaved }: any) {
                   className={inputCls + " pl-9"} />
               </div>
               <div className="max-h-40 overflow-y-auto rounded-lg border border-line divide-y divide-line/60">
-                {filtered.slice(0, 30).map((s: any) => (
+                {filtered.slice(0, 30).map((s) => (
                   <button key={s.id} onClick={() => setStudentId(s.id)} className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50">
                     {s.name} <span className="text-faint text-[12px]">{s.grade}</span>
                   </button>
