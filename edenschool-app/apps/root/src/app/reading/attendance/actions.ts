@@ -4,7 +4,8 @@ import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/reading/session";
 
-type Status = "PRESENT" | "LATE" | "ABSENT" | "MAKEUP";
+/** 출결 상태. 페이지·클라이언트가 같은 타입을 쓰도록 공개한다. */
+export type Status = "PRESENT" | "LATE" | "ABSENT" | "MAKEUP";
 
 function parseDate(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);

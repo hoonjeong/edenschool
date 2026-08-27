@@ -29,7 +29,40 @@ function ymLabel(ym: string) {
 }
 
 // 동시간대 최대 겹침 수
-function maxConcurrent(clinics: any[]): number {
+
+// 서버 페이지(page.tsx)가 만들어 넘기는 모양 그대로.
+interface ClinicRow {
+  id: number;
+  /** 1=월 … 6=토 */
+  weekday: number;
+  time: string;
+  endTime: string | null;
+  subject: string;
+  teacher: string | null;
+  note: string | null;
+  studentId: number;
+  studentName: string;
+  grade: string;
+  classId: number | null;
+  className: string | null;
+  /** 주차(1~4) → 진도 내용 */
+  progress: Record<number, string>;
+}
+
+interface StudentOption {
+  id: number;
+  name: string;
+  grade: string;
+}
+
+interface ClassOption {
+  id: number;
+  name: string;
+}
+
+type Tab = "timetable" | "progress";
+
+function maxConcurrent(clinics: ClinicRow[]): number {
   const events: { t: number; d: number }[] = [];
   for (const c of clinics) {
     const s = hhmmToMinutes(c.time);
@@ -48,9 +81,9 @@ function maxConcurrent(clinics: any[]): number {
   return max;
 }
 
-export default function ClinicClient({ clinics, students, classes }: any) {
+export default function ClinicClient({ clinics, students, classes }: { clinics: ClinicRow[]; students: StudentOption[]; classes: ClassOption[] }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"timetable" | "progress">("timetable");
+  const [tab, setTab] = useState<Tab>("timetable");
 
   return (
     <div>
@@ -60,13 +93,13 @@ export default function ClinicClient({ clinics, students, classes }: any) {
       />
 
       <div className="flex gap-1 mb-4 border-b border-line print:hidden">
-        {[
+        {([
           { k: "timetable", label: "시간표" },
           { k: "progress", label: "주차별 진도" },
-        ].map((t) => (
+        ] as const).map((t) => (
           <button
             key={t.k}
-            onClick={() => setTab(t.k as any)}
+            onClick={() => setTab(t.k)}
             className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px ${tab === t.k ? "border-brand-600 text-brand-700" : "border-transparent text-muted hover:text-ink"}`}
           >
             {t.label}
@@ -84,7 +117,7 @@ export default function ClinicClient({ clinics, students, classes }: any) {
 }
 
 /* ══════════════ 시간표 탭 (색상 타임라인) ══════════════ */
-function TimetableView({ clinics, students, onRefresh }: any) {
+function TimetableView({ clinics, students, onRefresh }: { clinics: ClinicRow[]; students: StudentOption[]; onRefresh: () => void }) {
   const [day, setDay] = useState(1);
   const [activeTeacher, setActiveTeacher] = useState("ALL");
   const [open, setOpen] = useState(false);
@@ -98,7 +131,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   }, []);
 
   const dayClinics = useMemo(
-    () => clinics.filter((c: any) => c.weekday === day),
+    () => clinics.filter((c) => c.weekday === day),
     [clinics, day],
   );
 
@@ -106,7 +139,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   const dayByTime = useMemo(
     () =>
       [...dayClinics].sort(
-        (a: any, b: any) =>
+        (a, b) =>
           (hhmmToMinutes(a.time) ?? 0) - (hhmmToMinutes(b.time) ?? 0) ||
           a.studentName.localeCompare(b.studentName, "ko"),
       ),
@@ -115,7 +148,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
 
   // 담당 선생님 색상 맵 (해당 요일 기준)
   const colorMap = useMemo(
-    () => assignTeacherColors(dayClinics.map((c: any) => c.teacher)),
+    () => assignTeacherColors(dayClinics.map((c) => c.teacher)),
     [dayClinics],
   );
 
@@ -135,7 +168,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
   }, [dayClinics]);
 
   const concurrent = useMemo(() => maxConcurrent(dayClinics), [dayClinics]);
-  const detail = detailId != null ? clinics.find((c: any) => c.id === detailId) : null;
+  const detail = detailId != null ? clinics.find((c) => c.id === detailId) ?? null : null;
 
   return (
     <div>
@@ -177,7 +210,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
       {/* 요일 탭 */}
       <div className="flex gap-1.5 mb-4 print:hidden">
         {WEEKDAYS_MON_SAT.map((w) => {
-          const count = clinics.filter((c: any) => c.weekday === w.n).length;
+          const count = clinics.filter((c) => c.weekday === w.n).length;
           return (
             <button
               key={w.n}
@@ -291,7 +324,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
               </tr>
             </thead>
             <tbody>
-              {dayByTime.map((c: any) => {
+              {dayByTime.map((c) => {
                 const color = teacherColorOf(c.teacher, colorMap);
                 return (
                   <tr key={c.id} style={{ breakInside: "avoid" }}>
@@ -347,7 +380,7 @@ function TimetableView({ clinics, students, onRefresh }: any) {
 }
 
 /* ══════════════ 주차별 진도 탭 (반 일괄/개별) ══════════════ */
-function ProgressView({ clinics, classes, onRefresh }: any) {
+function ProgressView({ clinics, classes, onRefresh }: { clinics: ClinicRow[]; classes: ClassOption[]; onRefresh: () => void }) {
   const [week, setWeek] = useState(1);
   const [classFilter, setClassFilter] = useState("ALL");
   const [bulk, setBulk] = useState("");
@@ -363,9 +396,9 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
   const filtered = useMemo(
     () =>
       clinics
-        .filter((c: any) => classFilter === "ALL" || String(c.classId) === classFilter)
+        .filter((c) => classFilter === "ALL" || String(c.classId) === classFilter)
         .sort(
-          (a: any, b: any) =>
+          (a, b) =>
             a.weekday - b.weekday ||
             (hhmmToMinutes(a.time) ?? 0) - (hhmmToMinutes(b.time) ?? 0) ||
             a.studentName.localeCompare(b.studentName, "ko"),
@@ -373,10 +406,10 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
     [clinics, classFilter],
   );
 
-  const valueOf = (c: any) => drafts[c.id] ?? c.progress?.[week] ?? "";
+  const valueOf = (c: ClinicRow) => drafts[c.id] ?? c.progress?.[week] ?? "";
 
   function applyBulk() {
-    const ids = filtered.map((c: any) => c.id);
+    const ids = filtered.map((c) => c.id);
     if (ids.length === 0) return;
     if (!confirm(`${classFilter === "ALL" ? "전체" : "선택 반"} ${ids.length}건에 ${week}주차 진도를 일괄 적용할까요?\n(각 학생 개별 내용은 덮어써집니다)`)) return;
     start(async () => {
@@ -390,7 +423,7 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
     });
   }
 
-  function saveOne(c: any) {
+  function saveOne(c: ClinicRow) {
     start(async () => {
       await upsertClinicProgress(c.id, week, valueOf(c));
       onRefresh();
@@ -424,7 +457,7 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
               className="h-9 rounded-lg border border-line bg-canvas px-3 text-sm"
             >
               <option value="ALL">전체 반</option>
-              {classes.map((c: any) => (
+              {classes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -466,7 +499,7 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
           <EmptyState icon={<Clock className="size-6" />} title="해당 반에 배정된 클리닉이 없습니다" />
         ) : (
           <div className="divide-y divide-line/70">
-            {filtered.map((c: any) => (
+            {filtered.map((c) => (
               <div key={c.id} className="px-5 py-3 flex flex-wrap items-center gap-3">
                 <div className="w-40 shrink-0">
                   <Link href={`/reading/students/${c.studentId}`} className="font-semibold hover:text-brand-700">
@@ -504,7 +537,7 @@ function ProgressView({ clinics, classes, onRefresh }: any) {
 }
 
 /* ══════════════ 상세 모달 (1~4주차 진도 + 삭제) ══════════════ */
-function DetailModal({ clinic, onClose, onChanged, onDeleted }: any) {
+function DetailModal({ clinic, onClose, onChanged, onDeleted }: { clinic: ClinicRow; onClose: () => void; onChanged: () => void; onDeleted: () => void }) {
   const [weeks, setWeeks] = useState<Record<number, string>>(() => {
     const init: Record<number, string> = {};
     for (const w of WEEKS) init[w] = clinic.progress?.[w] ?? "";
@@ -585,7 +618,7 @@ function DetailModal({ clinic, onClose, onChanged, onDeleted }: any) {
 }
 
 /* ══════════════ 클리닉 추가 모달 ══════════════ */
-function AddModal({ students, defaultDay, onClose, onSaved }: any) {
+function AddModal({ students, defaultDay, onClose, onSaved }: { students: StudentOption[]; defaultDay: number; onClose: () => void; onSaved: () => void }) {
   const [studentId, setStudentId] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [weekday, setWeekday] = useState(defaultDay);
@@ -597,8 +630,8 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
   const [pending, start] = useTransition();
   const [err, setErr] = useState("");
 
-  const filtered = students.filter((s: any) => !q || s.name.includes(q));
-  const selected = students.find((s: any) => s.id === studentId);
+  const filtered = students.filter((s) => !q || s.name.includes(q));
+  const selected = students.find((s) => s.id === studentId);
 
   function save() {
     if (!studentId) return setErr("학생을 선택하세요.");
@@ -643,7 +676,7 @@ function AddModal({ students, defaultDay, onClose, onSaved }: any) {
             <>
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="학생 검색" className={inputCls + " mb-2"} />
               <div className="max-h-36 overflow-y-auto rounded-lg border border-line divide-y divide-line/60">
-                {filtered.slice(0, 30).map((s: any) => (
+                {filtered.slice(0, 30).map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setStudentId(s.id)}

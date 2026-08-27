@@ -10,9 +10,51 @@ import { createTemplate, updateTemplate, deleteTemplate, previewNotices, sendNot
 
 const VAR_HELP = ["이름", "반", "점수", "특이점", "다음수업"];
 
-export default function NoticesClient({ templates, students, recentLogs, smsConfigured }: any) {
+// 서버 페이지(page.tsx)가 넘기는 모양. 컴포넌트가 실제 쓰는 필드만 적는다.
+interface TemplateRow {
+  id: number;
+  title: string;
+  body: string;
+  /** DB 상 Json 컬럼. 실제로는 치환 변수 이름 배열이다. */
+  variables: unknown;
+}
+
+interface StudentRow {
+  id: number;
+  name: string;
+  grade: string;
+  classId: number | null;
+  className: string | null;
+}
+
+interface SmsLogRow {
+  id: number;
+  phone: string;
+  type: string;
+  success: boolean;
+  /** 페이지에서 toISOString() 으로 문자열화해 넘긴다 */
+  sentAt: string;
+}
+
+// 서버 액션 반환값을 그대로 따라간다 — 액션이 바뀌면 여기서 바로 드러난다.
+type PreviewRow = Awaited<ReturnType<typeof previewNotices>>[number];
+type SendResult = Awaited<ReturnType<typeof sendNotices>>;
+
+type Tab = "send" | "templates";
+
+export default function NoticesClient({
+  templates,
+  students,
+  recentLogs,
+  smsConfigured,
+}: {
+  templates: TemplateRow[];
+  students: StudentRow[];
+  recentLogs: SmsLogRow[];
+  smsConfigured: boolean;
+}) {
   const router = useRouter();
-  const [tab, setTab] = useState<"send" | "templates">("send");
+  const [tab, setTab] = useState<Tab>("send");
 
   return (
     <div>
@@ -26,11 +68,11 @@ export default function NoticesClient({ templates, students, recentLogs, smsConf
       )}
 
       <div className="flex gap-1 mb-4 border-b border-line">
-        {[
+        {([
           { k: "send", label: "공지 생성·발송" },
           { k: "templates", label: "템플릿 관리" },
-        ].map((t) => (
-          <button key={t.k} onClick={() => setTab(t.k as any)}
+        ] as const).map((t) => (
+          <button key={t.k} onClick={() => setTab(t.k)}
             className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px ${tab === t.k ? "border-brand-600 text-brand-700" : "border-transparent text-muted hover:text-ink"}`}>
             {t.label}
           </button>
@@ -46,22 +88,22 @@ export default function NoticesClient({ templates, students, recentLogs, smsConf
   );
 }
 
-function SendView({ templates, students, recentLogs }: any) {
+function SendView({ templates, students, recentLogs }: { templates: TemplateRow[]; students: StudentRow[]; recentLogs: SmsLogRow[] }) {
   const [templateId, setTemplateId] = useState<number | null>(templates[0]?.id ?? null);
   const [classFilter, setClassFilter] = useState("ALL");
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [previews, setPreviews] = useState<any[] | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [previews, setPreviews] = useState<PreviewRow[] | null>(null);
+  const [result, setResult] = useState<SendResult | null>(null);
   const [pending, start] = useTransition();
 
-  const template = templates.find((t: any) => t.id === templateId);
+  const template = templates.find((t) => t.id === templateId);
   const classes = useMemo(() => {
-    const m = new Map<number, string>();
+    const m = new Map<number, string | null>();
     for (const s of students) if (s.classId) m.set(s.classId, s.className);
     return [...m.entries()];
   }, [students]);
 
-  const filtered = students.filter((s: any) => classFilter === "ALL" || String(s.classId) === classFilter);
+  const filtered = students.filter((s) => classFilter === "ALL" || String(s.classId) === classFilter);
 
   function toggle(id: number) {
     setSelected((prev) => {
@@ -72,7 +114,7 @@ function SendView({ templates, students, recentLogs }: any) {
     setPreviews(null); setResult(null);
   }
   function selectAll() {
-    setSelected(new Set(filtered.map((s: any) => s.id)));
+    setSelected(new Set(filtered.map((s) => s.id)));
     setPreviews(null); setResult(null);
   }
 
@@ -100,7 +142,7 @@ function SendView({ templates, students, recentLogs }: any) {
         <Card className="p-5">
           <label className={labelCls}>템플릿 선택</label>
           <select value={templateId ?? ""} onChange={(e) => { setTemplateId(Number(e.target.value)); setPreviews(null); setResult(null); }} className={inputCls}>
-            {templates.map((t: any) => <option key={t.id} value={t.id}>{t.title}</option>)}
+            {templates.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
           </select>
           {template && (
             <div className="mt-3 rounded-lg bg-canvas px-4 py-3 text-[13px] leading-relaxed whitespace-pre-line">
@@ -114,7 +156,7 @@ function SendView({ templates, students, recentLogs }: any) {
             <label className={labelCls + " mb-0"}>발송 대상</label>
             <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="ml-auto h-8 rounded-lg border border-line bg-canvas px-2 text-[13px]">
               <option value="ALL">전체 반</option>
-              {classes.map(([id, name]: any) => <option key={id} value={id}>{name}</option>)}
+              {classes.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
             </select>
           </div>
           <div className="flex items-center gap-2 mb-2">
@@ -123,7 +165,7 @@ function SendView({ templates, students, recentLogs }: any) {
             <span className="ml-auto text-[12px] text-muted">{selected.size}명 선택</span>
           </div>
           <div className="max-h-72 overflow-y-auto flex flex-wrap gap-1.5">
-            {filtered.map((s: any) => {
+            {filtered.map((s) => {
               const on = selected.has(s.id);
               return (
                 <button key={s.id} onClick={() => toggle(s.id)}
@@ -157,7 +199,7 @@ function SendView({ templates, students, recentLogs }: any) {
             <EmptyState icon={<MessageSquare className="size-6" />} title="미리보기를 실행하세요" desc="대상을 선택하고 미리보기를 누르면 개인별 치환 결과가 표시됩니다." />
           ) : (
             <div className="space-y-2 max-h-[520px] overflow-y-auto">
-              {previews.map((p: any) => (
+              {previews.map((p) => (
                 <div key={p.id} className="rounded-xl border border-line p-3">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="font-semibold text-[13px]">{p.name}</span>
@@ -174,7 +216,7 @@ function SendView({ templates, students, recentLogs }: any) {
           <Card className="p-5">
             <h3 className="font-bold text-[15px] mb-2">최근 발송 로그</h3>
             <div className="divide-y divide-line/60">
-              {recentLogs.map((l: any) => (
+              {recentLogs.map((l) => (
                 <div key={l.id} className="flex items-center gap-2 py-2 text-[13px]">
                   <Badge tone={l.success ? "mint" : "rose"}>{l.success ? "성공" : "실패"}</Badge>
                   <span className="tabular-nums text-muted">{l.phone}</span>
@@ -190,8 +232,8 @@ function SendView({ templates, students, recentLogs }: any) {
   );
 }
 
-function TemplatesView({ templates, onChange }: any) {
-  const [modal, setModal] = useState<null | { mode: "create" | "edit"; row?: any }>(null);
+function TemplatesView({ templates, onChange }: { templates: TemplateRow[]; onChange: () => void }) {
+  const [modal, setModal] = useState<null | { mode: "create" | "edit"; row?: TemplateRow }>(null);
   return (
     <div>
       <div className="flex justify-end mb-3">
@@ -201,7 +243,7 @@ function TemplatesView({ templates, onChange }: any) {
         <Card><EmptyState icon={<FileText className="size-6" />} title="템플릿이 없습니다" /></Card>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
-          {templates.map((t: any) => (
+          {templates.map((t) => (
             <Card key={t.id} className="p-5">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="size-4 text-brand-600" />
@@ -221,7 +263,7 @@ function TemplatesView({ templates, onChange }: any) {
   );
 }
 
-function TemplateModal({ mode, row, onClose, onSaved }: any) {
+function TemplateModal({ mode, row, onClose, onSaved }: { mode: "create" | "edit"; row?: TemplateRow; onClose: () => void; onSaved: () => void }) {
   const [title, setTitle] = useState(row?.title ?? "");
   const [body, setBody] = useState(row?.body ?? "");
   const [pending, start] = useTransition();
@@ -231,12 +273,13 @@ function TemplateModal({ mode, row, onClose, onSaved }: any) {
     if (!title.trim() || !body.trim()) return;
     start(async () => {
       if (mode === "create") await createTemplate({ title, body });
-      else await updateTemplate(row.id, { title, body });
+      else if (row) await updateTemplate(row.id, { title, body });
       onSaved();
     });
   }
   function del() {
     if (!confirm("이 템플릿을 삭제할까요?")) return;
+    if (!row) return;
     start(async () => { await deleteTemplate(row.id); onSaved(); });
   }
 

@@ -7,11 +7,51 @@ import { ChevronLeft, ChevronRight, ScanLine, CalendarDays, AlertTriangle, Users
 import { Card, PageIntro, StatCard, Badge, Button, EmptyState } from "@/components/reading/ui";
 import { ATTENDANCE_STATUS } from "@/lib/reading/labels";
 import { fmtDateShort } from "@/lib/reading/utils";
-import { setAttendance, clearAttendance } from "./actions";
+import { setAttendance, clearAttendance, type Status } from "./actions";
+
+// 서버 페이지(page.tsx)가 만들어 넘기는 모양 그대로. 어긋나면 tsc 가 호출부에서 잡는다.
+interface AttendanceRow {
+  id: number;
+  name: string;
+  grade: string;
+  className: string | null;
+  classColor: string | null;
+  classSchedule: string | null;
+  /** 반 시간표에서 요일을 읽어낸 반인지 (반 미배정·시간표 미입력이면 false) */
+  scheduleKnown: boolean;
+  classDays: string;
+  scheduled: boolean;
+  status: Status | null;
+  /** 이 날 결석에 대한 보강일(yyyy-mm-dd) */
+  makeupDate: string | null;
+}
+
+interface ClassStat {
+  id: number;
+  name: string;
+  color: string;
+  rate: number | null;
+  count: number;
+}
+
+interface AbsentAlert {
+  id: number;
+  name: string;
+  className: string | null;
+  absent: number;
+}
+
+interface Props {
+  dateStr: string;
+  isToday: boolean;
+  rows: AttendanceRow[];
+  classStats: ClassStat[];
+  absentAlerts: AbsentAlert[];
+}
 
 const STATUS_ORDER = ["PRESENT", "LATE", "ABSENT", "MAKEUP"] as const;
 
-export default function AttendanceClient({ dateStr, isToday, rows, classStats, absentAlerts }: any) {
+export default function AttendanceClient({ dateStr, isToday, rows, classStats, absentAlerts }: Props) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [filter, setFilter] = useState("ALL");
@@ -25,9 +65,9 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
     router.push(`/reading/attendance?date=${ns}`);
   }
 
-  function set(studentId: number, status: string) {
+  function set(studentId: number, status: Status) {
     start(async () => {
-      await setAttendance(studentId, dateStr, status as any);
+      await setAttendance(studentId, dateStr, status);
       router.refresh();
     });
   }
@@ -44,18 +84,18 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
     const list =
       scope === "ALL"
         ? [...rows]
-        : rows.filter((r: any) => r.scheduled || !r.scheduleKnown || r.status);
+        : rows.filter((r) => r.scheduled || !r.scheduleKnown || r.status);
     // 오늘 수업 있는 학생을 위로 올린다.
-    return list.sort((a: any, b: any) => Number(b.scheduled) - Number(a.scheduled));
+    return list.sort((a, b) => Number(b.scheduled) - Number(a.scheduled));
   }, [rows, scope]);
 
-  const dayCount = rows.filter((r: any) => r.scheduled).length;
+  const dayCount = rows.filter((r) => r.scheduled).length;
 
   const summary = useMemo(() => {
-    const by = (st: string) => cohort.filter((r: any) => r.status === st).length;
+    const by = (st: Status) => cohort.filter((r) => r.status === st).length;
     return {
       total: cohort.length,
-      checked: cohort.filter((r: any) => r.status).length,
+      checked: cohort.filter((r) => r.status).length,
       present: by("PRESENT"),
       late: by("LATE"),
       absent: by("ABSENT"),
@@ -63,7 +103,7 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
     };
   }, [cohort]);
 
-  const filtered = cohort.filter((r: any) => {
+  const filtered = cohort.filter((r) => {
     if (filter === "ALL") return true;
     if (filter === "NONE") return !r.status;
     return r.status === filter;
@@ -154,7 +194,7 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
               <EmptyState icon={<Users className="size-6" />} title="해당 조건의 학생이 없습니다" />
             ) : (
               <div className="divide-y divide-line/70 max-h-[560px] overflow-y-auto">
-                {filtered.map((r: any) => (
+                {filtered.map((r) => (
                   <div key={r.id} className="flex items-center gap-3 px-4 py-2.5">
                     <Link href={`/reading/students/${r.id}`} className="min-w-0 flex items-center gap-2 hover:text-brand-700">
                       <span className="font-semibold">{r.name}</span>
@@ -232,7 +272,7 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
           <Card className="p-5">
             <h3 className="font-bold text-[15px] mb-3">반별 출석률 <span className="text-faint font-normal text-[12px]">최근 30일</span></h3>
             <div className="space-y-3">
-              {classStats.map((c: any) => (
+              {classStats.map((c) => (
                 <div key={c.id}>
                   <div className="flex items-center justify-between text-[13px] mb-1">
                     <span className="inline-flex items-center gap-1.5">
@@ -256,7 +296,7 @@ export default function AttendanceClient({ dateStr, isToday, rows, classStats, a
               <p className="text-[13px] text-faint">최근 30일 내 결석 3회 이상 학생이 없습니다.</p>
             ) : (
               <div className="space-y-2">
-                {absentAlerts.map((s: any) => (
+                {absentAlerts.map((s) => (
                   <Link key={s.id} href={`/reading/students/${s.id}`}
                     className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-[13px] hover:bg-rose-100">
                     <span className="font-semibold text-rose-700">{s.name}</span>
