@@ -7,7 +7,9 @@
     "dev:clean": "rimraf .next && next dev -p 4272",
     "build": "next build",
     "start": "next start -p 4272",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -44,6 +46,7 @@
     "prisma": "^7.8.0",
     "rimraf": "^6.1.2",
     "tailwindcss": "^4",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
   }
 }
