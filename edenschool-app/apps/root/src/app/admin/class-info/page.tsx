@@ -3,6 +3,7 @@ import { requireAdminSession } from '@/lib/admin-session';
 import { selectClassInfoById } from '@edenschool/common/queries/class';
 import { selectClassStudentListByClassId } from '@edenschool/common/queries/student';
 import Link from 'next/link';
+import { AttendanceExcelButton } from '@/components/AttendanceExcelButton';
 
 interface ClassInfoPageProps {
   searchParams: Promise<{ id?: string }>;
@@ -97,6 +98,7 @@ export default async function ClassInfoPage({ searchParams }: ClassInfoPageProps
           <div className="card mb-4">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">수강생 목록 ({students.length}명)</h5>
+              <AttendanceExcelButton classId={classId} />
             </div>
             <div className="card-body p-0">
               <table className="table table-bordered table-hover table-sm mb-0">

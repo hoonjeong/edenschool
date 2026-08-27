@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectClassInfoById } from '@edenschool/common/queries/class';
 import { selectStudentListByClassId } from '@edenschool/common/queries/student';
+import { AttendanceExcelButton } from '@/components/AttendanceExcelButton';
 
 interface Props {
   searchParams: Promise<{ id?: string }>;
@@ -22,7 +23,10 @@ export default async function TeacherStudentListPage({ searchParams }: Props) {
   return (
     <div>
       <h4>{classInfo.name} 학생 명단</h4>
-      <a href="/admin/student-manage" className="btn btn-secondary mb-3">뒤로가기</a>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <a href="/admin/student-manage" className="btn btn-secondary">뒤로가기</a>
+        <AttendanceExcelButton classId={classId} />
+      </div>
       <table className="table table-bordered table-striped">
         <thead>
           <tr>
