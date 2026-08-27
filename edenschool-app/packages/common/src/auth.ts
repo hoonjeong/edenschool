@@ -49,4 +49,12 @@ export interface SessionData {
     verified?: boolean;
     attempts?: number;
   };
+  // 회원가입 1단계(휴대폰 인증) 통과 정보. 2단계(정보 입력)로 넘길 때 사용한다.
+  // 서버(api/auth/verify-phone)만 기록하고 가입 확정 시 소비 후 삭제한다.
+  // 인증으로 확정된 학생 id 하나만 담는다 — 전화번호는 여기에도, 화면에도 남기지 않고
+  // 저장 직전에 student 테이블에서 id로 다시 읽는다.
+  pendingJoin?: {
+    studentId: number;
+    expiresAt: number;
+  };
 }

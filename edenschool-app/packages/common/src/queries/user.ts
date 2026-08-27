@@ -38,13 +38,19 @@ export async function selectEmailByPhone(phone: string, type: string): Promise<s
   return rows[0]?.email || null;
 }
 
-// ROOT: selectStudentByPhone
-export async function selectStudentByPhone(sphone: string, pphone: string): Promise<Student | null> {
+// ROOT: countLiveUserByStudentId — 한 학생당 살아있는 계정 하나. 중복 가입을 막는다.
+// (이메일 찾기가 user_info를 ORDER BY id DESC LIMIT 1로 조회하므로,
+//  쓸 수 있는 계정이 여러 개면 예전 계정이 묻혀 로그인 불가 상태가 된다.)
+//
+// code='S'만 센다. 로그인 쿼리(selectUserInfoByEmail)가 code="S"로 제한하므로
+// 퇴원 처리된 계정('D')이나 본인이 탈퇴한 계정('E')은 로그인할 수 없고,
+// 그런 행이 남아 있다는 이유로 재가입을 막으면 다시 들어올 길이 사라진다.
+export async function countLiveUserByStudentId(studentId: number): Promise<number> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT * FROM student WHERE sphone=? AND pphone=? AND status=1`,
-    [sphone, pphone]
+    `SELECT count(0) as cnt FROM user_info WHERE student_id=? AND code='S'`,
+    [studentId]
   );
-  return (rows[0] as Student) || null;
+  return rows[0].cnt;
 }
 
 // ROOT: insertUser — password must be pre-hashed by caller
@@ -108,9 +114,10 @@ export async function updateUserInfo(studentId: number, email: string, sphone: s
 
 // ROOT: selectLiveStudentByPhone
 export async function selectLiveStudentByPhone(phone: string, type: string): Promise<Student | null> {
+  // 같은 번호로 status=1 행이 둘 이상일 때 임의 선택되지 않도록 최신(id 큰) 행으로 고정한다.
   const sql = type === 'P'
-    ? `SELECT * FROM student WHERE pphone=? AND status=1 LIMIT 1`
-    : `SELECT * FROM student WHERE sphone=? AND status=1 LIMIT 1`;
+    ? `SELECT * FROM student WHERE pphone=? AND status=1 ORDER BY id DESC LIMIT 1`
+    : `SELECT * FROM student WHERE sphone=? AND status=1 ORDER BY id DESC LIMIT 1`;
   const [rows] = await pool.query<RowDataPacket[]>(sql, [phone]);
   return (rows[0] as Student) || null;
 }
