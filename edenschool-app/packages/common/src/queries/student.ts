@@ -11,6 +11,27 @@ export async function selectStudentById(studentId: number): Promise<Student | nu
   return (rows[0] as Student) || null;
 }
 
+// Admin: selectStudentsByNameAndPhone — 신규 등록 시 같은 학생이 이미 있는지 확인한다.
+// 이름 + 연락처로만 찾는다. 학교·학년은 진학하면 바뀌므로 판별 기준으로 쓸 수 없다.
+// 두 연락처를 모두 비워두고 등록하면(둘 다 '') 매칭하지 않는다 — 이름만으로는 동명이인과 구분할 수 없다.
+// status DESC 정렬이라 재원생(1)이 퇴원생(0)보다 앞에 온다.
+export async function selectStudentsByNameAndPhone(
+  name: string,
+  sphone: string,
+  pphone: string,
+): Promise<Student[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, name, school, grade, year, sphone, pphone, status,
+            date_format(modify_date, "%Y-%m-%d") as date
+       FROM student
+      WHERE name = ?
+        AND ( (? <> '' AND sphone = ?) OR (? <> '' AND pphone = ?) )
+      ORDER BY status DESC, modify_date DESC, id DESC`,
+    [name, sphone, sphone, pphone, pphone]
+  );
+  return rows as Student[];
+}
+
 // Admin: insertStudent
 export async function insertStudent(student: Omit<Student, 'id'>): Promise<number> {
   const [result] = await pool.query<ResultSetHeader>(
