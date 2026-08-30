@@ -12,11 +12,18 @@ export const ADMIN_ROLES: AdminRole[] = [
   { code: 'R', label: '독서교육원' },
 ];
 
-// 선생님 추가/관리 화면에서 선택·표시하는 역할 코드 목록
+// 선생님 관리 화면에서 표시·처리하는 역할 코드 목록
 export const MANAGEABLE_ROLE_CODES = ADMIN_ROLES.map((r) => r.code); // ['T','O','R']
 
 export function isManageableRole(code: unknown): code is string {
   return typeof code === 'string' && MANAGEABLE_ROLE_CODES.includes(code);
+}
+
+// 선생님 추가/수정 폼에서 새로 선택할 수 있는 역할(운영진 O 는 폼에서 부여하지 않음)
+export const ASSIGNABLE_ROLES: AdminRole[] = ADMIN_ROLES.filter((r) => r.code !== 'O');
+
+export function isAssignableRole(code: unknown): code is string {
+  return typeof code === 'string' && ASSIGNABLE_ROLES.some((r) => r.code === code);
 }
 
 export function adminRoleLabel(code: string): string {

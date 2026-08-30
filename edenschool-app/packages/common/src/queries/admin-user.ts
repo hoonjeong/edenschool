@@ -171,11 +171,18 @@ export async function insertTeacherUser(name: string, phone: string, code?: stri
   return result.insertId;
 }
 
-// Admin: updateTeacherUser
-export async function updateTeacherUser(id: number, name: string, email: string, phone: string): Promise<void> {
+// Admin: updateTeacherUser — code 미지정 시 기존 역할 유지
+export async function updateTeacherUser(id: number, name: string, email: string, phone: string, code?: string): Promise<void> {
+  if (code === undefined) {
+    await pool.query(
+      `UPDATE admin_user_info SET name=?, email=?, phone=? WHERE id=? AND code IN ('O','T','R')`,
+      [name, email, phone, id]
+    );
+    return;
+  }
   await pool.query(
-    `UPDATE admin_user_info SET name=?, email=?, phone=? WHERE id=? AND code IN ('O','T','R')`,
-    [name, email, phone, id]
+    `UPDATE admin_user_info SET name=?, email=?, phone=?, code=? WHERE id=? AND code IN ('O','T','R')`,
+    [name, email, phone, normalizeManageableCode(code), id]
   );
 }
 

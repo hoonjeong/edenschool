@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { ASSIGNABLE_ROLES, adminRoleLabel } from '@/lib/admin-roles';
 
 function TeacherEditContent() {
   const searchParams = useSearchParams();
@@ -11,6 +12,7 @@ function TeacherEditContent() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('T');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -23,6 +25,7 @@ function TeacherEditContent() {
           setName(data.teacher.name || '');
           setEmail(data.teacher.email || '');
           setPhone(data.teacher.phone || '');
+          setCode(data.teacher.code || 'T');
         }
       })
       .catch(() => alert('선생님 정보를 불러오지 못했습니다.'))
@@ -45,7 +48,7 @@ function TeacherEditContent() {
       const res = await fetch('/api/admin/teacher', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: Number(id), name: name.trim(), email: email.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ id: Number(id), name: name.trim(), email: email.trim(), phone: phone.trim(), code }),
       });
       const data = await res.json();
       if (data.success) {
@@ -101,6 +104,24 @@ function TeacherEditContent() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
+        </div>
+        <div className="form-group">
+          <label>역할</label>
+          <select
+            className="form-control"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          >
+            {/* 기존 운영진(O) 계정은 폼에서 역할이 바뀌지 않도록 현재 값을 그대로 노출 */}
+            {!ASSIGNABLE_ROLES.some((r) => r.code === code) && (
+              <option value={code}>{adminRoleLabel(code)}</option>
+            )}
+            {ASSIGNABLE_ROLES.map((r) => (
+              <option key={r.code} value={r.code}>
+                {r.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-group mt-4">
           <button type="submit" className="btn btn-primary" disabled={saving}>

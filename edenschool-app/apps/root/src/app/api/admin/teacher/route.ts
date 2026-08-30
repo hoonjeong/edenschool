@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
-import { isManageableRole } from '@/lib/admin-roles';
+import { isAssignableRole, isManageableRole } from '@/lib/admin-roles';
 import {
   selectTeacherUserList,
   selectTeacherUserById,
@@ -42,7 +42,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     if (!name || !phone) {
       return NextResponse.json({ error: '이름과 핸드폰번호를 입력해주세요.' }, { status: 400 });
     }
-    if (!isManageableRole(code)) {
+    if (!isAssignableRole(code)) {
       return NextResponse.json({ error: '역할을 올바르게 선택해주세요.' }, { status: 400 });
     }
 
@@ -60,13 +60,17 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const body = await req.json();
-    const { id, name, email, phone } = body;
+    const { id, name, email, phone, code } = body;
 
     if (!id || !name || !phone) {
       return NextResponse.json({ error: '필수 항목을 입력해주세요.' }, { status: 400 });
     }
+    // 역할은 선택 항목 — 보내온 경우에만 검증 후 변경(기존 운영진 O 유지 가능)
+    if (code !== undefined && !isManageableRole(code)) {
+      return NextResponse.json({ error: '역할을 올바르게 선택해주세요.' }, { status: 400 });
+    }
 
-    await updateTeacherUser(id, name.trim(), (email || '').trim(), phone.trim());
+    await updateTeacherUser(id, name.trim(), (email || '').trim(), phone.trim(), code);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Teacher update error:', error);

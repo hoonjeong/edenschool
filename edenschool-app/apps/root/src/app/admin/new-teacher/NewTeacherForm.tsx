@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ADMIN_ROLES, adminRoleLabel } from '@/lib/admin-roles';
+import { ASSIGNABLE_ROLES, adminRoleLabel } from '@/lib/admin-roles';
 
 export function NewTeacherForm() {
   const router = useRouter();
@@ -78,7 +78,7 @@ export function NewTeacherForm() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
           >
-            {ADMIN_ROLES.map((r) => (
+            {ASSIGNABLE_ROLES.map((r) => (
               <option key={r.code} value={r.code}>
                 {r.label}
               </option>
