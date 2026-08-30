@@ -14,7 +14,7 @@ export async function selectFileInfoById(id: number): Promise<FileInfo | null> {
 // ROOT + Admin: selectFileInfoListById (lecture files)
 export async function selectFileInfoListById(lectureId: number): Promise<FileInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT i.id, i.filename, i.filedata FROM file_info i, file_status s WHERE s.lecture_id=? AND s.file_id=i.id`,
+    `SELECT i.id, i.filename FROM file_info i, file_status s WHERE s.lecture_id=? AND s.file_id=i.id`,
     [lectureId]
   );
   return rows as FileInfo[];
@@ -23,7 +23,7 @@ export async function selectFileInfoListById(lectureId: number): Promise<FileInf
 // ROOT + Admin: selectPostFileInfoListById
 export async function selectPostFileInfoListById(postId: number): Promise<FileInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT i.id, i.filename, i.filedata FROM file_info i, post_file_status s WHERE s.post_id=? AND s.file_id=i.id`,
+    `SELECT i.id, i.filename FROM file_info i, post_file_status s WHERE s.post_id=? AND s.file_id=i.id`,
     [postId]
   );
   return rows as FileInfo[];

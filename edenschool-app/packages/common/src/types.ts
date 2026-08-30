@@ -159,9 +159,9 @@ export interface Question {
 // FileInfo.java
 export interface FileInfo {
   id: number;
-  filedata: Buffer | null;
   filename: string;
-  filesize: number | null;
+  // 단건 조회(selectFileInfoById)에서만 채워진다. 목록 조회는 BLOB 을 읽지 않는다.
+  filedata?: Buffer | null;
 }
 
 // MyDream.java

@@ -22,7 +22,6 @@ interface LectureRow {
 interface FileRow {
   id: number;
   filename: string;
-  filesize: number;
 }
 
 export default async function LectureViewPage({
@@ -162,11 +161,6 @@ export default async function LectureViewPage({
                   <i className="fas fa-download mr-1" />
                   {file.filename}
                 </a>
-                {file.filesize && (
-                  <span className="text-muted ml-2">
-                    ({(file.filesize / 1024).toFixed(1)} KB)
-                  </span>
-                )}
               </li>
             ))}
           </ul>
