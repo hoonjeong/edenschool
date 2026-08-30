@@ -73,6 +73,29 @@ export function addImageAlt(html: string, alt: string): string {
   );
 }
 
+/** 프로토콜·프로토콜상대(//)·루트절대(/)·앵커(#) 로 시작하면 이미 절대경로 */
+const ABSOLUTE_URL = /^(?:[a-z][a-z0-9+.\-]*:|\/\/|\/|#)/i;
+
+/**
+ * 레거시 본문의 상대경로 src/href 를 루트 기준 절대경로로 보정한다.
+ *
+ * 구 JSP 게시글 본문은 `<img src="image-view.html?id=123">` 처럼 상대경로를 쓴다.
+ * 예전 주소(/post-view)에서는 브라우저가 /image-view.html 로 풀어서 next.config 의
+ * rewrite 에 걸렸지만, 주소가 /board/{카테고리}/{슬러그} 로 깊어지면
+ * /board/{카테고리}/image-view.html 로 풀려 이미지가 전부 깨진다.
+ * 본문에서 미리 절대경로로 바꿔 두면 주소 깊이와 무관해진다.
+ */
+export function absolutizeLegacyPaths(html: string): string {
+  return html.replace(
+    /(\s(?:src|href)\s*=\s*)(["'])([^"']*)\2/gi,
+    (full, prefix: string, quote: string, url: string) => {
+      const trimmed = url.trim();
+      if (!trimmed || ABSOLUTE_URL.test(trimmed)) return full;
+      return `${prefix}${quote}/${trimmed.replace(/^\.?\/*/, '')}${quote}`;
+    },
+  );
+}
+
 /** HTML 태그 제거 → 순수 텍스트 추출 */
 export function stripHtml(html: string): string {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })

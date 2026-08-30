@@ -8,7 +8,7 @@ import {
   updatePostReadCount,
 } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
-import { sanitizeAdminHtml, stripHtml, addImageAlt } from '@/lib/sanitize';
+import { sanitizeAdminHtml, stripHtml, addImageAlt, absolutizeLegacyPaths } from '@/lib/sanitize';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 import { isCrawler } from '@/lib/crawler';
 import { boardListPath, boardPostPath, categoryByCode, encodePathname, isSamePath, DEFAULT_CATEGORY } from '@/lib/board';
@@ -132,7 +132,7 @@ export default async function BoardPostPage({ params }: PageProps) {
           </span>
         </div>
         <div className="eden-card-body">
-          <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(sanitizeAdminHtml(post.contents), post.subject)) }} />
+          <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(absolutizeLegacyPaths(sanitizeAdminHtml(post.contents)), post.subject)) }} />
         </div>
       </div>
 
