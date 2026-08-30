@@ -5,8 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 
 interface FileInfo {
   id: number;
-  name: string;
-  file_type: string;
+  fileName: string;
 }
 
 // 과목명 판별용 키워드
@@ -717,7 +716,7 @@ function PrevTestAddContent() {
               <tbody>
                 {existingFiles.map((f) => (
                   <tr key={f.id}>
-                    <td className="align-middle">{f.name}</td>
+                    <td className="align-middle">{f.fileName}</td>
                     <td style={{ width: '150px' }} className="text-right">
                       <a
                         href={`/api/admin/prev-test/download?id=${f.id}`}

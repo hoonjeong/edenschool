@@ -33,6 +33,18 @@ export async function selectPrevTestMetaInfoById(id: number): Promise<PrevTestMe
   return (rows[0] as PrevTestMetaInfo) || null;
 }
 
+// 편집 화면의 "등록된 파일" 목록용 — content(LONGBLOB) 는 읽지 않는다.
+// 실제 바이트는 다운로드 시 selectPrevTestFileInfoByInfoId 로만 읽는다.
+export async function selectPrevTestFileMetaByInfoId(
+  infoId: number,
+): Promise<{ id: number; fileName: string } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id, file_name as fileName FROM prev_test_file_info WHERE info_id=?`,
+    [infoId]
+  );
+  return (rows[0] as { id: number; fileName: string }) || null;
+}
+
 export async function selectPrevTestFileInfoByInfoId(infoId: number): Promise<PrevTestFileInfo | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT id, info_id as infoId, file_name as fileName, content FROM prev_test_file_info WHERE info_id=?`,

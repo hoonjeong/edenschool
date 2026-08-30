@@ -12,6 +12,7 @@ import {
   selectPrevTestMetaInfoAll,
   selectPrevTestMetaInfoById,
   selectPrevTestFileInfoByInfoId,
+  selectPrevTestFileMetaByInfoId,
   selectPrevTestByYear,
 } from '@edenschool/common/queries/prev-test';
 import { toId } from '@/lib/params';
@@ -99,9 +100,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     const year = searchParams.get('year');
 
     if (metaId) {
-      // Fetch single meta info + files (for edit page)
+      // 편집 화면용 메타 + 파일명. 파일 바이트(LONGBLOB)는 응답에 넣지 않는다
+      // — 넣으면 hwp 전체가 JSON 배열로 직렬화돼 원본보다 몇 배 큰 응답이 나간다.
       const meta = await selectPrevTestMetaInfoById(metaId);
-      const fileInfo = await selectPrevTestFileInfoByInfoId(metaId);
+      const fileInfo = await selectPrevTestFileMetaByInfoId(metaId);
       const files = fileInfo ? [fileInfo] : [];
       return NextResponse.json({
         meta: meta || null,
