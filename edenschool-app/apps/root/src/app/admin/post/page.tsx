@@ -38,7 +38,9 @@ export default async function PostPage() {
                   posts.map((post) => (
                     <tr key={post.id}>
                       <td>
-                        <Link href={`/admin/post-info?id=${post.id}`}>
+                        {/* 이 화면에는 별도 수정 버튼이 없으므로 제목 클릭 = 편집기로 이동.
+                            (기존의 /admin/post-info?id= 는 id 를 무시하고 전체 목록만 보여줬다.) */}
+                        <Link href={`/admin/write?id=${post.id}`}>
                           {post.subject}
                         </Link>
                       </td>

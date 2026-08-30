@@ -1,160 +1,23 @@
-import { redirect } from 'next/navigation';
-import type { Metadata } from 'next';
-import { getSession } from '@/lib/session';
-import { selectPostInfoById, selectCommentList, updatePostReadCount } from '@edenschool/common/queries/post';
-import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
-import { sanitizeAdminHtml, stripHtml, addImageAlt } from '@/lib/sanitize';
-import { getSiteUrl, SITE_NAME } from '@/lib/site';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { selectPostInfoById } from '@edenschool/common/queries/post';
+import { boardPostPath } from '@/lib/board';
 
-/** YouTube/Vimeo embed 링크를 iframe으로 변환 */
-function embedVideos(html: string): string {
-  return html.replace(
-    /<a\s+href="(https?:\/\/(?:www\.)?(?:youtube\.com\/embed\/|player\.vimeo\.com\/video\/)[^"]+)"[^>]*>[^<]*<\/a>/gi,
-    '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;margin:16px 0"><iframe src="$1" style="position:absolute;top:0;left:0;width:100%;height:100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>'
-  );
-}
-
-// 동적 메타태그 생성 (게시글별 제목/설명/OG)
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}): Promise<Metadata> {
-  const params = await searchParams;
-  const id = Number(params.id);
-  if (!id) return { title: `게시판 - ${SITE_NAME}` };
-
-  const post = await selectPostInfoById(id);
-  if (!post) return { title: `게시판 - ${SITE_NAME}` };
-
-  const title = `${post.subject} - ${SITE_NAME}`;
-  const description = post.metaDescription || stripHtml(post.contents).slice(0, 150);
-  const url = `${await getSiteUrl()}/post-view?id=${id}`;
-
-  return {
-    title,
-    description,
-    keywords: post.metaKeyword || undefined,
-    alternates: { canonical: url },
-    openGraph: { title, description, type: 'article', url },
-  };
-}
-
-export default async function PostViewPage({
+/**
+ * 레거시 게시글 URL(/post-view?id=123, /post-view.html?id=123 → 이 경로로 301)을
+ * 정식 slug URL(/board/{category}/{id}-{slug})로 영구 이동시킨다.
+ * 이미 색인된 옛 주소의 링크 자산을 새 주소로 승계하기 위해 유지한다.
+ */
+export default async function PostViewRedirectPage({
   searchParams,
 }: {
   searchParams: Promise<{ id?: string }>;
 }) {
-  const params = await searchParams;
-  const id = Number(params.id);
-  if (!id) redirect('/board');
+  const { id } = await searchParams;
+  const postId = Number(id);
+  if (!postId || !Number.isInteger(postId) || postId <= 0) permanentRedirect('/board/notice');
 
-  await updatePostReadCount(id);
+  const post = await selectPostInfoById(postId);
+  if (!post) notFound();
 
-  const post = await selectPostInfoById(id);
-  if (!post) redirect('/board');
-
-  const files = await selectPostFileInfoListById(id);
-  const comments = await selectCommentList(id);
-  const session = await getSession();
-
-  // JSON-LD 구조화 데이터 (검색엔진/AI 검색용)
-  const plainText = stripHtml(post.contents);
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: post.subject,
-    description: post.metaDescription || plainText.slice(0, 150),
-    articleBody: plainText.slice(0, 500),
-    datePublished: post.date?.replace(/\./g, '-'),
-    author: { '@type': 'Organization', name: SITE_NAME },
-    publisher: { '@type': 'Organization', name: SITE_NAME },
-    mainEntityOfPage: `${await getSiteUrl()}/post-view?id=${id}`,
-  };
-
-  return (
-    <div className="eden-container">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
-
-      <div className="eden-card" style={{ marginBottom: 20 }}>
-        <div className="eden-card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{post.subject}</h1>
-          <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>
-            {post.writer} &middot; {post.date} &middot; 조회 {post.readCount}
-          </span>
-        </div>
-        <div className="eden-card-body">
-          <div className="eden-post-body" dangerouslySetInnerHTML={{ __html: embedVideos(addImageAlt(sanitizeAdminHtml(post.contents), post.subject)) }} />
-        </div>
-      </div>
-
-      {files.length > 0 && (
-        <div className="eden-card" style={{ marginBottom: 20 }}>
-          <div className="eden-card-header">
-            <i className="fas fa-paperclip"></i> 첨부파일
-          </div>
-          <div className="eden-card-body">
-            {files.map((file) => (
-              <div key={file.id} className="eden-file-item">
-                <i className="fas fa-file-alt"></i>
-                <a href={`/api/file/download/${file.id}`} download>
-                  {file.filename}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="eden-card" style={{ marginBottom: 20 }}>
-        <div className="eden-card-header">
-          <i className="fas fa-comments"></i> 댓글 ({comments.length})
-        </div>
-        <div className="eden-card-body">
-          {session.user && (
-            <form action="/api/comment" method="POST" style={{ marginBottom: comments.length > 0 ? 16 : 0 }}>
-              <input type="hidden" name="postId" value={id} />
-              <input type="hidden" name="userId" value={session.user.id} />
-              <div className="eden-input-row">
-                <input type="text" name="text" placeholder="댓글을 입력하세요" required />
-                <button type="submit" className="eden-btn eden-btn-primary">등록</button>
-              </div>
-            </form>
-          )}
-
-          {comments.length > 0 ? (
-            comments.map((c) => (
-              <div key={c.id} className="eden-comment">
-                <div className="eden-comment-header">
-                  <div>
-                    <span className="eden-comment-author">{c.writer}</span>
-                    <span className="eden-comment-date" style={{ marginLeft: 8 }}>{c.date}</span>
-                  </div>
-                  {session.user && session.user.id === c.userId && (
-                    <form action="/api/comment/delete" method="POST" style={{ display: 'inline' }}>
-                      <input type="hidden" name="commentId" value={c.id} />
-                      <input type="hidden" name="postId" value={id} />
-                      <button type="submit" className="eden-btn eden-btn-danger eden-btn-sm">삭제</button>
-                    </form>
-                  )}
-                </div>
-                <p className="eden-comment-text">{c.text}</p>
-              </div>
-            ))
-          ) : (
-            <div className="eden-empty" style={{ padding: '20px 0' }}>
-              댓글이 없습니다.
-            </div>
-          )}
-        </div>
-      </div>
-
-      <a href="/board" className="eden-btn eden-btn-secondary">
-        <i className="fas fa-list"></i> 목록
-      </a>
-    </div>
-  );
+  permanentRedirect(boardPostPath(post));
 }

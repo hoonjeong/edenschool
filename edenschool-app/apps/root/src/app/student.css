@@ -210,11 +210,37 @@ body.eden-body {
   margin-bottom: 24px;
 }
 
+.eden-page-header h1,
 .eden-page-header h2 {
   font-size: 22px;
   font-weight: 700;
   color: var(--eden-text);
   margin: 0 0 4px;
+}
+
+/* ===== Breadcrumb (게시판 상세) ===== */
+.eden-breadcrumb {
+  font-size: 13px;
+  color: var(--eden-text-muted);
+  margin-bottom: 12px;
+}
+
+.eden-breadcrumb a {
+  color: var(--eden-text-muted);
+  text-decoration: none;
+}
+
+.eden-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Pagination (게시판 목록) ===== */
+.eden-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .eden-page-header p {
@@ -1191,6 +1217,7 @@ body.eden-body {
     grid-template-columns: 1fr 1fr;
   }
 
+  .eden-page-header h1,
   .eden-page-header h2 {
     font-size: 19px;
   }

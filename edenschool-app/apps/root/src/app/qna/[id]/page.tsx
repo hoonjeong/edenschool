@@ -9,6 +9,7 @@ import {
 } from '@edenschool/common/queries/qna';
 import { QnaComments } from './QnaComments';
 import { QnaActions } from './QnaActions';
+import { getSiteUrl } from '@/lib/site';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,15 +22,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!post) return { title: '질문게시판 - 이든배움국어학원' };
 
   const description = post.metaDescription || stripHtml(post.contents).slice(0, 150);
+  const url = `${await getSiteUrl()}/qna/${post.id}`;
+  const title = `${post.subject} - 이든배움국어학원 질문게시판`;
 
   return {
-    title: `${post.subject} - 이든배움국어학원 질문게시판`,
+    title,
     description,
-    openGraph: {
-      title: `${post.subject} - 이든배움국어학원 질문게시판`,
-      description,
-      type: 'article',
-    },
+    alternates: { canonical: url },
+    openGraph: { title, description, type: 'article', url },
   };
 }
 

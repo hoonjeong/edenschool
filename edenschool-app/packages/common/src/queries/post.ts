@@ -2,16 +2,42 @@ import pool from '../db';
 import type { PostInfo, Comment } from '../types';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// 사이트맵용: 게시글 id + 날짜 목록 (본문 제외, 경량)
-export async function selectPostSitemap(): Promise<{ id: number; date: string }[]> {
+// 사이트맵용: 게시글 id + 제목 + 카테고리 + 날짜 (본문 제외, 경량)
+// 제목/카테고리는 slug URL(/board/{category}/{id}-{slug}) 조립에 필요하다.
+export async function selectPostSitemap(): Promise<
+  { id: number; subject: string; category: string | null; date: string }[]
+> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id, date_format(insert_time, '%Y-%m-%d') as date FROM post_info WHERE code='P' ORDER BY id DESC LIMIT 2000`
+    `SELECT id, subject, category, date_format(insert_time, '%Y-%m-%d') as date FROM post_info WHERE code='P' ORDER BY id DESC LIMIT 2000`
   );
-  return rows as { id: number; date: string }[];
+  return rows as { id: number; subject: string; category: string | null; date: string }[];
+}
+
+// 목록 페이지네이션용 총 건수
+export async function selectPostInfoCount(code: string, category?: string): Promise<number> {
+  const params: any[] = [code];
+  let where = ` WHERE code=?`;
+  if (category) {
+    where += ` AND category=?`;
+    params.push(category);
+  }
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT count(0) as cnt FROM post_info${where}`,
+    params
+  );
+  return Number(rows[0]?.cnt ?? 0);
 }
 
 // ROOT: selectPostInfoList
-export async function selectPostInfoList(code: string, category?: string): Promise<PostInfo[]> {
+export async function selectPostInfoList(
+  code: string,
+  category?: string,
+  limit = 500,
+  offset = 0,
+): Promise<PostInfo[]> {
+  // LIMIT/OFFSET 은 정수로 강제해 직접 삽입한다(MySQL 5.7 prepared LIMIT ? 비호환 회피).
+  const lim = Math.min(500, Math.max(1, Math.trunc(limit) || 1));
+  const off = Math.max(0, Math.trunc(offset) || 0);
   const params: any[] = [code];
   let where = ` WHERE p.code=?`;
   if (category) {
@@ -30,7 +56,7 @@ export async function selectPostInfoList(code: string, category?: string): Promi
       (SELECT count(0) FROM comment WHERE post_id=p.id) as commentCount,
       a.name as writer
     FROM post_info p LEFT JOIN admin_user_info a ON a.id=p.user_id${where}
-    ORDER BY p.id DESC LIMIT 500`;
+    ORDER BY p.id DESC LIMIT ${lim} OFFSET ${off}`;
   const [rows] = await pool.query<RowDataPacket[]>(sql, params);
   return rows as PostInfo[];
 }
@@ -38,7 +64,7 @@ export async function selectPostInfoList(code: string, category?: string): Promi
 // ROOT: selectPostInfoById
 export async function selectPostInfoById(id: number): Promise<PostInfo | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT p.id, p.subject, p.contents, p.read_count as readCount, p.meta_keyword as metaKeyword, p.meta_description as metaDescription, date_format(p.insert_time, "%Y.%m.%d") as date, a.name as writer FROM post_info p, admin_user_info a WHERE p.id=? AND a.id=p.user_id`,
+    `SELECT p.id, p.subject, p.contents, p.code, p.category, p.read_count as readCount, p.meta_keyword as metaKeyword, p.meta_description as metaDescription, date_format(p.insert_time, "%Y.%m.%d") as date, a.name as writer FROM post_info p, admin_user_info a WHERE p.id=? AND a.id=p.user_id`,
     [id]
   );
   return (rows[0] as PostInfo) || null;

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectPostList } from '@edenschool/common/queries/post';
+import { boardPostPath } from '@/lib/board';
 
 export default async function PostInfoPage() {
   const session = await requireAdminSession();
@@ -36,7 +37,7 @@ export default async function PostInfoPage() {
                       <td className="text-center">{post.id}</td>
                       <td>
                         <a
-                          href={`/post-view?id=${post.id}`}
+                          href={boardPostPath(post)}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

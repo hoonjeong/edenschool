@@ -1,28 +1,16 @@
-import { selectPostInfoList } from '@edenschool/common/queries/post';
-import { BoardList } from '@/components/BoardList';
-import { BoardTabs } from '@/components/BoardTabs';
-import { toBoardItem } from '@/lib/board';
+import { permanentRedirect } from 'next/navigation';
+import { boardListPath, categoryByCode, DEFAULT_CATEGORY } from '@/lib/board';
 
-export default async function BoardPage({
+/**
+ * 구 게시판 목록 URL(/board, /board?category=CODE) → 카테고리별 정식 URL(/board/{slug}) 로 영구 이동.
+ * 같은 목록이 /board 와 /board?category=N 두 주소로 색인되던 중복을 제거한다.
+ */
+export default async function BoardIndexPage({
   searchParams,
 }: {
   searchParams: Promise<{ category?: string }>;
 }) {
-  const params = await searchParams;
-  const category = params.category || 'N';
-  const list = await selectPostInfoList('P', category);
-
-  return (
-    <div className="eden-container">
-      <div className="eden-page-header">
-        <h2>게시판</h2>
-      </div>
-
-      <BoardTabs active={category} />
-
-      <BoardList
-        items={list.map((item) => toBoardItem(item, `/post-view?id=${item.id}`))}
-      />
-    </div>
-  );
+  const { category } = await searchParams;
+  const cat = categoryByCode(category) ?? DEFAULT_CATEGORY;
+  permanentRedirect(boardListPath(cat.slug));
 }

@@ -1,5 +1,16 @@
 import type { NextConfig } from 'next';
 
+// 정식 도메인. SITE_URL 이 설정된 운영 환경에서만 www → apex 정규화를 활성화한다.
+// (개발/IP 접속 환경에서 잘못된 리디렉트가 걸리지 않도록 미설정 시 건너뛴다.)
+const canonicalHost = (() => {
+  if (!process.env.SITE_URL) return null;
+  try {
+    return new URL(process.env.SITE_URL).host.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+})();
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -29,9 +40,17 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // 레거시(구 JSP) 게시글 URL: post-view.html?id=<id> → /post-view?id=<id>
-      // 검색엔진에 색인된 옛 주소의 유입을 살리기 위해 영구(301) 이동. 쿼리스트링은 자동 보존.
-      { source: '/post-view.html', destination: '/post-view', statusCode: 301 },
+      // www → apex 도메인 정규화. canonical/sitemap 이 한 호스트로만 노출되게 한다.
+      ...(canonicalHost
+        ? [
+            {
+              source: '/:path*',
+              has: [{ type: 'host' as const, value: `www.${canonicalHost}` }],
+              destination: `https://${canonicalHost}/:path*`,
+              permanent: true,
+            },
+          ]
+        : []),
     ];
   },
   async rewrites() {
@@ -41,6 +60,10 @@ const nextConfig: NextConfig = {
       { source: '/image-view.html', destination: '/api/legacy-image' },
       // 에디터(/admin/write)에서는 상대경로가 /admin/image-view.html 로 해석됨 (작성 중 미리보기용)
       { source: '/admin/image-view.html', destination: '/api/legacy-image' },
+      // 레거시(구 JSP) 게시글 URL: post-view.html?id=<id>
+      // 리디렉트가 아니라 rewrite 로 처리해 /post-view 페이지가 곧바로 정식 slug URL 로 308 이동하게 한다.
+      // (301 → 308 두 번 튕기지 않도록 홉을 하나로 줄인다.) 쿼리스트링은 자동 보존.
+      { source: '/post-view.html', destination: '/post-view' },
     ];
   },
 };

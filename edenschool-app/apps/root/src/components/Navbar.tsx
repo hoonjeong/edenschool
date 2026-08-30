@@ -16,11 +16,11 @@ export async function Navbar() {
           <ul className="eden-navbar-menu">
             <li><a href="/">학원소개</a></li>
             <li><a href="/class-info">수업안내</a></li>
-            <li><a href="/board">게시판</a></li>
+            <li><a href="/board/notice">게시판</a></li>
             <li><a href="/lecture">동영상강의</a></li>
             <li><a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a></li>
             <li><a href="/class-video">수업 소개영상</a></li>
-            <li><a href="/board?category=R">수강후기</a></li>
+            <li><a href="/board/review">수강후기</a></li>
             <li><a href="https://blog.naver.com/edenschool/223955303630">교습비</a></li>
           </ul>
 
@@ -76,11 +76,11 @@ export async function Navbar() {
       <div className="eden-mobile-menu" id="edenMobileMenu">
         <a href="/">학원소개</a>
         <a href="/class-info">수업안내</a>
-        <a href="/board">게시판</a>
+        <a href="/board/notice">게시판</a>
         <a href="/lecture">동영상강의</a>
         <a href="https://booking.naver.com/booking/13/bizes/844951">상담예약</a>
         <a href="/class-video">수업 소개영상</a>
-        <a href="/board?category=R">수강후기</a>
+        <a href="/board/review">수강후기</a>
         <a href="https://blog.naver.com/edenschool/223955303630">교습비</a>
         <div className="eden-mobile-divider"></div>
         {user ? (

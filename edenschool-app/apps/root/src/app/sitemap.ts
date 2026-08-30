@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getSiteUrl } from '@/lib/site';
 import { selectPostSitemap } from '@edenschool/common/queries/post';
 import { selectQnaSitemap } from '@edenschool/common/queries/qna';
+import { BOARD_CATEGORIES, boardListPath, boardPostPath } from '@/lib/board';
 
 // DB 조회 + 요청 host 기반 URL이 필요하므로 요청 시 생성
 export const dynamic = 'force-dynamic';
@@ -21,13 +22,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${site}/`, changeFrequency: 'weekly', priority: 1 },
-    { url: `${site}/board`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${site}/qna`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${site}/class-video`, changeFrequency: 'monthly', priority: 0.7 },
   ];
 
+  // 게시판 카테고리 목록 5종 (/board 는 /board/notice 로 301 되므로 등록하지 않는다)
+  const categoryRoutes: MetadataRoute.Sitemap = BOARD_CATEGORIES.map((cat) => ({
+    url: `${site}${boardListPath(cat.slug)}`,
+    changeFrequency: 'daily',
+    priority: cat.code === 'N' ? 0.8 : 0.7,
+  }));
+
   const postRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
-    url: `${site}/post-view?id=${p.id}`,
+    url: `${site}${boardPostPath(p)}`,
     lastModified: toDate(p.date),
     changeFrequency: 'weekly',
     priority: 0.7,
@@ -40,5 +47,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...postRoutes, ...qnaRoutes];
+  return [...staticRoutes, ...categoryRoutes, ...postRoutes, ...qnaRoutes];
 }
