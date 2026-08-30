@@ -145,7 +145,7 @@ export default async function BoardPostPage({ params }: PageProps) {
             {files.map((file) => (
               <div key={file.id} className="eden-file-item">
                 <i className="fas fa-file-alt"></i>
-                <a href={`/api/file/download/${file.id}`} download>
+                <a href={`/api/board/file/${file.id}`} download>
                   {file.filename}
                 </a>
               </div>

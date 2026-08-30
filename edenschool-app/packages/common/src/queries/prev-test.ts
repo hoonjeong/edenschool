@@ -45,6 +45,15 @@ export async function deletePrevTestMetaInfoById(id: number): Promise<void> {
   await pool.query(`DELETE FROM prev_test_meta_info WHERE id=?`, [id]);
 }
 
+// 파일 한 개만 삭제 (메타는 남긴다). deletePrevTestFileInfoByInfoId 는 메타에 딸린 파일 전체를 지운다.
+export async function deletePrevTestFileInfoById(id: number): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `DELETE FROM prev_test_file_info WHERE id=?`,
+    [id]
+  );
+  return result.affectedRows;
+}
+
 export async function deletePrevTestFileInfoByInfoId(infoId: number): Promise<void> {
   await pool.query(`DELETE FROM prev_test_file_info WHERE info_id=?`, [infoId]);
 }

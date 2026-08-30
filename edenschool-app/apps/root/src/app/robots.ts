@@ -22,8 +22,6 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         '/free-lecture',
         '/special-lecture',
         '/school-lecture',
-        '/test',
-        '/test-view',
         '/carrer',
         '/carrer-view',
         '/major',

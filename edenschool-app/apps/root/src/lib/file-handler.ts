@@ -1,8 +1,59 @@
 import { NextResponse } from 'next/server';
-import { selectFileInfoById, isFilePublicImage, isFileAccessibleByUser } from '@edenschool/common/queries/file';
+import { selectFileInfoById, isFilePublicImage, isFileAccessibleByUser, isFileAttachedToPost } from '@edenschool/common/queries/file';
 import { getSession } from './session';
 import { getAdminSession } from './admin-session';
 import { readUploadFile } from './legacy-upload';
+
+/** filedata(DB BLOB) 우선, 없으면 파일시스템(upload/)에서 읽는다. 못 읽으면 null */
+async function loadFileBuffer(file: { filedata?: unknown; filename?: string }): Promise<Uint8Array | null> {
+  if (file.filedata) {
+    return Buffer.isBuffer(file.filedata)
+      ? new Uint8Array(file.filedata)
+      : (file.filedata as Uint8Array);
+  }
+  if (file.filename) {
+    try {
+      return await readUploadFile(file.filename);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** 다운로드(attachment) 응답 */
+function downloadResponse(buffer: Uint8Array, filename: string): NextResponse {
+  return new NextResponse(buffer as unknown as BodyInit, {
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+      'Content-Length': String(buffer.length),
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+/**
+ * 게시판 첨부파일 다운로드 (무인증).
+ * 게시판은 로그인 없이 볼 수 있는 공개 페이지이므로 첨부파일도 같은 범위로 연다.
+ * 다만 임의 파일 노출을 막기 위해 **게시글에 실제로 붙어 있는 파일**만 서빙한다.
+ */
+export async function servePostAttachment(id: number): Promise<NextResponse> {
+  if (!Number.isInteger(id) || id <= 0) {
+    return new NextResponse('Bad Request', { status: 400 });
+  }
+  if (!(await isFileAttachedToPost(id))) {
+    return new NextResponse('Not Found', { status: 404 });
+  }
+
+  const file = await selectFileInfoById(id);
+  if (!file) return new NextResponse('Not Found', { status: 404 });
+
+  const buffer = await loadFileBuffer(file);
+  if (!buffer) return new NextResponse('Not Found', { status: 404 });
+
+  return downloadResponse(buffer, file.filename);
+}
 
 export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'): Promise<NextResponse> {
   const [session, adminSession] = await Promise.all([
@@ -37,29 +88,13 @@ export async function serveFile(id: number, mode: 'download' | 'image' | 'pdf'):
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  // filedata(DB BLOB)가 있으면 그것을, 없으면 파일시스템(upload/)에서 파일명으로 읽는다.
-  let buffer: Buffer | Uint8Array;
-  if (file.filedata) {
-    buffer = Buffer.isBuffer(file.filedata) ? new Uint8Array(file.filedata) : file.filedata;
-  } else if (file.filename) {
-    try {
-      buffer = await readUploadFile(file.filename);
-    } catch {
-      return new NextResponse('Not Found', { status: 404 });
-    }
-  } else {
+  const buffer = await loadFileBuffer(file);
+  if (!buffer) {
     return new NextResponse('Not Found', { status: 404 });
   }
 
   if (mode === 'download') {
-    return new NextResponse(buffer as unknown as BodyInit, {
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(file.filename)}"`,
-        'Content-Length': String(buffer.length),
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
+    return downloadResponse(buffer, file.filename);
   }
 
   if (mode === 'pdf') {

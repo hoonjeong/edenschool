@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/session';
 import { selectMyDreamByUserId } from '@edenschool/common/queries/dream';
+import { DreamDeleteButton } from './DreamDeleteButton';
 
 export default async function MyDreamPage() {
   const session = await getSession();
@@ -28,10 +29,7 @@ export default async function MyDreamPage() {
               {careers.map((item) => (
                 <li key={item.id} className="eden-list-item">
                   <a href={`/carrer-view?id=${item.id1}`}>{item.name}</a>
-                  <form action="/api/dream/delete" method="POST" style={{ display: 'inline' }}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <button type="submit" className="eden-btn eden-btn-danger eden-btn-sm">삭제</button>
-                  </form>
+                  <DreamDeleteButton id={item.id} />
                 </li>
               ))}
             </ul>
@@ -53,10 +51,7 @@ export default async function MyDreamPage() {
               {majors.map((item) => (
                 <li key={item.id} className="eden-list-item">
                   <a href={`/major-view?id=${item.id1}`}>{item.name}</a>
-                  <form action="/api/dream/delete" method="POST" style={{ display: 'inline' }}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <button type="submit" className="eden-btn eden-btn-danger eden-btn-sm">삭제</button>
-                  </form>
+                  <DreamDeleteButton id={item.id} />
                 </li>
               ))}
             </ul>

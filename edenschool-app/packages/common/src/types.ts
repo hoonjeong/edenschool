@@ -86,49 +86,6 @@ export interface TestInfo {
   insertTime?: string;
 }
 
-// TestPlan.java
-export interface TestPlan {
-  id: number;
-  testInfoId: number;
-  classId: number;
-  subject: string;
-  description?: string;
-  date: string;
-  className?: string;
-  count?: number;
-  resultCount?: number;
-  correctCount?: number;
-  fileId?: number;
-}
-
-// AnswerInfo.java
-export interface AnswerInfo {
-  testInfoId: number;
-  num: number;
-  answer: number;
-  score: number;
-  type: number;
-}
-
-// StudentTestResult.java
-export interface StudentTestResult {
-  id?: number;
-  testInfoId: number;
-  studentId: number;
-  num: number;
-  answer: number;
-  resultAnswer?: number;
-  insertTime?: string;
-}
-
-// TestAnalResult.java (ROOT)
-export interface TestAnalResult {
-  type: number;
-  count: number;
-  correctCount: number;
-  rate: number;
-}
-
 // TestAnalInfo.java (Admin)
 export interface TestAnalInfo {
   studentId?: number;

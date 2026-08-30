@@ -73,6 +73,15 @@ export async function deletePostFileStatusByFileId(fileId: number): Promise<numb
   return result.affectedRows;
 }
 
+// ROOT: isFileAttachedToPost (게시판은 공개 페이지 - 게시글에 실제로 붙은 파일만 무인증 허용)
+export async function isFileAttachedToPost(fileId: number): Promise<boolean> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT 1 FROM post_file_status s JOIN post_info p ON p.id=s.post_id WHERE s.file_id=? LIMIT 1`,
+    [fileId]
+  );
+  return rows.length > 0;
+}
+
 // ROOT: isFilePublicImage (강사 사진 또는 팝업 이미지는 공개)
 export async function isFilePublicImage(fileId: number): Promise<boolean> {
   const [rows] = await pool.query<RowDataPacket[]>(

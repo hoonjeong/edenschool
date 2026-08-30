@@ -98,7 +98,7 @@ function StudentTable({ students }: { students: Student[] }) {
         {students.map((s, i) => (
           <tr key={`${s.id}-${i}`}>
             <td>
-              <Link href={`/admin/student-info/${s.id}`}>{s.name}</Link>
+              <Link href={`/admin/student-info?id=${s.id}`}>{s.name}</Link>
             </td>
             <td>
               {s.school} {s.grade}

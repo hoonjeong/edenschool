@@ -462,8 +462,8 @@ function PrevTestAddContent() {
   const handleDeleteFile = async (fileId: number) => {
     if (!confirm('파일을 삭제하시겠습니까?')) return;
     try {
-      const res = await fetch(`/api/admin/prev-test/file-delete?id=${fileId}`, {
-        method: 'POST',
+      const res = await fetch(`/api/admin/prev-test/file?id=${fileId}`, {
+        method: 'DELETE',
       });
       const data = await res.json();
       if (data.error) {

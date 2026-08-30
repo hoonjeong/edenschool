@@ -6,7 +6,7 @@ import { sessionOptions } from '@edenschool/common/auth';
 import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 
 // Student protected paths
-const protectedPaths = ['/myinfo', '/lecture', '/lecture-view', '/free-lecture', '/special-lecture', '/school-lecture', '/test', '/test-view', '/carrer', '/carrer-view', '/major', '/major-view', '/my-dream', '/ai-career'];
+const protectedPaths = ['/myinfo', '/lecture', '/lecture-view', '/free-lecture', '/special-lecture', '/school-lecture', '/carrer', '/carrer-view', '/major', '/major-view', '/my-dream', '/ai-career'];
 const publicPaths = ['/', '/login', '/join', '/join-step2', '/find-email', '/find-pass', '/board', '/post-view', '/class-video', '/error', '/api', '/about'];
 
 // Admin public paths (no auth required)
