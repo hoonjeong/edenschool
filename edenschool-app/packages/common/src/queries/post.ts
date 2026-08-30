@@ -45,10 +45,11 @@ export async function selectPostInfoList(
     params.push(category);
   }
   // MySQL 5.7 호환(REGEXP_* 미지원): 태그 제거는 앱(JS)에서 처리.
-  // - contents: 발췌용으로 본문 앞 30000자(장황한 에디터 HTML도 텍스트 확보)
+  // - contents: 발췌용 앞부분만. 미리보기는 태그 제거 후 100자만 쓰므로 여유를 두되
+  //   목록 한 페이지의 전송량이 커지지 않게 제한한다.
   // - firstImage: 문자열 함수로 첫 이미지 src만 추출(본문 어디에 있든, 위치 무관)
   const sql = `SELECT p.id, p.subject,
-      LEFT(p.contents, 30000) as contents,
+      LEFT(p.contents, 8000) as contents,
       CASE WHEN LOCATE('src="', p.contents) = 0 THEN NULL
            ELSE SUBSTRING_INDEX(SUBSTRING(p.contents, LOCATE('src="', p.contents) + 5), '"', 1) END as firstImage,
       p.code, p.category, p.user_id as userId, p.read_count as readCount,

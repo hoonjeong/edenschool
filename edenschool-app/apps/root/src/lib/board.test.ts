@@ -7,6 +7,8 @@ import {
   categoryBySlug,
   encodePathname,
   isSamePath,
+  pagePath,
+  toPageNumber,
   toTitleSlug,
 } from './board';
 
@@ -125,5 +127,33 @@ describe('카테고리 조회', () => {
     expect(categoryBySlug('nope')).toBeUndefined();
     expect(categoryByCode('X')).toBeUndefined();
     expect(categoryByCode(undefined)).toBeUndefined();
+  });
+});
+
+describe('pagePath / toPageNumber - 목록 페이지네이션', () => {
+  it('1페이지에는 쿼리를 붙이지 않는다 (중복 URL 방지)', () => {
+    expect(pagePath('/qna')).toBe('/qna');
+    expect(pagePath('/qna', 1)).toBe('/qna');
+    expect(pagePath('/board/notice', 1)).toBe('/board/notice');
+  });
+
+  it('2페이지부터 ?page= 를 붙인다', () => {
+    expect(pagePath('/qna', 2)).toBe('/qna?page=2');
+    expect(pagePath('/board/review', 7)).toBe('/board/review?page=7');
+  });
+
+  it('잘못된 page 값은 모두 1페이지로 본다', () => {
+    expect(toPageNumber(undefined)).toBe(1);
+    expect(toPageNumber('')).toBe(1);
+    expect(toPageNumber('0')).toBe(1);
+    expect(toPageNumber('-3')).toBe(1);
+    expect(toPageNumber('1.5')).toBe(1);
+    expect(toPageNumber('abc')).toBe(1);
+    expect(toPageNumber('undefined')).toBe(1);
+  });
+
+  it('정상적인 page 값은 그대로 쓴다', () => {
+    expect(toPageNumber('2')).toBe(2);
+    expect(toPageNumber('10')).toBe(10);
   });
 });

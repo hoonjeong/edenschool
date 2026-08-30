@@ -97,9 +97,20 @@ export function isSamePath(a: string, b: string): boolean {
   return normalizeForCompare(a) === normalizeForCompare(b);
 }
 
+/** 목록 경로에 페이지 번호를 붙인다 (1페이지는 쿼리 없음 - 중복 URL 방지) */
+export function pagePath(basePath: string, page = 1): string {
+  return page > 1 ? `${basePath}?page=${page}` : basePath;
+}
+
 /** 게시판 목록 경로: /board/{categorySlug} (2페이지 이상만 ?page= 부착) */
 export function boardListPath(slug: string, page = 1): string {
-  return page > 1 ? `/board/${slug}?page=${page}` : `/board/${slug}`;
+  return pagePath(`/board/${slug}`, page);
+}
+
+/** ?page= 값을 1 이상 정수로 정규화 (목록 화면 공용) */
+export function toPageNumber(raw?: string): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 1 ? n : 1;
 }
 
 /** 게시글 행(제목/본문/댓글수)을 목록 아이템으로 변환. href만 게시판별로 다르게 넘긴다.

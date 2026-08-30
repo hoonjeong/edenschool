@@ -23,11 +23,20 @@ export async function selectQnaSitemap(): Promise<{ id: number; date: string }[]
   return rows as { id: number; date: string }[];
 }
 
+// 목록 총 건수 (페이지네이션용)
+export async function selectQnaPostCount(): Promise<number> {
+  const [rows] = await pool.query<RowDataPacket[]>(`SELECT count(0) as cnt FROM qna_post`);
+  return Number(rows[0]?.cnt ?? 0);
+}
+
 // 목록 조회 (댓글 수 포함)
-export async function selectQnaPostList(): Promise<QnaPost[]> {
-  // MySQL 5.7 호환: 태그 제거는 앱(JS)에서. contents=발췌용 앞 30000자, firstImage=첫 이미지 src(위치 무관)
+export async function selectQnaPostList(limit = 20, offset = 0): Promise<QnaPost[]> {
+  // LIMIT/OFFSET 은 정수로 강제해 직접 삽입한다(MySQL 5.7 prepared LIMIT ? 비호환 회피).
+  const lim = Math.min(500, Math.max(1, Math.trunc(limit) || 1));
+  const off = Math.max(0, Math.trunc(offset) || 0);
+  // MySQL 5.7 호환: 태그 제거는 앱(JS)에서. contents=발췌용 앞부분, firstImage=첫 이미지 src(위치 무관)
   const sql = `SELECT q.id, q.subject,
-      LEFT(q.contents, 30000) as contents,
+      LEFT(q.contents, 8000) as contents,
       CASE WHEN LOCATE('src="', q.contents) = 0 THEN NULL
            ELSE SUBSTRING_INDEX(SUBSTRING(q.contents, LOCATE('src="', q.contents) + 5), '"', 1) END as firstImage,
       q.read_count as readCount,
@@ -37,7 +46,7 @@ export async function selectQnaPostList(): Promise<QnaPost[]> {
     FROM qna_post q
     JOIN user_info u ON u.id=q.user_id
     JOIN student s ON s.id=u.student_id
-    ORDER BY q.id DESC`;
+    ORDER BY q.id DESC LIMIT ${lim} OFFSET ${off}`;
   const [rows] = await pool.query<RowDataPacket[]>(sql);
   return (rows as any[]).map(toWriterRow) as QnaPost[];
 }

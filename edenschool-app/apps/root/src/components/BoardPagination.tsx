@@ -1,16 +1,16 @@
-import { boardListPath } from '@/lib/board';
+import { pagePath } from '@/lib/board';
 
 /**
- * 게시판 목록 페이지네이션.
- * 링크는 /board/{slug} 와 /board/{slug}?page=N 형태로만 만들어(중복 URL 방지)
+ * 목록 페이지네이션 (일반 게시판 + 질문게시판 공용).
+ * 링크는 basePath 와 basePath?page=N 형태로만 만들어(중복 URL 방지)
  * 각 페이지가 자기 자신을 canonical 로 갖도록 한다.
  */
 export function BoardPagination({
-  slug,
+  basePath,
   page,
   totalPages,
 }: {
-  slug: string;
+  basePath: string;
   page: number;
   totalPages: number;
 }) {
@@ -25,7 +25,7 @@ export function BoardPagination({
   return (
     <nav className="eden-pagination" aria-label="게시판 페이지" style={{ marginTop: 16, textAlign: 'center' }}>
       {page > 1 && (
-        <a href={boardListPath(slug, page - 1)} className="eden-btn eden-btn-secondary eden-btn-sm" rel="prev">
+        <a href={pagePath(basePath, page - 1)} className="eden-btn eden-btn-secondary eden-btn-sm" rel="prev">
           이전
         </a>
       )}
@@ -35,13 +35,13 @@ export function BoardPagination({
             {p}
           </span>
         ) : (
-          <a key={p} href={boardListPath(slug, p)} className="eden-btn eden-btn-secondary eden-btn-sm">
+          <a key={p} href={pagePath(basePath, p)} className="eden-btn eden-btn-secondary eden-btn-sm">
             {p}
           </a>
         ),
       )}
       {page < totalPages && (
-        <a href={boardListPath(slug, page + 1)} className="eden-btn eden-btn-secondary eden-btn-sm" rel="next">
+        <a href={pagePath(basePath, page + 1)} className="eden-btn eden-btn-secondary eden-btn-sm" rel="next">
           다음
         </a>
       )}

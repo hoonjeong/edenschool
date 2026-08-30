@@ -10,6 +10,7 @@ import {
   boardPostPath,
   categoryBySlug,
   toBoardItem,
+  toPageNumber,
 } from '@/lib/board';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 
@@ -18,18 +19,12 @@ interface PageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
-/** ?page= 값을 1 이상 정수로 정규화 */
-function toPage(raw?: string): number {
-  const n = Number(raw);
-  return Number.isInteger(n) && n > 1 ? n : 1;
-}
-
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { category } = await params;
   const cat = categoryBySlug(category);
   if (!cat) return { title: `게시판 - ${SITE_NAME}` };
 
-  const page = toPage((await searchParams).page);
+  const page = toPageNumber((await searchParams).page);
   const site = await getSiteUrl();
   // 페이지네이션 각 페이지는 자기 자신을 canonical 로 둔다(1페이지로 합치면 2페이지 이후가 색인되지 않음).
   const url = `${site}${boardListPath(cat.slug, page)}`;
@@ -50,7 +45,7 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
   const cat = categoryBySlug(category);
   if (!cat) notFound();
 
-  const page = toPage((await searchParams).page);
+  const page = toPageNumber((await searchParams).page);
   const total = await selectPostInfoCount('P', cat.code);
   const totalPages = Math.max(1, Math.ceil(total / BOARD_PAGE_SIZE));
   if (page > totalPages) notFound();
@@ -84,7 +79,7 @@ export default async function BoardCategoryPage({ params, searchParams }: PagePr
 
       <BoardList items={list.map((item) => toBoardItem(item, boardPostPath(item)))} />
 
-      <BoardPagination slug={cat.slug} page={page} totalPages={totalPages} />
+      <BoardPagination basePath={boardListPath(cat.slug)} page={page} totalPages={totalPages} />
     </div>
   );
 }
