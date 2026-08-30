@@ -11,6 +11,7 @@ import {
   selectSplitFileContentByMetaId,
   searchSplitFiles,
 } from '@edenschool/common/queries/split-file';
+import { toId } from '@/lib/params';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
@@ -59,11 +60,15 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const { searchParams } = new URL(req.url);
-    const metaId = searchParams.get('metaId');
+    const metaIdParam = searchParams.get('metaId');
+    const metaId = toId(metaIdParam);
+    if (metaIdParam && !metaId) {
+      return NextResponse.json({ error: 'Invalid metaId' }, { status: 400 });
+    }
 
     if (metaId) {
-      const meta = await selectSplitFileMetaInfoById(Number(metaId));
-      const fileInfo = await selectSplitFileContentByMetaId(Number(metaId));
+      const meta = await selectSplitFileMetaInfoById(metaId);
+      const fileInfo = await selectSplitFileContentByMetaId(metaId);
       return NextResponse.json({
         meta: meta || null,
         file: fileInfo ? { id: fileInfo.id, fileName: fileInfo.fileName } : null,
@@ -91,14 +96,14 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = toId(searchParams.get('id'));
 
     if (!id) {
       return NextResponse.json({ ok: false, error: 'Missing id' }, { status: 400 });
     }
 
-    await deleteSplitFileContentByMetaId(Number(id));
-    await deleteSplitFileMetaInfoById(Number(id));
+    await deleteSplitFileContentByMetaId(id);
+    await deleteSplitFileMetaInfoById(id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

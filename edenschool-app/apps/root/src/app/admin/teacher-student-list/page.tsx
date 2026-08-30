@@ -3,6 +3,7 @@ import { requireAdminSession } from '@/lib/admin-session';
 import { selectClassInfoById } from '@edenschool/common/queries/class';
 import { selectStudentListByClassId } from '@edenschool/common/queries/student';
 import { AttendanceExcelButton } from '@/components/AttendanceExcelButton';
+import { toId } from '@/lib/params';
 
 interface Props {
   searchParams: Promise<{ id?: string }>;
@@ -12,13 +13,13 @@ export default async function TeacherStudentListPage({ searchParams }: Props) {
   const session = await requireAdminSession();
 
   const params = await searchParams;
-  const classId = params.id;
+  const classId = toId(params.id);
   if (!classId) redirect('/admin/student-manage');
 
-  const classInfo = await selectClassInfoById(Number(classId));
+  const classInfo = await selectClassInfoById(classId);
   if (!classInfo) redirect('/admin/student-manage');
 
-  const studentList = await selectStudentListByClassId(Number(classId));
+  const studentList = await selectStudentListByClassId(classId);
 
   return (
     <div>

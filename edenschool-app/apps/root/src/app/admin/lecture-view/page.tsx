@@ -6,6 +6,7 @@ import { selectFileInfoListById } from '@edenschool/common/queries/file';
 import { selectLectureViewLogsByLectureId } from '@edenschool/common/queries/lecture-view-log';
 import { selectQuestionListAdmin } from '@edenschool/common/queries/question';
 import QuestionAnswerList from './QuestionAnswerList';
+import { toId } from '@/lib/params';
 
 interface LectureRow {
   id: number;
@@ -31,10 +32,8 @@ export default async function LectureViewPage({
 }) {
   await requireAdminSession();
 
-  const { id } = await searchParams;
-  if (!id) redirect('/admin/lecture-info');
-
-  const lectureId = Number(id);
+  const lectureId = toId((await searchParams).id);
+  if (!lectureId) redirect('/admin/lecture-info');
 
   // Fetch lecture with class name
   const [lectureRows] = await pool.query(

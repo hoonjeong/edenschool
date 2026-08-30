@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectPrevTestFileInfoByInfoId } from '@edenschool/common/queries/prev-test';
+import { toId } from '@/lib/params';
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = toId(searchParams.get('id'));
 
     if (!id) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
     // Original: dao.selectPrevTestFileInfoByInfoId(id)
-    const fileInfo = await selectPrevTestFileInfoByInfoId(Number(id));
+    const fileInfo = await selectPrevTestFileInfoByInfoId(id);
 
     if (!fileInfo || !fileInfo.content || !fileInfo.fileName) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });

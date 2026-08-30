@@ -4,6 +4,7 @@ import { selectClassInfoById } from '@edenschool/common/queries/class';
 import { selectClassStudentListByClassId } from '@edenschool/common/queries/student';
 import Link from 'next/link';
 import { AttendanceExcelButton } from '@/components/AttendanceExcelButton';
+import { toId } from '@/lib/params';
 
 interface ClassInfoPageProps {
   searchParams: Promise<{ id?: string }>;
@@ -13,11 +14,11 @@ export default async function ClassInfoPage({ searchParams }: ClassInfoPageProps
   const session = await requireAdminSession();
 
   const params = await searchParams;
-  const classId = params.id;
+  const classId = toId(params.id);
   if (!classId) redirect('/admin/class-manager');
 
   // Fetch class info
-  const classInfo = await selectClassInfoById(Number(classId));
+  const classInfo = await selectClassInfoById(classId);
 
   if (!classInfo) {
     return (

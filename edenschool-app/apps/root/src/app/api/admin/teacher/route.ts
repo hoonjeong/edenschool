@@ -9,17 +9,23 @@ import {
   updateTeacherUser,
   deleteTeacherUser,
 } from '@edenschool/common/queries/admin-user';
+import { toId } from '@/lib/params';
 
 // GET: 선생님 목록 또는 단건 조회
 export const GET = withErrorHandler(async (req: NextRequest) => {
   const session = await requireOwnerApiSession();
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+  const idParam = searchParams.get('id');
+  const id = toId(idParam);
+  // 값은 왔는데 형식이 잘못된 경우는 목록을 돌려주지 않고 명시적으로 거절한다.
+  if (idParam && !id) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+  }
 
   try {
     if (id) {
-      const teacher = await selectTeacherUserById(Number(id));
+      const teacher = await selectTeacherUserById(id);
       if (!teacher) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       return NextResponse.json({ teacher });
     }
@@ -84,10 +90,10 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = toId(searchParams.get('id'));
     if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
 
-    await deleteTeacherUser(Number(id));
+    await deleteTeacherUser(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Teacher delete error:', error);

@@ -14,6 +14,7 @@ import {
   selectPrevTestFileInfoByInfoId,
   selectPrevTestByYear,
 } from '@edenschool/common/queries/prev-test';
+import { toId } from '@/lib/params';
 
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAdminApiSession();
@@ -90,13 +91,17 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const { searchParams } = new URL(req.url);
-    const metaId = searchParams.get('metaId');
+    const metaIdParam = searchParams.get('metaId');
+    const metaId = toId(metaIdParam);
+    if (metaIdParam && !metaId) {
+      return NextResponse.json({ error: 'Invalid metaId' }, { status: 400 });
+    }
     const year = searchParams.get('year');
 
     if (metaId) {
       // Fetch single meta info + files (for edit page)
-      const meta = await selectPrevTestMetaInfoById(Number(metaId));
-      const fileInfo = await selectPrevTestFileInfoByInfoId(Number(metaId));
+      const meta = await selectPrevTestMetaInfoById(metaId);
+      const fileInfo = await selectPrevTestFileInfoByInfoId(metaId);
       const files = fileInfo ? [fileInfo] : [];
       return NextResponse.json({
         meta: meta || null,
@@ -124,7 +129,7 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
 
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = toId(searchParams.get('id'));
 
     if (!id) {
       return NextResponse.json({ ok: false, error: 'Missing id' }, { status: 400 });
@@ -132,8 +137,8 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
 
     // Java original: dao.deletePrevTestMetaInfoById(id) AND dao.deletePrevTestFileInfoByInfoId(id)
     // Must delete both meta info and file info (file info references meta via info_id)
-    await deletePrevTestFileInfoByInfoId(Number(id));
-    await deletePrevTestMetaInfoById(Number(id));
+    await deletePrevTestFileInfoByInfoId(id);
+    await deletePrevTestMetaInfoById(id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

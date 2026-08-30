@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { deleteFileStatusById } from '@edenschool/common/queries/file';
+import { toId } from '@/lib/params';
 
 export const DELETE = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   try {
     const { searchParams } = new URL(req.url);
-    const fid = searchParams.get('fid');
-    const lid = searchParams.get('lid');
+    const fid = toId(searchParams.get('fid'));
+    const lid = toId(searchParams.get('lid'));
 
     if (!fid || !lid) {
       return NextResponse.json({ ok: false, error: 'Missing fid or lid' }, { status: 400 });
     }
 
-    await deleteFileStatusById(Number(fid), Number(lid));
+    await deleteFileStatusById(fid, lid);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

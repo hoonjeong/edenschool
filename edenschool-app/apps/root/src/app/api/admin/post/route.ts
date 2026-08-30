@@ -4,25 +4,26 @@ import { withErrorHandler } from '@/lib/api-handler';
 import { selectPostById, insertPost, updatePost } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById, insertPostFileStatus } from '@edenschool/common/queries/file';
 import { sanitizeAdminHtml } from '@/lib/sanitize';
+import { toId } from '@/lib/params';
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+  const id = toId(searchParams.get('id'));
 
   if (!id) {
     return NextResponse.json({ error: 'id is required' }, { status: 400 });
   }
 
   try {
-    const post = await selectPostById(Number(id));
+    const post = await selectPostById(id);
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
     // Get attached files
-    const files = await selectPostFileInfoListById(Number(id));
+    const files = await selectPostFileInfoListById(id);
 
     return NextResponse.json({ post, files });
   } catch (error) {

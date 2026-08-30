@@ -2,19 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectSplitFileContentByMetaId } from '@edenschool/common/queries/split-file';
+import { toId } from '@/lib/params';
 
 export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = toId(searchParams.get('id'));
 
     if (!id) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    const fileInfo = await selectSplitFileContentByMetaId(Number(id));
+    const fileInfo = await selectSplitFileContentByMetaId(id);
 
     if (!fileInfo || !fileInfo.content || !fileInfo.fileName) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });

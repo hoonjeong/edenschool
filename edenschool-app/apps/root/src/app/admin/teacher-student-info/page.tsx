@@ -2,6 +2,7 @@ import { requireAdminSession } from '@/lib/admin-session';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectStudentMemos } from '@edenschool/common/queries/student-record';
 import ClinicSection from './ClinicSection';
+import { toId } from '@/lib/params';
 
 export default async function TeacherStudentInfoPage({
   searchParams,
@@ -11,7 +12,7 @@ export default async function TeacherStudentInfoPage({
   await requireAdminSession();
 
   const params = await searchParams;
-  const studentId = params.id;
+  const studentId = toId(params.id);
 
   if (!studentId) {
     return (
@@ -21,7 +22,7 @@ export default async function TeacherStudentInfoPage({
     );
   }
 
-  const student = await selectStudentById(Number(studentId));
+  const student = await selectStudentById(studentId);
 
   if (!student) {
     return (

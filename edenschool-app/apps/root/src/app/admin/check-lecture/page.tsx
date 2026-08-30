@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectLectureListByStudentIdAdmin } from '@edenschool/common/queries/lecture';
+import { toId } from '@/lib/params';
 
 export default async function CheckLecturePage({
   searchParams,
@@ -10,8 +11,8 @@ export default async function CheckLecturePage({
 }) {
   const session = await requireAdminSession();
 
-  const { sid } = await searchParams;
-  if (!sid) {
+  const studentId = toId((await searchParams).sid);
+  if (!studentId) {
     return (
       <div>
         <div className="alert alert-danger">학생 ID가 필요합니다.</div>
@@ -19,7 +20,6 @@ export default async function CheckLecturePage({
     );
   }
 
-  const studentId = Number(sid);
 
   // Fetch student info
   const student = await selectStudentById(studentId);

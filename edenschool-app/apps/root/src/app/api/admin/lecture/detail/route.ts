@@ -3,6 +3,7 @@ import { requireAdminApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { selectSpecialLectureModifyById } from '@edenschool/common/queries/lecture';
 import { selectFileInfoListById } from '@edenschool/common/queries/file';
+import { toId } from '@/lib/params';
 
 // Matches original: selectSpecialLectureModifyById + selectFileInfoListById
 // Used by lecture-modify page to fetch lecture data for editing
@@ -10,7 +11,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+  const id = toId(searchParams.get('id'));
 
   if (!id) {
     return NextResponse.json({ error: 'Missing lecture id' }, { status: 400 });
@@ -18,7 +19,7 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
 
   try {
     // selectSpecialLectureModifyById: get lecture with class_name via LEFT JOIN
-    const lecture = await selectSpecialLectureModifyById(Number(id));
+    const lecture = await selectSpecialLectureModifyById(id);
 
     if (!lecture) {
       return NextResponse.json({ error: 'Lecture not found' }, { status: 404 });

@@ -7,18 +7,19 @@ import {
   deleteStudentMemo,
   updateStudentMemo,
 } from '@edenschool/common/queries/student-record';
+import { toId } from '@/lib/params';
 
 // 메모 목록
 export const GET = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
-  const studentId = searchParams.get('studentId');
+  const studentId = toId(searchParams.get('studentId'));
   if (!studentId) {
     return NextResponse.json({ error: 'studentId가 필요합니다.' }, { status: 400 });
   }
 
-  const memos = await selectStudentMemos(Number(studentId));
+  const memos = await selectStudentMemos(studentId);
   return NextResponse.json({ memos });
 });
 
@@ -62,11 +63,11 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
-  const id = searchParams.get('id');
+  const id = toId(searchParams.get('id'));
   if (!id) {
     return NextResponse.json({ error: 'id가 필요합니다.' }, { status: 400 });
   }
 
-  await deleteStudentMemo(Number(id));
+  await deleteStudentMemo(id);
   return NextResponse.json({ ok: true });
 });

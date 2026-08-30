@@ -1,5 +1,6 @@
 import { requireAdminSession } from '@/lib/admin-session';
 import { selectStudentById } from '@edenschool/common/queries/student';
+import { toId } from '@/lib/params';
 
 export default async function ModifyStudentPage({
   searchParams,
@@ -9,7 +10,7 @@ export default async function ModifyStudentPage({
   const session = await requireAdminSession();
 
   const params = await searchParams;
-  const studentId = params.id;
+  const studentId = toId(params.id);
 
   if (!studentId) {
     return (
@@ -19,7 +20,7 @@ export default async function ModifyStudentPage({
     );
   }
 
-  const student = await selectStudentById(Number(studentId));
+  const student = await selectStudentById(studentId);
 
   if (!student) {
     return (
