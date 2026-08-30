@@ -62,7 +62,7 @@ export async function updateStudentStatus(id: number, status: number): Promise<n
 // Admin: selectNewStudentList
 export async function selectNewStudentList(): Promise<Student[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT name, school, grade, year, date_format(insert_date, "%m/%d") as date FROM student WHERE status=1 AND insert_date=modify_date AND insert_date > now() - INTERVAL 1 MONTH ORDER BY insert_date DESC`
+    `SELECT id, name, school, grade, year, date_format(insert_date, "%m/%d") as date FROM student WHERE status=1 AND insert_date=modify_date AND insert_date > now() - INTERVAL 1 MONTH ORDER BY insert_date DESC`
   );
   return rows as Student[];
 }
@@ -70,7 +70,7 @@ export async function selectNewStudentList(): Promise<Student[]> {
 // Admin: selectReStudentList
 export async function selectReStudentList(): Promise<Student[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT name, school, grade, year, date_format(modify_date, "%m/%d") as date FROM student WHERE status=1 AND insert_date!=modify_date AND modify_date > now() - INTERVAL 1 MONTH ORDER BY modify_date DESC`
+    `SELECT id, name, school, grade, year, date_format(modify_date, "%m/%d") as date FROM student WHERE status=1 AND insert_date!=modify_date AND modify_date > now() - INTERVAL 1 MONTH ORDER BY modify_date DESC`
   );
   return rows as Student[];
 }

@@ -16,9 +16,10 @@ export default async function StudentInfoPage({
   if (session.user.code !== 'O') redirect('/admin/student-manage');
 
   const params = await searchParams;
-  const studentId = params.id;
+  // 숫자가 아닌 값(?id=undefined 등)이 그대로 쿼리로 넘어가면 서버 예외가 난다.
+  const studentId = Number(params.id);
 
-  if (!studentId) {
+  if (!params.id || !Number.isInteger(studentId) || studentId <= 0) {
     return (
       <div>
         <div className="alert alert-warning">학생 ID가 필요합니다.</div>
@@ -26,7 +27,7 @@ export default async function StudentInfoPage({
     );
   }
 
-  const student = await selectStudentById(Number(studentId));
+  const student = await selectStudentById(studentId);
 
   if (!student) {
     return (
@@ -36,7 +37,7 @@ export default async function StudentInfoPage({
     );
   }
 
-  const sid = Number(studentId);
+  const sid = studentId;
   const classList = await selectClassInfoByStudentId(sid);
   const classNames = await selectClassInfoLive();
 
