@@ -50,6 +50,7 @@ export async function selectPostInfoList(
   // - firstImage: 문자열 함수로 첫 이미지 src만 추출(본문 어디에 있든, 위치 무관)
   const sql = `SELECT p.id, p.subject,
       LEFT(p.contents, 8000) as contents,
+      CHAR_LENGTH(p.contents) as contentsLength,
       CASE WHEN LOCATE('src="', p.contents) = 0 THEN NULL
            ELSE SUBSTRING_INDEX(SUBSTRING(p.contents, LOCATE('src="', p.contents) + 5), '"', 1) END as firstImage,
       p.code, p.category, p.user_id as userId, p.read_count as readCount,

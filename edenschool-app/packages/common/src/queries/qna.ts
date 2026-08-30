@@ -37,6 +37,7 @@ export async function selectQnaPostList(limit = 20, offset = 0): Promise<QnaPost
   // MySQL 5.7 호환: 태그 제거는 앱(JS)에서. contents=발췌용 앞부분, firstImage=첫 이미지 src(위치 무관)
   const sql = `SELECT q.id, q.subject,
       LEFT(q.contents, 8000) as contents,
+      CHAR_LENGTH(q.contents) as contentsLength,
       CASE WHEN LOCATE('src="', q.contents) = 0 THEN NULL
            ELSE SUBSTRING_INDEX(SUBSTRING(q.contents, LOCATE('src="', q.contents) + 5), '"', 1) END as firstImage,
       q.read_count as readCount,

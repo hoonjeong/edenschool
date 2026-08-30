@@ -129,6 +129,7 @@ export interface PostInfo {
   summary?: string;
   commentCount?: number;
   firstImage?: string | null; // 목록 미리보기용: 본문 첫 이미지 src (쿼리에서 추출)
+  contentsLength?: number; // 본문 전체 길이. contents 가 발췌(LEFT)로 잘렸는지 판단용
 }
 
 // Comment.java
@@ -292,6 +293,7 @@ export interface QnaPost {
   writer?: string;
   commentCount?: number;
   firstImage?: string | null; // 목록 미리보기용: 본문 첫 이미지 src (쿼리에서 추출)
+  contentsLength?: number; // 본문 전체 길이. contents 가 발췌(LEFT)로 잘렸는지 판단용
 }
 
 // QnaComment (질문 댓글)

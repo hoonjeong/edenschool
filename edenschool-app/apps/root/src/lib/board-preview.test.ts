@@ -66,3 +66,27 @@ describe('srcToUrl', () => {
     expect(srcToUrl('')).toBeNull();
   });
 });
+
+// 목록 쿼리는 본문 앞부분만 잘라온다. 태그를 걷어내면 100자에 못 미치더라도
+// 실제 글은 더 길므로 말줄임이 보여야 한다.
+describe('toPreviewText - 원본이 잘린 경우 말줄임', () => {
+  it('잘린 원본이면 100자 미만이어도 말줄임을 붙인다', () => {
+    expect(toPreviewText('<p>짧은 도입부</p><div class="x', 100, true)).toBe('짧은 도입부…');
+  });
+
+  it('잘리지 않은 원본이면 짧을 때 말줄임을 붙이지 않는다', () => {
+    expect(toPreviewText('<p>짧은 글</p>', 100, false)).toBe('짧은 글');
+    expect(toPreviewText('<p>짧은 글</p>')).toBe('짧은 글');
+  });
+
+  it('100자를 넘으면 잘림 여부와 무관하게 말줄임을 붙인다', () => {
+    const long = '<p>' + '가'.repeat(200) + '</p>';
+    expect(toPreviewText(long, 100, false).endsWith('…')).toBe(true);
+    expect(toPreviewText(long, 100, true).endsWith('…')).toBe(true);
+  });
+
+  it('텍스트가 하나도 없으면 말줄임만 남기지 않는다', () => {
+    expect(toPreviewText('<div class="a"><span style="x', 100, true)).toBe('');
+    expect(toPreviewText('<p></p>', 100, true)).toBe('');
+  });
+});

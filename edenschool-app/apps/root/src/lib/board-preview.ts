@@ -4,7 +4,13 @@
  *  입력은 SQL LEFT(contents, N) 으로 잘려 온다. 자르는 지점이 태그 한가운데면
  *  닫는 '>' 가 없어 태그 제거 정규식에 걸리지 않고 `<p style="color:red` 같은
  *  조각이 화면에 그대로 노출된다. 그래서 끝에 남은 미완성 태그·엔티티를 따로 걷어낸다. */
-export function toPreviewText(text0?: string | null, maxLen = 100): string {
+export function toPreviewText(
+  text0?: string | null,
+  maxLen = 100,
+  /** 넘겨받은 text0 자체가 본문 앞부분만 잘라온 값이면 true.
+   *  태그를 걷어내고 나면 100자에 못 미쳐도 실제 글은 더 길므로 말줄임을 붙여야 한다. */
+  sourceTruncated = false,
+): string {
   if (!text0) return '';
   const text = String(text0)
     .replace(/<[^>]*>/g, ' ') // 완전한 태그 제거
@@ -19,7 +25,10 @@ export function toPreviewText(text0?: string | null, maxLen = 100): string {
     .replace(/​/g, '') // zero-width space(빈 줄 마커) 제거
     .replace(/\s+/g, ' ')
     .trim();
-  return text.length > maxLen ? text.slice(0, maxLen) + '…' : text;
+  if (!text) return '';
+  const clipped = text.length > maxLen;
+  const body = clipped ? text.slice(0, maxLen) : text;
+  return clipped || sourceTruncated ? body + '…' : body;
 }
 
 /** 쿼리에서 뽑은 이미지 경로(순수 URL 또는 `src="..."` 조각)를 썸네일 URL로 정규화. 없으면 null.

@@ -116,14 +116,25 @@ export function toPageNumber(raw?: string): number {
 /** 게시글 행(제목/본문/댓글수)을 목록 아이템으로 변환. href만 게시판별로 다르게 넘긴다.
  *  contents=본문 앞부분(발췌용), firstImage=쿼리에서 뽑은 첫 이미지 경로(썸네일용). */
 export function toBoardItem(
-  item: { id: number; subject: string; contents?: string | null; firstImage?: string | null; commentCount?: number },
+  item: {
+    id: number;
+    subject: string;
+    contents?: string | null;
+    contentsLength?: number;
+    firstImage?: string | null;
+    commentCount?: number;
+  },
   href: string,
 ): BoardListItem {
+  // contents 는 목록 쿼리에서 앞부분만 잘라온 값이다. 원본이 더 길면
+  // 태그를 걷어낸 결과가 짧더라도 말줄임을 붙여 "더 있음"을 알린다.
+  const truncated =
+    item.contentsLength != null && item.contentsLength > (item.contents?.length ?? 0);
   return {
     id: item.id,
     subject: item.subject,
     href,
-    preview: toPreviewText(item.contents),
+    preview: toPreviewText(item.contents, 100, truncated),
     thumbnail: srcToUrl(item.firstImage),
     commentCount: item.commentCount ?? 0,
   };
