@@ -11,7 +11,7 @@ import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
 import { sanitizeAdminHtml, stripHtml, addImageAlt } from '@/lib/sanitize';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 import { isCrawler } from '@/lib/crawler';
-import { boardListPath, boardPostPath, categoryByCode, DEFAULT_CATEGORY } from '@/lib/board';
+import { boardListPath, boardPostPath, categoryByCode, encodePathname, isSamePath, DEFAULT_CATEGORY } from '@/lib/board';
 import { BoardComments } from './BoardComments';
 
 interface PageProps {
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${post.subject} - ${SITE_NAME}`;
   const description = post.metaDescription || stripHtml(post.contents).slice(0, 150);
   // canonical 은 항상 정식 슬러그 URL. 잘못된 슬러그로 들어와도 한 주소로 합쳐진다.
-  const url = `${await getSiteUrl()}${boardPostPath(post)}`;
+  const url = `${await getSiteUrl()}${encodePathname(boardPostPath(post))}`;
 
   return {
     title,
@@ -65,9 +65,11 @@ export default async function BoardPostPage({ params }: PageProps) {
   const post = await selectPostInfoById(id);
   if (!post) notFound();
 
-  // 카테고리·슬러그가 정식 형태와 다르면 정식 URL로 영구 이동 (중복 URL 방지)
+  // 카테고리·슬러그가 정식 형태와 다르면 정식 URL로 영구 이동 (중복 URL 방지).
+  // 요청 경로는 디코딩/인코딩 상태가 환경에 따라 다르므로 isSamePath 로 정규화 비교한다.
+  // (단순 문자열 비교는 같은 주소를 다르다고 판단해 무한 리디렉트를 일으킨다.)
   const canonicalPath = boardPostPath(post);
-  if (`/board/${category}/${slug}` !== decodeURI(canonicalPath)) {
+  if (!isSamePath(`/board/${category}/${slug}`, canonicalPath)) {
     permanentRedirect(canonicalPath);
   }
 
@@ -96,7 +98,7 @@ export default async function BoardPostPage({ params }: PageProps) {
       datePublished: post.date?.replace(/\./g, '-'),
       author: { '@type': 'Organization', name: SITE_NAME },
       publisher: { '@type': 'Organization', name: SITE_NAME },
-      mainEntityOfPage: `${site}${canonicalPath}`,
+      mainEntityOfPage: `${site}${encodePathname(canonicalPath)}`,
     },
     {
       '@context': 'https://schema.org',
@@ -104,7 +106,7 @@ export default async function BoardPostPage({ params }: PageProps) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: '게시판', item: `${site}/board/notice` },
         { '@type': 'ListItem', position: 2, name: cat.label, item: `${site}${boardListPath(cat.slug)}` },
-        { '@type': 'ListItem', position: 3, name: post.subject, item: `${site}${canonicalPath}` },
+        { '@type': 'ListItem', position: 3, name: post.subject, item: `${site}${encodePathname(canonicalPath)}` },
       ],
     },
   ];

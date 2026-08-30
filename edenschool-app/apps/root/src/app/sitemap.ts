@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getSiteUrl } from '@/lib/site';
 import { selectPostSitemap } from '@edenschool/common/queries/post';
 import { selectQnaSitemap } from '@edenschool/common/queries/qna';
-import { BOARD_CATEGORIES, boardListPath, boardPostPath } from '@/lib/board';
+import { BOARD_CATEGORIES, boardListPath, boardPostPath, encodePathname } from '@/lib/board';
 
 // DB 조회 + 요청 host 기반 URL이 필요하므로 요청 시 생성
 export const dynamic = 'force-dynamic';
@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const postRoutes: MetadataRoute.Sitemap = posts.map((p) => ({
-    url: `${site}${boardPostPath(p)}`,
+    url: `${site}${encodePathname(boardPostPath(p))}`,
     lastModified: toDate(p.date),
     changeFrequency: 'weekly',
     priority: 0.7,

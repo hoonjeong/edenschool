@@ -5,6 +5,8 @@ import {
   boardPostPath,
   categoryByCode,
   categoryBySlug,
+  encodePathname,
+  isSamePath,
   toTitleSlug,
 } from './board';
 
@@ -39,8 +41,8 @@ describe('toTitleSlug', () => {
 
 describe('boardPostPath', () => {
   it('카테고리 슬러그 + id + 제목 슬러그로 조립한다', () => {
-    const path = boardPostPath({ id: 123, subject: '겨울방학 특강 안내', category: 'N' });
-    expect(decodeURI(path)).toBe('/board/notice/123-겨울방학-특강-안내');
+    expect(boardPostPath({ id: 123, subject: '겨울방학 특강 안내', category: 'N' }))
+      .toBe('/board/notice/123-겨울방학-특강-안내');
   });
 
   it('알 수 없는 카테고리는 기본 카테고리(notice)로 떨어진다', () => {
@@ -48,10 +50,50 @@ describe('boardPostPath', () => {
     expect(boardPostPath({ id: 1, subject: 'test', category: null })).toBe('/board/notice/1-test');
   });
 
-  it('한글 부분은 퍼센트 인코딩되고 decodeURI 로 원복된다(정식 URL 비교에 사용)', () => {
-    const path = boardPostPath({ id: 7, subject: '수능 국어 대비', category: 'C' });
-    expect(path).toContain('%');
-    expect(decodeURI(path)).toBe('/board/admission/7-수능-국어-대비');
+  it('퍼센트 인코딩하지 않은 원본 경로를 돌려준다(리디렉트에 그대로 쓰기 위함)', () => {
+    expect(boardPostPath({ id: 7, subject: '수능 국어 대비', category: 'C' }))
+      .not.toContain('%');
+  });
+});
+
+describe('encodePathname', () => {
+  it('세그먼트만 인코딩하고 / 는 보존한다', () => {
+    expect(encodePathname('/board/admission/7-수능-국어-대비'))
+      .toBe('/board/admission/7-%EC%88%98%EB%8A%A5-%EA%B5%AD%EC%96%B4-%EB%8C%80%EB%B9%84');
+  });
+
+  it('ASCII 경로는 그대로 둔다', () => {
+    expect(encodePathname('/board/notice/1-test')).toBe('/board/notice/1-test');
+  });
+});
+
+describe('isSamePath — 리디렉트 루프 방지', () => {
+  const canonical = boardPostPath({ id: 12, subject: '겨울방학 특강 안내', category: 'N' });
+
+  it('디코딩된 요청 경로를 같다고 본다', () => {
+    expect(isSamePath('/board/notice/12-겨울방학-특강-안내', canonical)).toBe(true);
+  });
+
+  it('퍼센트 인코딩된 요청 경로도 같다고 본다', () => {
+    expect(isSamePath(encodePathname(canonical), canonical)).toBe(true);
+  });
+
+  it('이중 인코딩된 요청 경로도 같다고 본다', () => {
+    expect(isSamePath(encodePathname(encodePathname(canonical)), canonical)).toBe(true);
+  });
+
+  it('유니코드 정규화(NFD) 차이를 흡수한다', () => {
+    expect(isSamePath(canonical.normalize('NFD'), canonical)).toBe(true);
+  });
+
+  it('실제로 다른 글/카테고리는 다르다고 본다', () => {
+    expect(isSamePath('/board/story/12-겨울방학-특강-안내', canonical)).toBe(false);
+    expect(isSamePath('/board/notice/12-다른-제목', canonical)).toBe(false);
+  });
+
+  it('잘못된 퍼센트 시퀀스가 들어와도 예외 없이 처리한다', () => {
+    expect(() => isSamePath('/board/notice/12-%ZZ', canonical)).not.toThrow();
+    expect(isSamePath('/board/notice/12-%ZZ', canonical)).toBe(false);
   });
 });
 

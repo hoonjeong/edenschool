@@ -56,10 +56,45 @@ export function toTitleSlug(subject: string): string {
   return slug || 'post';
 }
 
-/** 게시글 상세 경로: /board/{categorySlug}/{id}-{titleSlug} */
+/**
+ * 게시글 상세 경로: /board/{categorySlug}/{id}-{titleSlug}
+ * 퍼센트 인코딩하지 않은 원본 경로를 돌려준다 — href 와 redirect 에 그대로 쓴다.
+ * (인코딩된 경로를 redirect 에 넘기면 이중 인코딩되어 리디렉트 루프가 난다.)
+ * 절대 URL(canonical/OG/sitemap)이 필요하면 encodePathname() 을 씌운다.
+ */
 export function boardPostPath(post: { id: number; subject: string; category?: string | null }): string {
   const cat = categoryByCode(post.category) ?? DEFAULT_CATEGORY;
-  return `/board/${cat.slug}/${post.id}-${encodeURIComponent(toTitleSlug(post.subject))}`;
+  return `/board/${cat.slug}/${post.id}-${toTitleSlug(post.subject)}`;
+}
+
+/** 경로를 세그먼트 단위로 퍼센트 인코딩 (절대 URL·사이트맵용). '/' 는 보존한다. */
+export function encodePathname(path: string): string {
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+
+/**
+ * 경로 비교용 정규화.
+ * 요청 경로가 디코딩되어 올 수도, 퍼센트 인코딩된 채로 올 수도, 이중 인코딩될 수도 있어
+ * 더 이상 안 풀릴 때까지 디코딩한 뒤 유니코드 정규화(NFC)까지 맞춘다.
+ */
+function normalizeForCompare(path: string): string {
+  let s = path;
+  for (let i = 0; i < 3; i++) {
+    if (!/%[0-9a-fA-F]{2}/.test(s)) break;
+    try {
+      const decoded = decodeURIComponent(s);
+      if (decoded === s) break;
+      s = decoded;
+    } catch {
+      break;
+    }
+  }
+  return s.normalize('NFC').toLowerCase();
+}
+
+/** 요청 경로와 정식 경로가 같은 곳을 가리키는가 (인코딩·정규화 차이 무시) */
+export function isSamePath(a: string, b: string): boolean {
+  return normalizeForCompare(a) === normalizeForCompare(b);
 }
 
 /** 게시판 목록 경로: /board/{categorySlug} (2페이지 이상만 ?page= 부착) */
