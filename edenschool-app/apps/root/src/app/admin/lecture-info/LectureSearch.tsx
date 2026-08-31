@@ -81,18 +81,18 @@ export default function LectureSearch({ lectures, total, page, totalPages, searc
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') doSearch(); }}
         />
+        <select
+          className="custom-select"
+          value={period}
+          onChange={(e) => doSearch(e.target.value)}
+          style={{ flex: '0 0 auto', width: 'auto' }}
+        >
+          {PERIOD_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
         <div className="input-group-append">
-          <select
-            className="form-control"
-            value={period}
-            onChange={(e) => doSearch(e.target.value)}
-            style={{ maxWidth: 130 }}
-          >
-            {PERIOD_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          <button className="btn btn-primary" type="button" onClick={() => doSearch()}>
+          <button className="btn btn-primary text-nowrap" type="button" onClick={() => doSearch()}>
             <i className="fas fa-search"></i> 검색
           </button>
         </div>
