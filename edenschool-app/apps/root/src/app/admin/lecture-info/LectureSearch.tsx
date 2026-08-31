@@ -19,17 +19,31 @@ interface Props {
   page: number;
   totalPages: number;
   search: string;
+  period: string;
 }
 
-export default function LectureSearch({ lectures, total, page, totalPages, search }: Props) {
+const PERIOD_OPTIONS = [
+  { value: '3', label: '최근 3개월' },
+  { value: '6', label: '최근 6개월' },
+  { value: '12', label: '최근 1년' },
+  { value: 'all', label: '전체 기간' },
+];
+
+export default function LectureSearch({ lectures, total, page, totalPages, search, period }: Props) {
   const router = useRouter();
   const [keyword, setKeyword] = useState(search);
 
-  const doSearch = () => {
+  const buildUrl = (opts: { search?: string; period?: string; page?: number }) => {
     const sp = new URLSearchParams();
-    if (keyword.trim()) sp.set('search', keyword.trim());
+    if (opts.search) sp.set('search', opts.search);
+    if (opts.period && opts.period !== '6') sp.set('period', opts.period);
+    if (opts.page && opts.page > 1) sp.set('page', String(opts.page));
     const qs = sp.toString();
-    router.push(`/admin/lecture-info${qs ? '?' + qs : ''}`);
+    return `/admin/lecture-info${qs ? '?' + qs : ''}`;
+  };
+
+  const doSearch = (nextPeriod = period) => {
+    router.push(buildUrl({ search: keyword.trim(), period: nextPeriod }));
   };
 
   const handleDelete = async (id: number) => {
@@ -53,11 +67,7 @@ export default function LectureSearch({ lectures, total, page, totalPages, searc
   };
 
   function pageUrl(p: number) {
-    const sp = new URLSearchParams();
-    if (search) sp.set('search', search);
-    if (p > 1) sp.set('page', String(p));
-    const qs = sp.toString();
-    return `/admin/lecture-info${qs ? '?' + qs : ''}`;
+    return buildUrl({ search, period, page: p });
   }
 
   return (
@@ -72,7 +82,17 @@ export default function LectureSearch({ lectures, total, page, totalPages, searc
           onKeyDown={(e) => { if (e.key === 'Enter') doSearch(); }}
         />
         <div className="input-group-append">
-          <button className="btn btn-primary" type="button" onClick={doSearch}>
+          <select
+            className="form-control"
+            value={period}
+            onChange={(e) => doSearch(e.target.value)}
+            style={{ maxWidth: 130 }}
+          >
+            {PERIOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <button className="btn btn-primary" type="button" onClick={() => doSearch()}>
             <i className="fas fa-search"></i> 검색
           </button>
         </div>
@@ -94,7 +114,7 @@ export default function LectureSearch({ lectures, total, page, totalPages, searc
           {lectures.length === 0 ? (
             <tr>
               <td colSpan={7} className="text-center">
-                {search ? '검색 결과가 없습니다.' : '강의가 없습니다.'}
+                {search ? '검색 결과가 없습니다.' : '해당 기간에 등록된 강의가 없습니다.'}
               </td>
             </tr>
           ) : (
@@ -123,7 +143,9 @@ export default function LectureSearch({ lectures, total, page, totalPages, searc
       </table>
 
       <div className="d-flex justify-content-between align-items-center">
-        <p className="text-muted mb-0">총 {total}건 (페이지 {page}/{totalPages || 1})</p>
+        <p className="text-muted mb-0">
+          {PERIOD_OPTIONS.find((o) => o.value === period)?.label ?? '최근 6개월'} 기준 총 {total}건 (페이지 {page}/{totalPages || 1})
+        </p>
         {totalPages > 1 && (
           <nav>
             <ul className="pagination pagination-sm mb-0">

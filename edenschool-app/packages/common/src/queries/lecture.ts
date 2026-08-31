@@ -71,18 +71,25 @@ export async function isLectureAccessibleByStudent(lectureId: number, studentId:
 }
 
 // Admin: searchLectureList (강의관리 — 서버사이드 검색 + 페이징)
-export async function searchLectureList(params: { search?: string; page?: number; pageSize?: number }): Promise<{ list: Lecture[]; total: number }> {
+// months: 최근 N개월 이내 등록분만 조회 (기본 6개월). 0 또는 null 이면 전체 기간.
+export async function searchLectureList(params: { search?: string; page?: number; pageSize?: number; months?: number | null }): Promise<{ list: Lecture[]; total: number }> {
   const page = params.page || 1;
   const pageSize = params.pageSize || 50;
   const offset = (page - 1) * pageSize;
 
-  let where = '';
+  const conds: string[] = [];
   const qp: any[] = [];
   if (params.search) {
-    where = `WHERE (l.subject LIKE ? OR l.teacher LIKE ? OR i.name LIKE ? OR l.lecture_date LIKE ?)`;
+    conds.push(`(l.subject LIKE ? OR l.teacher LIKE ? OR i.name LIKE ? OR l.lecture_date LIKE ?)`);
     const kw = `%${params.search}%`;
     qp.push(kw, kw, kw, kw);
   }
+  // lecture_date 는 자유 입력 문자열이라 기간 계산에 쓸 수 없어 등록 시각(insert_time) 기준으로 자른다.
+  const months = Math.floor(Number(params.months ?? 6));
+  if (months > 0) {
+    conds.push(`l.insert_time >= DATE_SUB(NOW(), INTERVAL ${months} MONTH)`);
+  }
+  const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
 
   const [cnt] = await pool.query<RowDataPacket[]>(
     `SELECT COUNT(*) as cnt FROM lecture l LEFT JOIN class_info i ON l.class_id=i.id ${where}`,

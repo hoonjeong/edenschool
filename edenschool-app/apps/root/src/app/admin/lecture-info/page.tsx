@@ -15,7 +15,7 @@ interface LectureRow {
 export default async function LectureInfoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; page?: string; period?: string }>;
 }) {
   await requireAdminSession();
 
@@ -23,8 +23,11 @@ export default async function LectureInfoPage({
   const search = params.search || '';
   const page = Number(params.page) || 1;
   const pageSize = 50;
+  // 기본은 최근 6개월. period=all 이면 전체 기간.
+  const period = params.period === 'all' ? 'all' : String(Number(params.period) || 6);
+  const months = period === 'all' ? 0 : Number(period);
 
-  const { list, total } = await searchLectureList({ search, page, pageSize });
+  const { list, total } = await searchLectureList({ search, page, pageSize, months });
 
   const lectures: LectureRow[] = list.map((l) => ({
     id: l.id,
@@ -53,6 +56,7 @@ export default async function LectureInfoPage({
         page={page}
         totalPages={totalPages}
         search={search}
+        period={period}
       />
     </div>
   );
