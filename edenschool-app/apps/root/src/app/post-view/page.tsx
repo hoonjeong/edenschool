@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation';
 import { selectPostInfoById } from '@edenschool/common/queries/post';
-import { boardPostPath } from '@/lib/board';
+import { BOARD_ROOT_PATH, boardPostPath } from '@/lib/board';
 
 /**
  * 레거시 게시글 URL(/post-view?id=123, /post-view.html?id=123 → 이 경로로 301)을
@@ -14,7 +14,7 @@ export default async function PostViewRedirectPage({
 }) {
   const { id } = await searchParams;
   const postId = Number(id);
-  if (!postId || !Number.isInteger(postId) || postId <= 0) permanentRedirect('/board/notice');
+  if (!postId || !Number.isInteger(postId) || postId <= 0) permanentRedirect(BOARD_ROOT_PATH);
 
   const post = await selectPostInfoById(postId);
   if (!post) notFound();

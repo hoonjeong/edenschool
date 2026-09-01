@@ -25,7 +25,22 @@ export const BOARD_CATEGORIES = [
 
 export type BoardCategory = (typeof BOARD_CATEGORIES)[number];
 
-/** 기본 카테고리(공지사항). /board 진입 시 이 카테고리로 보낸다. */
+/**
+ * 전체보기 — 카테고리 구분 없이 모든 글을 최신순으로 모아 보는 가상 카테고리.
+ * post_info.category 에 대응하는 code 가 없으므로 BOARD_CATEGORIES 에는 넣지 않는다.
+ * (넣으면 categoryByCode 가 잘못 매칭돼 게시글 URL 의 카테고리 세그먼트가 어긋난다.)
+ */
+export const ALL_CATEGORY = {
+  slug: 'all',
+  label: '전체보기',
+  description:
+    '이든배움국어학원 게시판 전체 글 - 공지사항·이든이야기·입시정보·입시자료·수강후기를 최신순으로 모아 봅니다.',
+} as const;
+
+/** 게시판 진입 경로(전체보기). 네비게이션·브레드크럼의 게시판 최상위. */
+export const BOARD_ROOT_PATH = `/board/${ALL_CATEGORY.slug}`;
+
+/** 게시글 URL 의 카테고리 세그먼트 기본값(공지사항). 카테고리가 비어 있는 글에 쓴다. */
 export const DEFAULT_CATEGORY = BOARD_CATEGORIES[0];
 
 /** 목록 한 페이지당 게시글 수 */

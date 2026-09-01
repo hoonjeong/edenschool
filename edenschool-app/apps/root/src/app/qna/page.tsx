@@ -46,11 +46,6 @@ export default async function QnaPage({ searchParams }: PageProps) {
 
   return (
     <div className="eden-container">
-      <div className="eden-page-header">
-        <h1>질문게시판</h1>
-        <p>{QNA_DESCRIPTION}</p>
-      </div>
-
       <BoardTabs active="qna" />
 
       <BoardList

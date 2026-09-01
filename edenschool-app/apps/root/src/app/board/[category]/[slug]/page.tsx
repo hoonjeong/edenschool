@@ -11,7 +11,7 @@ import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
 import { sanitizeAdminHtml, stripHtml, addImageAlt, absolutizeLegacyPaths } from '@/lib/sanitize';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 import { isCrawler } from '@/lib/crawler';
-import { boardListPath, boardPostPath, categoryByCode, encodePathname, isSamePath, DEFAULT_CATEGORY } from '@/lib/board';
+import { BOARD_ROOT_PATH, boardListPath, boardPostPath, categoryByCode, encodePathname, isSamePath, DEFAULT_CATEGORY } from '@/lib/board';
 import { BoardComments } from './BoardComments';
 
 interface PageProps {
@@ -104,7 +104,7 @@ export default async function BoardPostPage({ params }: PageProps) {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: '게시판', item: `${site}/board/notice` },
+        { '@type': 'ListItem', position: 1, name: '게시판', item: `${site}${BOARD_ROOT_PATH}` },
         { '@type': 'ListItem', position: 2, name: cat.label, item: `${site}${boardListPath(cat.slug)}` },
         { '@type': 'ListItem', position: 3, name: post.subject, item: `${site}${encodePathname(canonicalPath)}` },
       ],
@@ -119,7 +119,7 @@ export default async function BoardPostPage({ params }: PageProps) {
       />
 
       <nav className="eden-breadcrumb" aria-label="위치">
-        <a href="/board/notice">게시판</a>
+        <a href={BOARD_ROOT_PATH}>게시판</a>
         <span aria-hidden="true"> &rsaquo; </span>
         <a href={boardListPath(cat.slug)}>{cat.label}</a>
       </nav>
