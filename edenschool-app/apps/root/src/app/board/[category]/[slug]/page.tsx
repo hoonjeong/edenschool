@@ -1,18 +1,16 @@
-import { headers } from 'next/headers';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getSession } from '@/lib/session';
 import {
   selectPostInfoById,
   selectCommentList,
-  updatePostReadCount,
 } from '@edenschool/common/queries/post';
 import { selectPostFileInfoListById } from '@edenschool/common/queries/file';
 import { sanitizeAdminHtml, stripHtml, addImageAlt, absolutizeLegacyPaths } from '@/lib/sanitize';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
-import { isCrawler } from '@/lib/crawler';
 import { BOARD_ROOT_PATH, boardListPath, boardPostPath, categoryByCode, encodePathname, isSamePath, DEFAULT_CATEGORY } from '@/lib/board';
 import { BoardComments } from './BoardComments';
+import { ViewCount } from '@/components/ViewCount';
 
 interface PageProps {
   params: Promise<{ category: string; slug: string }>;
@@ -74,11 +72,6 @@ export default async function BoardPostPage({ params }: PageProps) {
   }
 
   const cat = categoryByCode(post.category) ?? DEFAULT_CATEGORY;
-  const headerList = await headers();
-  // 크롤러 방문으로 조회수가 부풀지 않도록 사람 요청에서만 집계
-  if (!isCrawler(headerList.get('user-agent'))) {
-    await updatePostReadCount(id);
-  }
 
   const files = await selectPostFileInfoListById(id);
   const comments = await selectCommentList(id);
@@ -128,7 +121,8 @@ export default async function BoardPostPage({ params }: PageProps) {
         <div className="eden-card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
           <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{post.subject}</h1>
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>
-            {post.writer} &middot; {post.date} &middot; 조회 {post.readCount}
+            {post.writer} &middot; {post.date} &middot;{' '}
+            <ViewCount key={id} endpoint="/api/board/view" postId={id} initialCount={post.readCount} />
           </span>
         </div>
         <div className="eden-card-body">

@@ -101,9 +101,13 @@ export async function deleteQnaPost(id: number): Promise<void> {
   await pool.query(`DELETE FROM qna_post WHERE id=?`, [id]);
 }
 
-// 조회수 증가
-export async function updateQnaPostReadCount(id: number): Promise<void> {
-  await pool.query(`UPDATE qna_post SET read_count=read_count+1 WHERE id=?`, [id]);
+// 조회수 증가. 글이 없으면 false (호출 측에서 중복 방지 쿠키를 남기지 않도록).
+export async function updateQnaPostReadCount(id: number): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE qna_post SET read_count=read_count+1 WHERE id=?`,
+    [id]
+  );
+  return result.affectedRows > 0;
 }
 
 // 게시글 존재 여부 확인

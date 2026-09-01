@@ -5,10 +5,10 @@ import { sanitizeUserHtml, stripHtml } from '@/lib/sanitize';
 import {
   selectQnaPostById,
   selectQnaCommentList,
-  updateQnaPostReadCount,
 } from '@edenschool/common/queries/qna';
 import { QnaComments } from './QnaComments';
 import { QnaActions } from './QnaActions';
+import { ViewCount } from '@/components/ViewCount';
 import { getSiteUrl } from '@/lib/site';
 
 interface PageProps {
@@ -37,8 +37,6 @@ export default async function QnaDetailPage({ params }: PageProps) {
   const { id } = await params;
   const postId = Number(id);
   if (!postId || !Number.isInteger(postId) || postId <= 0) redirect('/qna');
-
-  await updateQnaPostReadCount(postId);
 
   const post = await selectQnaPostById(postId);
   if (!post) redirect('/qna');
@@ -95,7 +93,8 @@ export default async function QnaDetailPage({ params }: PageProps) {
             {isOwner && <QnaActions postId={postId} />}
           </div>
           <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 400 }}>
-            {post.writer} &middot; {post.date} &middot; 조회 {post.readCount}
+            {post.writer} &middot; {post.date} &middot;{' '}
+            <ViewCount key={postId} endpoint="/api/qna/view" postId={postId} initialCount={post.readCount} />
           </span>
         </div>
         <div className="eden-card-body">

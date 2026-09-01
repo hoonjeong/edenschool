@@ -109,8 +109,13 @@ export async function deleteComment(id: number): Promise<number> {
 }
 
 // ROOT + Admin: updatePostReadCount
-export async function updatePostReadCount(id: number): Promise<void> {
-  await pool.query(`UPDATE post_info SET read_count=read_count+1 WHERE id=?`, [id]);
+// 조회수 +1. 글이 없으면 false (호출 측에서 중복 방지 쿠키를 남기지 않도록).
+export async function updatePostReadCount(id: number): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE post_info SET read_count=read_count+1 WHERE id=?`,
+    [id]
+  );
+  return result.affectedRows > 0;
 }
 
 // Admin: selectPostList
