@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
+import { ALLOWED_EXTENSIONS, MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL } from './upload-limits';
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-export const ALLOWED_EXTENSIONS = [
-  '.pdf', '.hwp', '.hwpx',
-  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-  '.doc', '.docx', '.xls', '.xlsx',
-];
+export { ALLOWED_EXTENSIONS, MAX_FILE_SIZE };
 
 // 확장자별 파일 시그니처(매직바이트). 확장자만 위조한 파일을 거른다.
 // - OLE(CFB): hwp/doc/xls,  ZIP: hwpx/docx/xlsx
@@ -34,7 +29,7 @@ const SIGNATURES: Record<string, number[][]> = {
 export async function validateUploadedFile(file: File): Promise<NextResponse | null> {
   if (file.size > MAX_FILE_SIZE) {
     return NextResponse.json(
-      { error: '파일 크기는 10MB 이하여야 합니다.' },
+      { error: `파일 크기는 ${MAX_FILE_SIZE_LABEL} 이하여야 합니다.` },
       { status: 400 },
     );
   }

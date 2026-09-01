@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
+import { MAX_FILE_SIZE, MAX_FILE_SIZE_LABEL, formatFileSize } from '@/lib/upload-limits';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -23,20 +24,50 @@ interface UploadedFile {
   isExisting?: boolean;
 }
 
-// Upload a single file to server
-async function uploadFileToServer(file: File): Promise<{ id: number; name: string } | null> {
+/** 업로드 결과. 실패하면 이유를 그대로 담아 화면에 보여줄 수 있게 한다. */
+type UploadResult =
+  | { ok: true; id: number; name: string }
+  | { ok: false; error: string };
+
+/**
+ * 파일 하나를 서버에 올린다.
+ * 실패 사유(용량 초과·형식 불일치·네트워크 오류 등)를 뭉뚱그리지 않고 그대로 돌려준다.
+ */
+async function uploadFileToServer(file: File): Promise<UploadResult> {
+  // 서버까지 보내기 전에 걸러낸다. 큰 파일은 한참 올린 뒤에야 실패해 이유를 알기 어렵다.
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      ok: false,
+      error: `${file.name}: 파일 크기가 ${formatFileSize(file.size)}입니다. ${MAX_FILE_SIZE_LABEL} 이하만 올릴 수 있습니다.`,
+    };
+  }
+
   const fd = new FormData();
   fd.append('file', file);
+
+  let res: Response;
   try {
-    const res = await fetch('/api/admin/file/upload', { method: 'POST', body: fd });
-    const data = await res.json();
-    if (data.fileId) {
-      return { id: data.fileId, name: data.fileName };
-    }
+    res = await fetch('/api/admin/file/upload', { method: 'POST', body: fd });
   } catch {
-    // ignore individual failure
+    return { ok: false, error: `${file.name}: 서버에 연결하지 못했습니다. 네트워크 상태를 확인해 주세요.` };
   }
-  return null;
+
+  // 웹서버(프록시)가 용량 초과로 요청을 끊으면 JSON 이 아닌 응답(413 등)이 온다.
+  let data: { fileId?: number; fileName?: string; error?: string };
+  try {
+    data = await res.json();
+  } catch {
+    const reason =
+      res.status === 413
+        ? `파일이 너무 커서 서버가 업로드를 거부했습니다. (${MAX_FILE_SIZE_LABEL} 이하)`
+        : `서버 응답을 읽지 못했습니다. (HTTP ${res.status})`;
+    return { ok: false, error: `${file.name}: ${reason}` };
+  }
+
+  if (!res.ok || !data.fileId) {
+    return { ok: false, error: `${file.name}: ${data.error || `업로드에 실패했습니다. (HTTP ${res.status})`}` };
+  }
+  return { ok: true, id: data.fileId, name: data.fileName || file.name };
 }
 
 function WriteContent() {
@@ -119,14 +150,14 @@ function WriteContent() {
               if (!file) return;
 
               const result = await uploadFileToServer(file);
-              if (result) {
+              if (result.ok) {
                 const range = quill.getSelection(true);
                 // 레거시 형식(image-view.html?id=)으로 삽입 → 예전 홈페이지와 호환되고,
                 // 새 앱에선 rewrite로 공개 legacy-image 라우트가 서빙(학생/비로그인도 표시).
                 quill.insertEmbed(range.index, 'image', `image-view.html?id=${result.id}`);
                 quill.setSelection(range.index + 1);
               } else {
-                alert('이미지 업로드에 실패했습니다.');
+                alert(`이미지 업로드에 실패했습니다.\n\n${result.error}`);
               }
             };
           },
@@ -142,17 +173,21 @@ function WriteContent() {
     if (files.length === 0) return;
     setUploading(true);
     const results: UploadedFile[] = [];
+    const errors: string[] = [];
     for (const file of files) {
       const result = await uploadFileToServer(file);
-      if (result) {
+      if (result.ok) {
         results.push({ id: result.id, name: result.name });
+      } else {
+        errors.push(result.error);
       }
     }
     if (results.length > 0) {
       setUploadedFiles((prev) => [...prev, ...results]);
     }
-    if (results.length < files.length) {
-      alert(`${files.length - results.length}개 파일 업로드에 실패했습니다.`);
+    // 어떤 파일이 왜 실패했는지 파일별로 보여준다.
+    if (errors.length > 0) {
+      alert(`${errors.length}개 파일 업로드에 실패했습니다.\n\n${errors.join('\n')}`);
     }
     setUploading(false);
   };
@@ -392,7 +427,7 @@ function WriteContent() {
                 <div style={{ color: '#6c757d' }}>
                   <div style={{ fontSize: 24, marginBottom: 4 }}>+</div>
                   <div>파일을 드래그하여 놓거나 클릭하여 선택하세요</div>
-                  <small>여러 파일을 한번에 업로드할 수 있습니다</small>
+                  <small>여러 파일을 한번에 업로드할 수 있습니다 (파일당 {MAX_FILE_SIZE_LABEL} 이하)</small>
                 </div>
               )}
             </div>
