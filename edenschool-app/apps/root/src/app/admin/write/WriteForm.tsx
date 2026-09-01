@@ -70,9 +70,11 @@ function WriteContent() {
             code: data.post.code || 'P',
             category: data.post.category || 'N',
             subject: data.post.subject || '',
-            contents: data.post.contents || data.post.content || '',
-            keyword: data.post.keyword || data.post.meta_keyword || '',
-            description: data.post.description || data.post.meta_description || '',
+            contents: data.post.contents || '',
+            // API(selectPostById)는 meta_keyword/meta_description 을
+            // metaKeyword/metaDescription 으로 별칭 지어 돌려준다.
+            keyword: data.post.metaKeyword || '',
+            description: data.post.metaDescription || '',
           });
           if (data.files) {
             setUploadedFiles(
