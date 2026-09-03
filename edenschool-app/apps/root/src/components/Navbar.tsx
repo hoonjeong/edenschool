@@ -15,7 +15,8 @@ export async function Navbar() {
 
           <ul className="eden-navbar-menu">
             <li className="eden-nav-dropdown">
-              <a href="/">학원소개</a>
+              {/* 클릭 시 이동하지 않고 하위 메뉴만 펼친다(터치 기기는 focus로 열림) */}
+              <button type="button" className="eden-nav-dropdown-toggle">학원소개</button>
               <div className="eden-nav-dropdown-menu">
                 <a href="/">이든국어의 시작</a>
                 <a href="/about/expertise">전문성에 전문성을 더하다</a>

@@ -35,7 +35,7 @@ const SYSTEM_CARDS = [
   {
     icon: 'fas fa-folder-open',
     title: '학교별 기출과 자료',
-    desc: '17년 동안 학교별 기출과 내신 자료, 수행평가 유형이 쌓였습니다. 시험마다 자체 제작 교재와 예상 문제로 시험지의 결을 미리 맞춰봅니다.',
+    desc: '18년 동안 학교별 기출과 내신 자료, 수행평가 유형이 쌓였습니다. 시험마다 자체 제작 교재와 예상 문제로 시험지의 결을 미리 맞춰봅니다.',
   },
   {
     icon: 'fas fa-chalkboard-teacher',
@@ -47,7 +47,7 @@ const SYSTEM_CARDS = [
 /** 학원 / 과외 / 이든배움 비교 */
 const COMPARE_ROWS = [
   { item: '커리큘럼', academy: '체계적', tutor: '선생님 개인차', eden: '학교별 맞춤 커리큘럼' },
-  { item: '기출 · 자료', academy: '풍부함', tutor: '확보 어려움', eden: '17년간 쌓인 학교별 자료' },
+  { item: '기출 · 자료', academy: '풍부함', tutor: '확보 어려움', eden: '18년간 쌓인 학교별 자료' },
   { item: '강의', academy: '전문 강사진', tutor: '1:1 설명', eden: '학교 전담 선생님 강의' },
   { item: '개별 보충', academy: '부족함', tutor: '밀착 보충', eden: '매주 1:1 클리닉' },
   { item: '관리 단위', academy: '반 단위', tutor: '학생 단위', eden: '수업은 반 단위, 관리는 학생 단위' },
@@ -138,7 +138,7 @@ export default function ClinicPage() {
           </p>
 
           <p>
-            17년 동안 5개 전문관으로 성장하며,
+            18년 동안 5개 전문관으로 성장하며,
             학원의 규모가 있어야만 만들 수 있는 것들을 쌓아왔습니다.
           </p>
 

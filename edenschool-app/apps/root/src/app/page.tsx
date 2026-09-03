@@ -86,7 +86,7 @@ export default async function HomePage() {
 
           <div className="about-stat-row">
             <div className="about-stat-card">
-              <div className="about-stat-number">17년</div>
+              <div className="about-stat-number">18년</div>
               <div className="about-stat-label">역사</div>
             </div>
             <div className="about-stat-card">
@@ -100,14 +100,14 @@ export default async function HomePage() {
           </div>
 
           <p>
-            이든배움국어학원은, 17년 전 부천 상동지역에서 교습소로 시작하여
-            학생과 학부모님의 응원에 힘입어,
+            이든배움국어학원은, 18년 전 부천 상동지역에서 1인 원장학원으로 시작하여
+            학생과 학부모님의 성원에 힘입어,
             지금은 상동지역에서만 <strong>5개의 전문관</strong>을 운영하는 학원으로 성장하였습니다.
           </p>
 
           <p>
-            많은 시간이 흘렀고 많은 변화가 있었지만
-            처음 시작할 때 마음속에 담아두었던 그 질문은 잊지 않고 있습니다.
+            18년 간 많은 변화가 있었지만,
+            처음 시작할 때 마음속에 담아 두었던 질문은 그대로입니다.
           </p>
         </div>
       </section>
@@ -116,10 +116,10 @@ export default async function HomePage() {
       <section className="about-section about-section-gray" data-animate>
         <div className="about-section-inner">
           <span className="about-label">PROMISE</span>
-          <h2>이든배움국어학원이 개원부터 지켜온 약속<br /><span className="accent">&ldquo;학교별 수업&rdquo;</span></h2>
+          <h2>이든배움국어학원이 개원부터 지켜온 약속<br /><span className="accent">&lsquo;학교별 수업&rsquo;</span></h2>
 
           <p>
-            17년 전부터 지켜온 이든배움국어학원의 첫 번째 원칙은 &ldquo;학교별 수업&rdquo;입니다.
+            18년 전부터 지켜온 이든배움국어학원의 첫 번째 원칙은 &lsquo;학교별 수업&rsquo;입니다.
           </p>
 
           <p>
@@ -127,7 +127,7 @@ export default async function HomePage() {
           </p>
 
           <p>
-            같은 내용을 배우더라도, 학교마다 다른 고유의 특징, 시험 유형, 시험 난이도 등이
+            같은 내용을 배우더라도, 학교마다 다른 특성, 시험 유형, 시험 난이도 등이
             명확하게 반영되려면, 학교별 반구성이라는 원칙을 고집해야만 했습니다.
           </p>
 
@@ -145,15 +145,9 @@ export default async function HomePage() {
 
           <p>
             아무리 좋은 선생님을 모셔도, 그리고 학교별로 반을 배정하더라도&hellip;
-            <br />한 선생님께서 너무 많은 학교를 맡으시게 되면,
-            수업 준비에 너무 많은 시간과 에너지가 들게 되어,
+            <br />한 분의 선생님께서 여러 학교를 맡게 되면,
+            수업 연구에 너무 많은 에너지가 소모되어,
             학생들에게 온전히 집중하기 힘들다는 사실을 깨달았습니다.
-          </p>
-
-          <p>
-            학교마다 교과서도 다르고, 시험 유형과 난이도도 천차만별이기 때문에,
-            한 명의 선생님이 4~5학교를 맡게 되면,
-            집중하기가 너무 힘든 환경이 만들어지기 때문입니다.
           </p>
 
           <div className="about-highlight">
@@ -197,7 +191,7 @@ export default async function HomePage() {
               상원고 전임 김보름 선생님은 상원고 1, 2, 3학년만 전담하며 관리하십니다.
               상원고에 대한 전문성을 쌓기 위해 노력하며,
               정규수업 외에도 매주 진행되는 1:1 클리닉으로,
-              학생 한 명 한 명을 개별관리하기 위해 노력해주십니다.
+              학생 한 명 한 명을 개별 관리하기 위해 노력해주십니다.
             </p>
           </div>
 
@@ -212,8 +206,7 @@ export default async function HomePage() {
           </p>
 
           <p>
-            고등부가 그 시작이었고,
-            지속되는 좋은 성과를 경험한 후에는
+            고등부에서 좋은 성과가 지속되는 것을 경험한 후에는
             중등부도 같은 시스템을 도입하기 위해 노력하고 있습니다.
           </p>
         </div>
@@ -230,15 +223,8 @@ export default async function HomePage() {
           <p>
             처음 시작했던 그 마음으로
             학생들에게 좋은 가르침을 제공하기 위한 노력으로,
-          </p>
-
-          <p className="about-highlight">
-            참되고 선한 가르침 이든배움국어학원
-          </p>
-
-          <p>
-            이라는 이름이 헛되지 않도록
-            늘 노력하는 이든배움국어학원이 되겠습니다.
+            <br />이든배움국어학원의 <strong>&lsquo;이든&rsquo;</strong>의 의미가 헛되지 않도록,
+            <br />늘 노력하는 이든배움국어학원이 되겠습니다.
           </p>
 
           <p className="about-signature">- 대표원장 서효정 드림</p>

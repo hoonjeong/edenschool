@@ -1184,6 +1184,31 @@ body.eden-body {
   position: relative;
 }
 
+/* 상위 항목은 링크가 아니라 토글 — 클릭해도 이동하지 않는다 */
+.eden-nav-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--eden-text);
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.eden-nav-dropdown:hover .eden-nav-dropdown-toggle,
+.eden-nav-dropdown-toggle:hover,
+.eden-nav-dropdown-toggle:focus {
+  background: var(--eden-primary);
+  color: #ffffff;
+  outline: none;
+}
+
 .eden-nav-dropdown-menu {
   display: none;
   position: absolute;
@@ -1237,7 +1262,8 @@ body.eden-body {
 /* ===== Responsive ===== */
 /* 메뉴 항목이 많아 좁은 데스크톱 폭에서 넘치지 않도록 간격을 줄인다 */
 @media (max-width: 1080px) and (min-width: 769px) {
-  .eden-navbar-menu a {
+  .eden-navbar-menu a,
+  .eden-nav-dropdown-toggle {
     padding: 8px 9px;
     font-size: 13px;
   }
