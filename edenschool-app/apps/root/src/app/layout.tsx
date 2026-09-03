@@ -42,7 +42,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // /reading(독서교육원)은 자체 레이아웃(AppShell)을 쓰므로 학생용 크롬(Navbar 등) 제외
   const isReading = pathname.startsWith('/reading');
   const isPlain = isAdmin || isReading;
-  const isAbout = pathname === '/';
+  const isHome = pathname === '/';
+  // 학원소개 3부작(/ , /about/expertise, /about/clinic)은 같은 소개글 크롬(고정 흰색 navbar)을 쓴다
+  const isAbout = isHome || pathname.startsWith('/about/');
 
   const bodyClasses = [
     !isPlain ? 'eden-body' : '',
@@ -59,7 +61,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={bodyClasses}>
         {!isPlain && <Navbar />}
-        {!isPlain && isAbout && <PopupModal />}
+        {!isPlain && isHome && <PopupModal />}
         {children}
         {!isPlain && <SessionHeartbeatWrapper />}
         <BootstrapClient />

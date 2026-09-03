@@ -1179,6 +1179,61 @@ body.eden-body {
   color: var(--eden-primary);
 }
 
+/* ===== Navbar 상위메뉴 드롭다운 (학원소개 등) ===== */
+.eden-nav-dropdown {
+  position: relative;
+}
+
+.eden-nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 160px;
+  background: #ffffff;
+  border: 1px solid var(--eden-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 6px 0;
+  z-index: 1050;
+}
+
+.eden-nav-dropdown:hover .eden-nav-dropdown-menu,
+.eden-nav-dropdown:focus-within .eden-nav-dropdown-menu {
+  display: block;
+}
+
+.eden-nav-dropdown-menu a {
+  display: block;
+  padding: 8px 16px;
+  color: var(--eden-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.eden-nav-dropdown-menu a:hover {
+  background: var(--eden-primary-light);
+  color: var(--eden-primary);
+}
+
+/* 모바일 드로어: 하위 메뉴 그룹 */
+.eden-mobile-menu .eden-mobile-group {
+  padding: 12px 16px 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--eden-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.eden-mobile-menu a.eden-mobile-sub {
+  padding-left: 32px;
+  font-size: 14px;
+}
+
 /* ===== Responsive ===== */
 /* 메뉴 항목이 많아 좁은 데스크톱 폭에서 넘치지 않도록 간격을 줄인다 */
 @media (max-width: 1080px) and (min-width: 769px) {

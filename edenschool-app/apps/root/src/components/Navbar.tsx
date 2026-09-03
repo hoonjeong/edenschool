@@ -14,7 +14,14 @@ export async function Navbar() {
           </a>
 
           <ul className="eden-navbar-menu">
-            <li><a href="/">학원소개</a></li>
+            <li className="eden-nav-dropdown">
+              <a href="/">학원소개</a>
+              <div className="eden-nav-dropdown-menu">
+                <a href="/">이든국어의 시작</a>
+                <a href="/about/expertise">전문성에 전문성을 더하다</a>
+                <a href="/about/clinic">과외식 클리닉 관리</a>
+              </div>
+            </li>
             <li><a href="/class-info">수업안내</a></li>
             <li><a href="/board/all">게시판</a></li>
             <li><a href="/lecture">동영상강의</a></li>
@@ -74,7 +81,10 @@ export async function Navbar() {
 
       {/* Mobile drawer */}
       <div className="eden-mobile-menu" id="edenMobileMenu">
-        <a href="/">학원소개</a>
+        <div className="eden-mobile-group">학원소개</div>
+        <a href="/" className="eden-mobile-sub">이든국어의 시작</a>
+        <a href="/about/expertise" className="eden-mobile-sub">전문성에 전문성을 더하다</a>
+        <a href="/about/clinic" className="eden-mobile-sub">과외식 클리닉 관리</a>
         <a href="/class-info">수업안내</a>
         <a href="/board/all">게시판</a>
         <a href="/lecture">동영상강의</a>

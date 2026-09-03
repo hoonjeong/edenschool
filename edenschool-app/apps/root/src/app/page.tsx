@@ -1,18 +1,13 @@
 import './about/about.css';
 import { AboutClient } from './about/AboutClient';
+import { AboutFooter } from './about/AboutFooter';
+import { AboutPageNav } from './about/AboutPageNav';
 import { getSiteUrl, SITE_NAME } from '@/lib/site';
 
 const SCHOOLS = [
   '상원고', '상동고', '송내고', '부명고', '상일고',
   '중원고', '중흥고', '정명고', '계남고', '소명여고',
 ];
-
-const FOOTER = (
-  <div className="about-footer">
-    이든배움진학지도보습학원 교육청등록 제5569호 사업자번호 130-92-61827 경기 부천시 소향로 29 (상동, 그린프라자) 503호, 504호 &copy; 이든배움진학지도보습학원 edenschool.kr <br />
-    이든배움국어상동2관입시학원 교육청등록 제6380호<br />이든배움국어상동3관입시학원 교육청등록 제6646호<br />이든국어독서교육원논술학원 교육청등록 제6673호<br />이든배움국어상동5관입시학원 교육청등록 제6739호
-  </div>
-);
 
 export default async function HomePage() {
   const site = await getSiteUrl();
@@ -75,7 +70,7 @@ export default async function HomePage() {
       <section className="about-section" data-animate>
         <div className="about-section-inner">
           <span className="about-label">SINCE 2008</span>
-          <h2>이든배움의 시작</h2>
+          <h2>이든배움국어학원의 시작</h2>
 
           <div className="about-quote">
             &lsquo;어떻게 하면, 부천 지역 학생들에게<br />
@@ -270,7 +265,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {FOOTER}
+      <AboutPageNav current="start" />
+
+      <AboutFooter />
     </>
   );
 }

@@ -22,6 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${site}/`, changeFrequency: 'weekly', priority: 1 },
+    { url: `${site}/about/expertise`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${site}/about/clinic`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${site}/qna`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${site}/class-video`, changeFrequency: 'monthly', priority: 0.7 },
   ];

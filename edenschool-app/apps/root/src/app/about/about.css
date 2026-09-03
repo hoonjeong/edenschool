@@ -374,6 +374,283 @@ body.eden-about-page .eden-navbar {
   z-index: 100;
 }
 
+/* ===== About Page: 학교별 전담 선생님 그리드 ===== */
+.about-teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 40px 0 0;
+}
+
+.about-teacher-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid var(--eden-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  transition: all 0.2s ease;
+}
+
+.about-teacher-card:hover {
+  border-color: var(--eden-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.about-teacher-school {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--eden-primary);
+  background: var(--eden-primary-light);
+  border-radius: 20px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+.about-teacher-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* ===== About Page: 3분할 카드 그리드 ===== */
+.about-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.about-card-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.about-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.about-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--eden-primary-light);
+  color: var(--eden-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.about-card-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--eden-primary);
+  background: var(--eden-primary-light);
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin-bottom: 10px;
+}
+
+.about-card h3 {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.about-card p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #64748b;
+  margin: 0;
+  word-break: keep-all;
+}
+
+/* ===== About Page: 단계 리스트 ===== */
+.about-step-list {
+  margin: 40px 0;
+}
+
+.about-step {
+  display: flex;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--eden-border);
+}
+
+.about-step:last-child {
+  border-bottom: none;
+}
+
+.about-step-num {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--eden-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.about-step-body h3 {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 4px 0 10px;
+}
+
+.about-step-body p {
+  font-size: 17px;
+  line-height: 1.9;
+  color: #64748b;
+  margin: 0;
+  word-break: keep-all;
+}
+
+/* ===== About Page: 비교표 ===== */
+.about-compare {
+  margin: 40px 0 0;
+  overflow-x: auto;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.about-compare table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.about-compare th,
+.about-compare td {
+  padding: 16px 14px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+  border-bottom: 1px solid var(--eden-border);
+  word-break: keep-all;
+}
+
+.about-compare thead th {
+  font-size: 15px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.about-compare tbody th {
+  font-weight: 700;
+  color: #1e293b;
+  background: #f8fafc;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.about-compare tbody tr:last-child th,
+.about-compare tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.about-compare .about-compare-eden {
+  color: var(--eden-primary);
+  font-weight: 700;
+  background: var(--eden-primary-light);
+}
+
+/* ===== About Page: 3부작 하단 네비게이션 ===== */
+.about-pagenav {
+  background: #f8f9fa;
+  padding: 72px 24px;
+  border-top: 1px solid var(--eden-border);
+}
+
+.about-pagenav-inner {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-pagenav h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 28px;
+}
+
+.about-pagenav-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.about-pagenav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid var(--eden-border);
+  border-radius: 16px;
+  padding: 24px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.about-pagenav-card:hover {
+  border-color: var(--eden-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+}
+
+.about-pagenav-label {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--eden-primary);
+  background: var(--eden-primary-light);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+.about-pagenav-card strong {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.about-pagenav-more {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--eden-primary);
+}
+
+.about-pagenav-more i {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
 /* ===== About Page: Responsive ===== */
 @media (max-width: 768px) {
   .about-hero {
@@ -479,5 +756,91 @@ body.eden-about-page .eden-navbar {
 
   .about-feature-card {
     padding: 20px 20px;
+  }
+}
+
+/* ===== About Page: 신규 블록 Responsive ===== */
+@media (max-width: 768px) {
+  .about-card-grid,
+  .about-card-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .about-card {
+    padding: 24px 20px;
+  }
+
+  .about-card h3 {
+    font-size: 17px;
+  }
+
+  .about-card p {
+    font-size: 15px;
+  }
+
+  .about-step {
+    gap: 14px;
+    padding: 20px 0;
+  }
+
+  .about-step-num {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .about-step-body h3 {
+    font-size: 17px;
+  }
+
+  .about-step-body p {
+    font-size: 15px;
+  }
+
+  .about-teacher-card {
+    padding: 14px 16px;
+  }
+
+  .about-teacher-school {
+    font-size: 13px;
+  }
+
+  .about-teacher-name {
+    font-size: 15px;
+  }
+
+  .about-compare th,
+  .about-compare td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .about-pagenav {
+    padding: 56px 20px;
+  }
+
+  .about-pagenav h2 {
+    font-size: 20px;
+  }
+
+  .about-pagenav-card strong {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-teacher-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-teacher-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .about-pagenav-grid {
+    grid-template-columns: 1fr;
   }
 }
