@@ -90,7 +90,7 @@ export default function ClinicPage() {
 
           <div className="about-quote">
             강의와 자료는 학원이 낫고,<br />
-            관리는 과외가 낫다
+            개별 관리는 과외가 낫다
           </div>
 
           <p>

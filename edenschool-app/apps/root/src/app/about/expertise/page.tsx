@@ -6,7 +6,7 @@ import { AboutPageNav } from '../AboutPageNav';
 export const metadata = {
   title: '전문성에 전문성을 더하다 | 이든배움국어학원',
   description:
-    '이든배움국어학원은 학교별 전담 선생님제로 운영합니다. 한 선생님이 한 학교의 1·2·3학년을 전담하여 시험 유형과 수행평가까지 학교의 전문성을 쌓아갑니다.',
+    '이든배움국어학원은 학교별 전담 선생님 시스템으로 운영합니다. 한 선생님이 한 학교의 1·2·3학년을 전담하여 시험 유형과 수행평가까지 학교의 전문성을 쌓아갑니다.',
 };
 
 /** 학교별 전담 선생님 배정 현황 */
@@ -41,7 +41,7 @@ export default function ExpertisePage() {
         <div className="about-hero-overlay-bottom" />
         <div className="about-hero-content">
           <h1>전문성에 전문성을 더하다</h1>
-          <p>학교별 전담 선생님제</p>
+          <p>학교별 전담 선생님 시스템</p>
           <div className="about-scroll-indicator">
             <span>스크롤</span>
             <i className="fas fa-chevron-down" />
@@ -70,7 +70,7 @@ export default function ExpertisePage() {
           </p>
 
           <div className="about-highlight">
-            &ldquo;학교별 전담 선생님제&rdquo;에서 답을 찾았습니다.
+            &ldquo;학교별 전담 선생님 시스템&rdquo;에서 답을 찾았습니다.
           </div>
         </div>
       </section>
@@ -88,7 +88,7 @@ export default function ExpertisePage() {
 
           <p>
             <strong>한 선생님이 한 학교의 1·2·3학년을 전부 맡아</strong>,
-            학교의 전문성을 극대화하는 구조입니다.
+            담당하는 학교에 대한 전문성을 극대화 하는 구조입니다.
           </p>
 
           <p>
@@ -159,7 +159,7 @@ export default function ExpertisePage() {
           <p>
             맡는 학교가 늘어날수록 살펴야 할 진도표와 부교재,
             기출 자료와 수행평가 관리도 함께 늘어나기 때문입니다.
-            <br />준비할 일이 늘어나면 <strong>학생 한 명을 챙길 여유부터 줄어듭니다.</strong>
+            <br />준비할 일이 늘어나면 <strong>학생 한 명 한 명에게 집중할 수 있는 여유가 없습니다.</strong>
           </p>
 
           <div className="about-highlight">
