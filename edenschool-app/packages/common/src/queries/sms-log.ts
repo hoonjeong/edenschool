@@ -1,14 +1,14 @@
 import pool from '../db';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// Admin: 특정 번호의 발송 이력 (본인 발송분, 최근순). 번호는 대시 유무 무관하게 매칭.
-export async function selectSendHistoryByPhone(sendId: number, phone: string, limit: number = 30): Promise<Record<string, any>[]> {
+// Admin: 특정 번호의 발송 이력 (발송자 무관 전체, 최근순). 번호는 대시 유무 무관하게 매칭.
+export async function selectSendHistoryByPhone(phone: string, limit: number = 30): Promise<Record<string, any>[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT phone, message, type, result_message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time
      FROM sms_send_result_renew
-     WHERE send_id=? AND REPLACE(phone,'-','')=REPLACE(?,'-','')
+     WHERE REPLACE(phone,'-','')=REPLACE(?,'-','')
      ORDER BY id DESC LIMIT ?`,
-    [sendId, phone, limit]
+    [phone, limit]
   );
   return rows;
 }
@@ -74,11 +74,11 @@ export async function deleteTemplate(id: number, teacherId: number): Promise<num
   return result.affectedRows;
 }
 
-// sms_send_result_renew: recent history by sender ID
-export async function selectSendHistoryBySenderId(sendId: number, limit: number = 20): Promise<Record<string, any>[]> {
+// sms_send_result_renew: 최근 발송 이력 (발송자 무관 전체)
+export async function selectRecentSendHistory(limit: number = 20): Promise<Record<string, any>[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT phone, message, type, result_message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time FROM sms_send_result_renew WHERE send_id=? ORDER BY id DESC LIMIT ?`,
-    [sendId, limit]
+    `SELECT phone, message, type, result_message, date_format(send_time, '%Y-%m-%d %H:%i') as send_time FROM sms_send_result_renew ORDER BY id DESC LIMIT ?`,
+    [limit]
   );
   return rows;
 }

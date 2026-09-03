@@ -73,7 +73,7 @@ export default function SmsComposer({ mode }: Props) {
   /* ─── Card 4: 전송 ─── */
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [myHistory, setMyHistory] = useState<SendLog[]>([]);
+  const [allHistory, setAllHistory] = useState<SendLog[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
 
@@ -105,10 +105,10 @@ export default function SmsComposer({ mode }: Props) {
       .catch(() => {});
   }, []);
 
-  const fetchMyHistory = () => {
-    fetch('/api/admin/sms?myHistory=true')
+  const fetchAllHistory = () => {
+    fetch('/api/admin/sms?allHistory=true')
       .then((r) => r.json())
-      .then((data) => setMyHistory(data.history || []))
+      .then((data) => setAllHistory(data.history || []))
       .catch(() => {});
   };
 
@@ -123,7 +123,7 @@ export default function SmsComposer({ mode }: Props) {
   };
 
   useEffect(() => {
-    fetchMyHistory();
+    fetchAllHistory();
   }, []);
 
 
@@ -318,7 +318,7 @@ export default function SmsComposer({ mode }: Props) {
         setResult(`발송 실패: ${data.error}`);
       } else {
         setResult(`발송 완료: 총 ${data.count || checkedPhones.length}건`);
-        fetchMyHistory();
+        fetchAllHistory();
         if (selectedNumber) fetchNumberHistory(selectedNumber);
       }
     } catch {
@@ -391,7 +391,7 @@ export default function SmsComposer({ mode }: Props) {
           </div>
           <div className="card-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {mode === 'admin' && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '12px', position: 'sticky', top: 0, background: '#ffffff', zIndex: 1, paddingBottom: '8px' }}>
                 <div className="btn-group btn-group-sm" role="group">
                   <button
                     className={`btn ${sendType === 'HIGH' ? 'btn-primary' : 'btn-outline-secondary'}`}
@@ -463,9 +463,12 @@ export default function SmsComposer({ mode }: Props) {
               </div>
             )}
 
+          </div>
+
+          {/* 스크롤 밖 고정 영역 — 목록이 길어도 버튼이 항상 보이게 한다 */}
+          <div style={{ padding: '10px 12px', borderTop: '1px solid #e2e8f0' }}>
             <button
               className="btn btn-primary btn-sm"
-              style={{ marginTop: '12px' }}
               onClick={fetchStudents}
               disabled={fetchingStudents || checkedClassIds.length === 0}
             >
@@ -710,7 +713,7 @@ export default function SmsComposer({ mode }: Props) {
               )}
             </div>
             {selectedNumber
-              ? renderHistory(numberHistory, '이 번호로 보낸 이력이 없습니다.')
+              ? renderHistory(numberHistory, '이 번호로 발송된 이력이 없습니다.')
               : (
                 <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '16px 0' }}>
                   수신번호를 선택(또는 아래 칩 클릭)하면 해당 번호의 발송 이력이 표시됩니다.
@@ -719,12 +722,12 @@ export default function SmsComposer({ mode }: Props) {
 
             <hr style={{ margin: '14px 0' }} />
 
-            {/* 전체 발송 이력 (본인 발송 전체) */}
+            {/* 전체 발송 이력 (발송자 구분 없이 최근 전체) */}
             <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px' }}>
               <i className="fas fa-list" style={{ marginRight: 4, color: '#64748b' }}></i>
-              전체 발송 이력 <span style={{ color: '#94a3b8', fontWeight: 400 }}>(내가 보낸 최근)</span>
+              전체 발송 이력 <span style={{ color: '#94a3b8', fontWeight: 400 }}>(최근 발송분)</span>
             </div>
-            {renderHistory(myHistory, '발송 이력이 없습니다.')}
+            {renderHistory(allHistory, '발송 이력이 없습니다.')}
           </div>
         </div>
       </div>

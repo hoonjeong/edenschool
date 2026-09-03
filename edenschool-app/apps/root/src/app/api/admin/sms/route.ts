@@ -3,19 +3,19 @@ import { sendSms } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
-import { selectSendHistoryByPhone, selectSendHistoryBySenderId } from '@edenschool/common/queries/sms-log';
+import { selectSendHistoryByPhone, selectRecentSendHistory } from '@edenschool/common/queries/sms-log';
 
-// GET: Fetch send history for a phone number
+// GET: 발송 이력 조회 (발송자 구분 없이 전체 이력)
 export const GET = withErrorHandler(async (req: NextRequest) => {
-  const session = await requireAdminApiSession();
+  await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
   const phone = searchParams.get('phone');
-  const myHistory = searchParams.get('myHistory');
+  const allHistory = searchParams.get('allHistory');
 
-  // My send history: ?myHistory=true
-  if (myHistory === 'true') {
-    const rows = await selectSendHistoryBySenderId(session.user.id, 30);
+  // 전체 최근 발송 이력: ?allHistory=true
+  if (allHistory === 'true') {
+    const rows = await selectRecentSendHistory(30);
     return NextResponse.json({ history: rows });
   }
 
@@ -23,8 +23,8 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ history: [] });
   }
 
-  // 특정 번호의 발송 이력(본인 발송분)
-  const rows = await selectSendHistoryByPhone(session.user.id, phone, 30);
+  // 특정 번호의 발송 이력
+  const rows = await selectSendHistoryByPhone(phone, 30);
   return NextResponse.json({ history: rows });
 });
 
