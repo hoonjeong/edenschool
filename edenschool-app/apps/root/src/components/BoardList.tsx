@@ -40,6 +40,7 @@ export function BoardList({
                   className={`eden-board-count${
                     (item.commentCount ?? 0) > 0 ? ' has-comments' : ''
                   }`}
+                  title={`댓글 ${item.commentCount ?? 0}`}
                 >
                   ({item.commentCount ?? 0})
                 </span>
@@ -66,6 +67,15 @@ export function BoardList({
                 ) : null}
               </div>
             )}
+
+            {/* 정보영역: 작성자 · 작성일 · 조회수 (요약 아래 한 줄) */}
+            <div className="eden-board-meta">
+              {item.writer && <span className="eden-board-meta-writer">{item.writer}</span>}
+              {item.date && <span>{item.date}</span>}
+              <span className="eden-board-meta-views">
+                조회 {(item.readCount ?? 0).toLocaleString('ko-KR')}
+              </span>
+            </div>
           </a>
         ))}
         {filtered.length === 0 && (

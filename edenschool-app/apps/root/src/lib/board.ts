@@ -8,6 +8,9 @@ export interface BoardListItem {
   preview?: string;
   thumbnail?: string | null;
   commentCount?: number;
+  readCount?: number;
+  writer?: string;
+  date?: string;
 }
 
 /**
@@ -128,7 +131,7 @@ export function toPageNumber(raw?: string): number {
   return Number.isInteger(n) && n > 1 ? n : 1;
 }
 
-/** 게시글 행(제목/본문/댓글수)을 목록 아이템으로 변환. href만 게시판별로 다르게 넘긴다.
+/** 게시글 행(제목/본문/댓글수/조회수/작성자/작성일)을 목록 아이템으로 변환. href만 게시판별로 다르게 넘긴다.
  *  contents=본문 앞부분(발췌용), firstImage=쿼리에서 뽑은 첫 이미지 경로(썸네일용). */
 export function toBoardItem(
   item: {
@@ -138,6 +141,9 @@ export function toBoardItem(
     contentsLength?: number;
     firstImage?: string | null;
     commentCount?: number;
+    readCount?: number;
+    writer?: string;
+    date?: string;
   },
   href: string,
 ): BoardListItem {
@@ -152,5 +158,8 @@ export function toBoardItem(
     preview: toPreviewText(item.contents, 100, truncated),
     thumbnail: srcToUrl(item.firstImage),
     commentCount: item.commentCount ?? 0,
+    readCount: item.readCount ?? 0,
+    writer: item.writer,
+    date: item.date,
   };
 }

@@ -504,6 +504,33 @@ body.eden-body {
   color: var(--eden-primary);
 }
 
+/* 3행: 정보영역 - 작성자 · 작성일 · 조회수 */
+.eden-board-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: -4px; /* 요약과 한 덩어리로 붙여 보이게 (item gap 12px 상쇄) */
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* 항목 사이 가운뎃점 구분 (첫 항목 앞에는 없음) */
+.eden-board-meta > span + span::before {
+  content: '·';
+  margin-right: 10px;
+  color: #cbd5e1;
+}
+
+.eden-board-meta-writer {
+  font-weight: 600;
+  color: var(--eden-text-muted);
+}
+
+.eden-board-meta-views {
+  white-space: nowrap;
+}
+
 .eden-board-arrow {
   flex: none;
   font-size: 12px;
@@ -526,6 +553,9 @@ body.eden-body {
   .eden-board-count {
     font-size: 17px;
     margin-left: 6px;
+  }
+  .eden-board-meta {
+    font-size: 14px;
   }
   .eden-board-preview {
     font-size: 16px;
