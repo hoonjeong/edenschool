@@ -10,8 +10,9 @@ export async function insertPrevTestMetaInfo(info: Omit<PrevTestMetaInfo, 'id' |
   return result.insertId;
 }
 
+// BLOB 은 execute(바이너리 프로토콜)로 넣는다 — query 는 이스케이프로 패킷이 ~2배가 되어 max_allowed_packet 초과 위험
 export async function insertPrevTestFileInfo(infoId: number, content: Buffer, fileName: string): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
+  const [result] = await pool.execute<ResultSetHeader>(
     `INSERT INTO prev_test_file_info (info_id, content, file_name, insert_time) VALUES (?,?,?,now())`,
     [infoId, content, fileName]
   );

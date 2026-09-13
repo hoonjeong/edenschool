@@ -14,6 +14,10 @@ import {
 } from '@edenschool/common/queries/split-file';
 import { toId } from '@/lib/params';
 
+function dbErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export const POST = withErrorHandler(async (req: NextRequest) => {
   await requireAdminApiSession();
 
@@ -52,7 +56,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true, id: metaId });
   } catch (error) {
     console.error('Insert split file error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to insert split file' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `쪼개기 등록 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });
 
@@ -135,7 +142,10 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true, id: metaId });
   } catch (error) {
     console.error('Update split file error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to update split file' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `쪼개기 수정 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });
 
@@ -157,6 +167,9 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Delete split file error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to delete split file' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `쪼개기 삭제 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });

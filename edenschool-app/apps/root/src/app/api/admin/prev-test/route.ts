@@ -18,6 +18,17 @@ import {
 } from '@edenschool/common/queries/prev-test';
 import { toId } from '@/lib/params';
 
+// prev_test_meta_info 의 year/grade/term/test_type 은 정수 컬럼 — 빈 문자열('')을 넣으면
+// strict 모드에서 INSERT/UPDATE 가 실패하므로 숫자로 보정한다 (scripts/import-prev-tests.ts 와 동일 처리).
+function toIntStr(v: FormDataEntryValue | null, fallback = 0): string {
+  const n = Number(String(v ?? '').trim());
+  return String(Number.isFinite(n) && String(v ?? '').trim() !== '' ? n : fallback);
+}
+
+function dbErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAdminApiSession();
 
@@ -27,19 +38,23 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     const file = formData.get('formFile') as File | null;
     const region = formData.get('region') as string;
     const school_type = formData.get('school_type') as string;
-    const school_name = formData.get('school_name') as string;
-    const year = formData.get('year') as string;
-    const grade = formData.get('grade') as string;
-    const term = formData.get('term') as string;
-    const test_type = formData.get('test_type') as string;
-    const section = formData.get('section') as string;
-    const publisher = formData.get('publisher') as string;
-    const fileType = formData.get('fileType') as string;
+    const school_name = ((formData.get('school_name') as string) || '').trim();
+    const year = toIntStr(formData.get('year'), new Date().getFullYear());
+    const grade = toIntStr(formData.get('grade'));
+    const term = toIntStr(formData.get('term'), 1);
+    const test_type = toIntStr(formData.get('test_type'), 1);
+    const section = (formData.get('section') as string) || '';
+    const publisher = (formData.get('publisher') as string) || '';
+    const fileType = (formData.get('fileType') as string) || 'HWP';
+
+    if (!school_name) {
+      return NextResponse.json({ ok: false, error: '학교명을 입력하세요.' }, { status: 400 });
+    }
 
     // Insert prev_test_meta_info (matches DataMapper: insertPrevTestMetaInfo)
     const metaId = await insertPrevTestMetaInfo({
-      region,
-      schoolType: school_type,
+      region: region || '부천',
+      schoolType: school_type || '',
       schoolName: school_name,
       year,
       grade,
@@ -84,7 +99,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true, id: metaId });
   } catch (error) {
     console.error('Insert prev test error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to insert prev test' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `기출 등록 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });
 
@@ -154,10 +172,10 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
     await updatePrevTestMetaInfoById(metaId, {
       schoolType: (formData.get('school_type') as string) || existing.schoolType || '',
       schoolName: school_name,
-      year: (formData.get('year') as string) || existing.year,
-      grade: (formData.get('grade') as string) || existing.grade || '',
-      term: (formData.get('term') as string) || existing.term,
-      testType: (formData.get('test_type') as string) || existing.testType,
+      year: toIntStr(formData.get('year'), Number(existing.year) || new Date().getFullYear()),
+      grade: toIntStr(formData.get('grade'), Number(existing.grade) || 0),
+      term: toIntStr(formData.get('term'), Number(existing.term) || 1),
+      testType: toIntStr(formData.get('test_type'), Number(existing.testType) || 1),
       section: (formData.get('section') as string) || '',
       publisher: (formData.get('publisher') as string) || '',
       fileType,
@@ -175,7 +193,10 @@ export const PUT = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true, id: metaId });
   } catch (error) {
     console.error('Update prev test error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to update prev test' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `기출 수정 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });
 
@@ -199,6 +220,9 @@ export const DELETE = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Delete prev test error:', error);
-    return NextResponse.json({ ok: false, error: 'Failed to delete prev test' }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: `기출 삭제 실패: ${dbErrorMessage(error)}` },
+      { status: 500 }
+    );
   }
 });

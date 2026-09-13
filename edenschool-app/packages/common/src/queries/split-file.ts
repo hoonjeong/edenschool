@@ -18,7 +18,8 @@ export async function insertSplitFileContent(
   content: Buffer,
   fileName: string
 ): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
+  // BLOB 은 execute(바이너리 프로토콜)로 넣는다 — query 는 이스케이프로 패킷이 ~2배가 되어 max_allowed_packet 초과 위험
+  const [result] = await pool.execute<ResultSetHeader>(
     `INSERT INTO split_file_content (meta_id, content, file_name, insert_time) VALUES (?,?,?,now())`,
     [metaId, content, fileName]
   );
