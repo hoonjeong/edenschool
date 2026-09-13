@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendSms } from '@edenschool/common/sms';
+import { sendSms, MMS_MAX_IMAGES, MMS_MAX_IMAGE_BYTES, MMS_ALLOWED_MIME, type SmsImage } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
@@ -28,12 +28,49 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   return NextResponse.json({ history: rows });
 });
 
-// POST: Send SMS
+// POST: Send SMS / LMS / MMS
+// - application/json: { numbers, message, type }
+// - multipart/form-data (MMS): numbers(JSON 문자열), message, type, images(파일, 최대 3장)
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const session = await requireAdminApiSession();
 
-  const body = await req.json();
-  const { numbers, message, type } = body;
+  let numbers: unknown;
+  let message: string;
+  let type: string | undefined;
+  const images: SmsImage[] = [];
+
+  if (req.headers.get('content-type')?.includes('multipart/form-data')) {
+    const form = await req.formData();
+    try {
+      numbers = JSON.parse(String(form.get('numbers') || '[]'));
+    } catch {
+      return NextResponse.json({ ok: false, error: 'Invalid numbers' }, { status: 400 });
+    }
+    message = String(form.get('message') || '');
+    type = String(form.get('type') || '') || undefined;
+
+    const files = form.getAll('images').filter((f): f is File => f instanceof File && f.size > 0);
+    if (files.length > MMS_MAX_IMAGES) {
+      return NextResponse.json({ ok: false, error: `이미지는 최대 ${MMS_MAX_IMAGES}장까지 첨부할 수 있습니다.` }, { status: 400 });
+    }
+    for (const f of files) {
+      if (!MMS_ALLOWED_MIME.includes(f.type)) {
+        return NextResponse.json({ ok: false, error: 'JPG, PNG, GIF 이미지만 첨부할 수 있습니다.' }, { status: 400 });
+      }
+      if (f.size > MMS_MAX_IMAGE_BYTES) {
+        return NextResponse.json(
+          { ok: false, error: `이미지 용량은 장당 ${Math.floor(MMS_MAX_IMAGE_BYTES / 1024)}KB 이하여야 합니다.` },
+          { status: 400 }
+        );
+      }
+      images.push({ buffer: Buffer.from(await f.arrayBuffer()), filename: f.name || 'image.jpg', mimeType: f.type });
+    }
+  } else {
+    const body = await req.json();
+    numbers = body.numbers;
+    message = body.message;
+    type = body.type;
+  }
 
   if (!numbers || !Array.isArray(numbers) || numbers.length === 0 || !message) {
     return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
@@ -41,6 +78,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
 
   if (numbers.length > 100) {
     return NextResponse.json({ ok: false, error: '한 번에 최대 100명까지 발송 가능합니다.' }, { status: 400 });
+  }
+
+  const smsType = type === 'MMS' ? 'MMS' : type || 'SMS';
+  if (smsType === 'MMS' && images.length === 0) {
+    return NextResponse.json({ ok: false, error: '이미지 문자(MMS)는 이미지를 1장 이상 첨부해야 합니다.' }, { status: 400 });
   }
 
   // Get the academy phone number for this teacher
@@ -58,12 +100,11 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     // use default srcNum
   }
 
-  const smsType = type || 'SMS';
   const results: { phone: string; result: string | null }[] = [];
 
   for (const phone of numbers) {
     if (!phone) continue;
-    const result = await sendSms(smsType, phone, message, srcNum, session.user.id);
+    const result = await sendSms(smsType, phone, message, srcNum, session.user.id, { images });
     results.push({ phone, result });
   }
 

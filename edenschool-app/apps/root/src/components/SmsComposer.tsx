@@ -1,6 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { compressImageForMms, formatBytes } from '@/lib/image-compress';
+
+const MMS_MAX_IMAGES = 3;
+const MMS_MAX_BYTES = 2000; // LMS/MMS 본문 최대 byte
 
 /* ── types ── */
 interface ClassInfo {
@@ -40,6 +44,17 @@ interface Props {
   mode: 'admin' | 'teacher';
 }
 
+/** MMS 첨부 이미지 (압축 완료본) */
+interface AttachedImage {
+  id: string;
+  file: File;
+  previewUrl: string;
+  originalSize: number;
+  compressedSize: number;
+  width: number;
+  height: number;
+}
+
 /* ── helpers ── */
 function getByteLength(str: string): number {
   let bytes = 0;
@@ -69,6 +84,11 @@ export default function SmsComposer({ mode }: Props) {
   // 발송 이력에서 클릭한 문자(전체 내용 보기용)
   const [detailLog, setDetailLog] = useState<SendLog | null>(null);
   const [newTemplateTitle, setNewTemplateTitle] = useState('');
+  // 문자 종류: 일반(SMS/LMS 자동) / 이미지(MMS)
+  const [msgKind, setMsgKind] = useState<'TEXT' | 'IMAGE'>('TEXT');
+  const [images, setImages] = useState<AttachedImage[]>([]);
+  const [compressing, setCompressing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   /* ─── Card 4: 전송 ─── */
   const [loading, setLoading] = useState(false);
@@ -78,7 +98,8 @@ export default function SmsComposer({ mode }: Props) {
   const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
 
   const byteLength = getByteLength(message);
-  const smsType = byteLength <= 90 ? 'SMS' : 'LMS';
+  const smsType = msgKind === 'IMAGE' ? 'MMS' : byteLength <= 90 ? 'SMS' : 'LMS';
+  const overByteLimit = byteLength > MMS_MAX_BYTES;
 
   /* ─── 초기 데이터 로드 ─── */
   useEffect(() => {
@@ -291,6 +312,74 @@ export default function SmsComposer({ mode }: Props) {
     }
   };
 
+  /* ─── 이미지 첨부 helpers ─── */
+  const revokeAll = (list: AttachedImage[]) => list.forEach((img) => URL.revokeObjectURL(img.previewUrl));
+
+  // 언마운트 시 미리보기 URL 정리
+  useEffect(() => {
+    return () => revokeAll(images);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleKindChange = (kind: 'TEXT' | 'IMAGE') => {
+    setMsgKind(kind);
+    if (kind === 'TEXT') {
+      revokeAll(images);
+      setImages([]);
+    }
+  };
+
+  const handleFilesSelected = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    const remain = MMS_MAX_IMAGES - images.length;
+    if (remain <= 0) {
+      alert(`이미지는 최대 ${MMS_MAX_IMAGES}장까지 첨부할 수 있습니다.`);
+      return;
+    }
+    const targets = files.slice(0, remain);
+    if (files.length > remain) alert(`이미지는 최대 ${MMS_MAX_IMAGES}장까지 첨부할 수 있어 ${remain}장만 추가합니다.`);
+
+    setCompressing(true);
+    const added: AttachedImage[] = [];
+    try {
+      for (const f of targets) {
+        if (!f.type.startsWith('image/')) {
+          alert(`${f.name}: 이미지 파일이 아닙니다.`);
+          continue;
+        }
+        try {
+          // 모바일용 최적화: 긴 변 1024px, JPEG, 250KB 이하로 압축
+          const r = await compressImageForMms(f);
+          added.push({
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            file: r.file,
+            previewUrl: URL.createObjectURL(r.blob),
+            originalSize: r.originalSize,
+            compressedSize: r.compressedSize,
+            width: r.width,
+            height: r.height,
+          });
+        } catch (e) {
+          alert(`${f.name}: ${e instanceof Error ? e.message : '이미지 처리에 실패했습니다.'}`);
+        }
+      }
+      if (added.length) setImages((prev) => [...prev, ...added]);
+    } finally {
+      setCompressing(false);
+    }
+  };
+
+  const removeImage = (id: string) => {
+    setImages((prev) => {
+      const target = prev.find((img) => img.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((img) => img.id !== id);
+    });
+  };
+
   /* ─── Card 4 helpers ─── */
   const handleSend = async () => {
     if (checkedPhones.length === 0) {
@@ -301,18 +390,38 @@ export default function SmsComposer({ mode }: Props) {
       alert('메세지를 입력해주세요.');
       return;
     }
-    if (!confirm(`총 ${checkedPhones.length}건의 ${smsType}를 발송하시겠습니까?`)) {
+    if (overByteLimit) {
+      alert(`메시지가 너무 깁니다. (최대 ${MMS_MAX_BYTES} byte)`);
+      return;
+    }
+    if (smsType === 'MMS' && images.length === 0) {
+      alert('이미지 문자는 이미지를 1장 이상 첨부해야 합니다.');
+      return;
+    }
+    const kindLabel = smsType === 'MMS' ? `이미지 문자(MMS, 이미지 ${images.length}장)` : smsType;
+    if (!confirm(`총 ${checkedPhones.length}건의 ${kindLabel}를 발송하시겠습니까?`)) {
       return;
     }
 
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/admin/sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numbers: checkedPhones, message, type: smsType }),
-      });
+      let res: Response;
+      if (smsType === 'MMS') {
+        // 이미지 첨부는 multipart/form-data로 전송
+        const form = new FormData();
+        form.append('numbers', JSON.stringify(checkedPhones));
+        form.append('message', message);
+        form.append('type', 'MMS');
+        images.forEach((img) => form.append('images', img.file, img.file.name));
+        res = await fetch('/api/admin/sms', { method: 'POST', body: form });
+      } else {
+        res = await fetch('/api/admin/sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numbers: checkedPhones, message, type: smsType }),
+        });
+      }
       const data = await res.json();
       if (data.error) {
         setResult(`발송 실패: ${data.error}`);
@@ -337,6 +446,9 @@ export default function SmsComposer({ mode }: Props) {
     setSearchQuery('');
     setSelectedNumber(null);
     setNumberHistory([]);
+    revokeAll(images);
+    setImages([]);
+    setMsgKind('TEXT');
   };
 
   // 발송 이력 테이블 렌더 (개별/전체 공용)
@@ -605,6 +717,97 @@ export default function SmsComposer({ mode }: Props) {
         <div className="card">
           <div className="card-header">3. 내용 작성 및 발송</div>
           <div className="card-body">
+            {/* 문자 종류 선택 */}
+            <div style={{ marginBottom: '10px', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="btn-group btn-group-sm" role="group">
+                <button
+                  className={`btn ${msgKind === 'TEXT' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => handleKindChange('TEXT')}
+                  disabled={loading}
+                >
+                  <i className="fas fa-comment" style={{ marginRight: 4 }}></i>일반 문자
+                </button>
+                <button
+                  className={`btn ${msgKind === 'IMAGE' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  onClick={() => handleKindChange('IMAGE')}
+                  disabled={loading}
+                >
+                  <i className="fas fa-image" style={{ marginRight: 4 }}></i>이미지 문자 (MMS)
+                </button>
+              </div>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                {msgKind === 'TEXT' ? '90byte 이하 SMS, 초과 시 LMS로 자동 발송' : '이미지 첨부 시 MMS로 발송 (최대 3장)'}
+              </span>
+            </div>
+
+            {/* 이미지 첨부 영역 (MMS) */}
+            {msgKind === 'IMAGE' && (
+              <div style={{ marginBottom: '10px', padding: '10px', border: '1px dashed #cbd5e1', borderRadius: '6px', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={(e) => handleFilesSelected(e.target.files)}
+                  />
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={compressing || loading || images.length >= MMS_MAX_IMAGES}
+                  >
+                    {compressing ? (
+                      <><i className="fas fa-spinner fa-spin" style={{ marginRight: 4 }}></i>압축 중...</>
+                    ) : (
+                      <><i className="fas fa-paperclip" style={{ marginRight: 4 }}></i>이미지 첨부 ({images.length}/{MMS_MAX_IMAGES})</>
+                    )}
+                  </button>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                    첨부 시 모바일용으로 자동 최적화됩니다 (긴 변 1024px · JPG · 250KB 이하)
+                  </span>
+                </div>
+
+                {images.length > 0 && (
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    {images.map((img) => (
+                      <div
+                        key={img.id}
+                        style={{ width: '120px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#fff', overflow: 'hidden', position: 'relative' }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.previewUrl}
+                          alt=""
+                          style={{ width: '100%', height: '90px', objectFit: 'cover', display: 'block' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(img.id)}
+                          title="삭제"
+                          style={{
+                            position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: '50%',
+                            border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '12px',
+                            lineHeight: '20px', padding: 0, cursor: 'pointer',
+                          }}
+                        >
+                          ×
+                        </button>
+                        <div style={{ padding: '4px 6px', fontSize: '11px', color: '#475569', lineHeight: 1.4 }}>
+                          <div>{img.width}×{img.height}</div>
+                          <div>
+                            <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>{formatBytes(img.originalSize)}</span>
+                            {' → '}
+                            <strong style={{ color: '#16a34a' }}>{formatBytes(img.compressedSize)}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Template area */}
             <div style={{ marginBottom: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
               <select
@@ -658,8 +861,9 @@ export default function SmsComposer({ mode }: Props) {
             />
 
             {/* Type info */}
-            <div style={{ marginTop: '8px', fontSize: '13px', color: byteLength > 90 ? '#dc2626' : '#64748b' }}>
-              {byteLength} byte · {smsType} · 대상 {checkedPhones.length}명
+            <div style={{ marginTop: '8px', fontSize: '13px', color: overByteLimit || (msgKind === 'TEXT' && byteLength > 90) ? '#dc2626' : '#64748b' }}>
+              {byteLength} byte{overByteLimit && ` (최대 ${MMS_MAX_BYTES})`} · {smsType}
+              {smsType === 'MMS' && ` · 이미지 ${images.length}장`} · 대상 {checkedPhones.length}명
             </div>
 
             {/* Action buttons */}
@@ -667,10 +871,10 @@ export default function SmsComposer({ mode }: Props) {
               <button
                 className="btn btn-danger"
                 onClick={handleSend}
-                disabled={loading || checkedPhones.length === 0 || !message.trim()}
+                disabled={loading || compressing || checkedPhones.length === 0 || !message.trim() || overByteLimit || (smsType === 'MMS' && images.length === 0)}
                 style={{ flex: 1 }}
               >
-                {loading ? '발송 중...' : '발송하기'}
+                {loading ? '발송 중...' : smsType === 'MMS' ? '이미지 문자 발송하기' : '발송하기'}
               </button>
               <button
                 className="btn btn-outline-secondary"
