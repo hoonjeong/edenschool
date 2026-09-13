@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@edenschool/common/db';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireAdminApiSession, requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { validateUploadedFile } from '@/lib/upload-validation';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import {
   insertPrevTestMetaInfo,
   insertPrevTestFileInfo,
+  updatePrevTestMetaInfoById,
   deletePrevTestMetaInfoById,
   deletePrevTestFileInfoByInfoId,
   selectPrevTestMetaInfoAll,
@@ -126,8 +127,61 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 });
 
+// PUT: 기출 메타 정보 수정 (+ 파일 교체). 관리 메뉴 전용 — 원장(O)만 가능
+export const PUT = withErrorHandler(async (req: NextRequest) => {
+  await requireOwnerApiSession();
+
+  try {
+    const formData = await req.formData();
+    const metaId = toId(formData.get('metaId') as string | null);
+    if (!metaId) {
+      return NextResponse.json({ ok: false, error: 'Missing metaId' }, { status: 400 });
+    }
+    const existing = await selectPrevTestMetaInfoById(metaId);
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: '기출 정보를 찾을 수 없습니다.' }, { status: 404 });
+    }
+
+    const file = formData.get('formFile') as File | null;
+    const school_name = ((formData.get('school_name') as string) || '').trim();
+    if (!school_name) {
+      return NextResponse.json({ ok: false, error: '학교명을 입력하세요.' }, { status: 400 });
+    }
+
+    // 새 파일이 없으면 기존 file_type 유지
+    const fileType = file && file.size > 0 ? ((formData.get('fileType') as string) || 'HWP') : existing.fileType || 'HWP';
+
+    await updatePrevTestMetaInfoById(metaId, {
+      schoolType: (formData.get('school_type') as string) || existing.schoolType || '',
+      schoolName: school_name,
+      year: (formData.get('year') as string) || existing.year,
+      grade: (formData.get('grade') as string) || existing.grade || '',
+      term: (formData.get('term') as string) || existing.term,
+      testType: (formData.get('test_type') as string) || existing.testType,
+      section: (formData.get('section') as string) || '',
+      publisher: (formData.get('publisher') as string) || '',
+      fileType,
+    });
+
+    // 새 파일이 올라오면 기존 파일을 교체한다
+    if (file && file.size > 0) {
+      const validationError = await validateUploadedFile(file);
+      if (validationError) return validationError;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await deletePrevTestFileInfoByInfoId(metaId);
+      await insertPrevTestFileInfo(metaId, buffer, file.name);
+    }
+
+    return NextResponse.json({ ok: true, id: metaId });
+  } catch (error) {
+    console.error('Update prev test error:', error);
+    return NextResponse.json({ ok: false, error: 'Failed to update prev test' }, { status: 500 });
+  }
+});
+
+// DELETE: 기출 메타 + 파일 삭제. 관리 메뉴 전용 — 원장(O)만 가능
 export const DELETE = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   try {
     const { searchParams } = new URL(req.url);

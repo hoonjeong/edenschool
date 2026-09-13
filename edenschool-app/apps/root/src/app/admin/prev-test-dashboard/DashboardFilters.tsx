@@ -10,6 +10,8 @@ interface Props {
   publishers: string[];
   schools: string[];
   region: string;
+  /** 필터 변경 시 이동할 경로 (기본: 대시보드). 관리 페이지에서는 /admin/prev-test-add */
+  basePath?: string;
 }
 
 export default function DashboardFilters({
@@ -17,6 +19,7 @@ export default function DashboardFilters({
   publishers,
   schools,
   region,
+  basePath = '/admin/prev-test-dashboard',
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,15 +36,16 @@ export default function DashboardFilters({
     (key: string, values: string[]) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set('region', region);
+      params.delete('metaId'); // 필터를 바꾸면 수정 모드는 해제
       if (values.length > 0) {
         params.set(key, values.join(','));
       } else {
         params.delete(key);
       }
       const qs = params.toString();
-      router.replace(`/admin/prev-test-dashboard?${qs}`);
+      router.replace(`${basePath}?${qs}`);
     },
-    [router, searchParams, region]
+    [router, searchParams, region, basePath]
   );
 
   const toggleCheckbox = (key: string, value: string, current: string[]) => {
@@ -54,13 +58,14 @@ export default function DashboardFilters({
   const setParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('region', region);
+    params.delete('metaId');
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
     const qs = params.toString();
-    router.replace(`/admin/prev-test-dashboard?${qs}`);
+    router.replace(`${basePath}?${qs}`);
   };
 
   return (

@@ -18,16 +18,54 @@ interface SplitFileRow {
   contentId?: number;
 }
 
-export default function ResultTable({
-  list,
-  keyword,
-}: {
+interface Props {
   list: SplitFileRow[];
   keyword: string;
-}) {
+  /**
+   * 관리 모드: 수정/삭제 열을 표시한다. 값은 수정 시 이동할 페이지 경로
+   * (예: '/admin/split-file-add'). 관리 메뉴(원장 전용)에서만 넘긴다.
+   */
+  manageBasePath?: string;
+}
+
+export default function ResultTable({ list, keyword, manageBasePath }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [downloading, setDownloading] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const router = useRouter();
+  const manage = !!manageBasePath;
+
+  // 수정: 상단 추가 폼을 수정 모드(metaId)로 전환하고 맨 위로 스크롤
+  function handleEdit(id: number) {
+    if (!manageBasePath) return;
+    const sep = manageBasePath.includes('?') ? '&' : '?';
+    router.push(`${manageBasePath}${sep}metaId=${id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function handleDelete(item: SplitFileRow) {
+    const label = item.fileName || item.searchKeyword || `ID ${item.id}`;
+    if (!confirm(`다음 쪼개기 파일을 삭제하시겠습니까?\n\n${label}\n\n첨부 파일도 함께 삭제되며 되돌릴 수 없습니다.`)) return;
+    setDeletingId(item.id);
+    try {
+      const res = await fetch(`/api/admin/split-file?id=${item.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        alert(`삭제 실패: ${data.error || res.statusText}`);
+        return;
+      }
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+      router.refresh();
+    } catch {
+      alert('삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const selectableItems = list.filter((item) => item.contentId);
   const allSelected =
@@ -117,12 +155,13 @@ export default function ResultTable({
               <th style={{ width: '50px' }}>학기</th>
               <th style={{ width: '80px' }}>시험유형</th>
               <th style={{ width: '50px' }}>학년</th>
+              {manage && <th style={{ width: '110px' }}>관리</th>}
             </tr>
           </thead>
           <tbody>
             {list.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center text-muted py-3">
+                <td colSpan={manage ? 9 : 8} className="text-center text-muted py-3">
                   {keyword ? '검색 결과가 없습니다.' : '쪼개기 파일이 없습니다.'}
                 </td>
               </tr>
@@ -169,6 +208,26 @@ export default function ResultTable({
                         : '-'}
                   </td>
                   <td>{item.grade || '-'}</td>
+                  {manage && (
+                    <td className="text-center" style={{ whiteSpace: 'nowrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary btn-sm mr-1"
+                        onClick={() => handleEdit(item.id)}
+                        disabled={deletingId === item.id}
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDelete(item)}
+                        disabled={deletingId === item.id}
+                      >
+                        {deletingId === item.id ? '삭제 중' : '삭제'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

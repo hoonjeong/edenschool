@@ -304,6 +304,14 @@ function PrevTestAddContent() {
   const router = useRouter();
   const metaId = searchParams.get('metaId');
   const regionParam = searchParams.get('region') || '부천';
+  const isEdit = !!metaId;
+  // 수정 취소/완료 후 돌아갈 관리 페이지 (검색 조건은 유지, metaId만 제거)
+  const backToManage = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('metaId');
+    params.set('region', regionParam);
+    router.push(`/admin/prev-test-add?${params.toString()}`);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -312,7 +320,7 @@ function PrevTestAddContent() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  const [form, setForm] = useState({
+  const emptyForm = () => ({
     schoolName: '',
     year: String(new Date().getFullYear()),
     term: '1',
@@ -320,10 +328,17 @@ function PrevTestAddContent() {
     publisher: '',
     section: '',
   });
+  const [form, setForm] = useState(emptyForm);
 
-  // 수정 모드: 기존 데이터 불러오기
+  // 수정 모드: 기존 데이터 불러오기 (수정 취소로 metaId가 사라지면 폼 초기화)
   useEffect(() => {
-    if (!metaId) return;
+    if (!metaId) {
+      setForm(emptyForm());
+      setExistingFiles([]);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     setFetching(true);
     fetch(`/api/admin/prev-test?metaId=${metaId}`)
       .then((res) => res.json())
@@ -427,27 +442,23 @@ function PrevTestAddContent() {
       }
       formData.append('fileType', fileType);
 
+      // 수정 모드는 PUT(원장 전용), 추가는 POST
       const res = await fetch('/api/admin/prev-test', {
-        method: 'POST',
+        method: metaId ? 'PUT' : 'POST',
         body: formData,
       });
       const data = await res.json();
-      if (data.error) {
-        alert(`저장 실패: ${data.error}`);
+      if (!res.ok || data.error) {
+        alert(`저장 실패: ${data.error || res.statusText}`);
       } else {
-        alert('저장되었습니다.');
+        alert(metaId ? '수정되었습니다.' : '저장되었습니다.');
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (!metaId) {
-          setForm({
-            schoolName: '',
-            year: String(new Date().getFullYear()),
-            term: '1',
-            testType: '1',
-            publisher: '',
-            section: '',
-          });
+          setForm(emptyForm());
+          router.refresh(); // 하단 관리 목록 갱신
         } else {
+          backToManage();
           router.refresh();
         }
       }
@@ -494,7 +505,16 @@ function PrevTestAddContent() {
   return (
     <div>
       <h4 className="mb-3">
-        {metaId ? '기출문제 관리' : `${regionParam === '부천' ? '부천' : '타지역'} 기출문제 추가`}
+        {isEdit ? (
+          <>
+            기출문제 수정
+            <span className="badge badge-warning ml-2" style={{ fontSize: '12px', verticalAlign: 'middle' }}>
+              ID {metaId}
+            </span>
+          </>
+        ) : (
+          `${regionParam === '부천' ? '부천' : '타지역'} 기출문제 추가`
+        )}
       </h4>
 
       {/* ── 파일 첨부 (드래그 앤 드롭) ── */}
@@ -557,7 +577,9 @@ function PrevTestAddContent() {
               +
             </div>
             <div className="text-muted">
-              파일을 드래그하여 놓거나 클릭하여 선택하세요
+              {isEdit
+                ? '새 파일을 올리면 기존 파일이 교체됩니다 (파일 변경이 없으면 비워두세요)'
+                : '파일을 드래그하여 놓거나 클릭하여 선택하세요'}
             </div>
             <div className="text-muted small mt-1">HWP, PDF 파일 지원</div>
           </div>
@@ -719,7 +741,7 @@ function PrevTestAddContent() {
                     <td className="align-middle">{f.fileName}</td>
                     <td style={{ width: '150px' }} className="text-right">
                       <a
-                        href={`/api/admin/prev-test/download?id=${f.id}`}
+                        href={`/api/admin/prev-test/download?id=${metaId}`}
                         className="btn btn-sm btn-outline-info mr-1"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -749,15 +771,18 @@ function PrevTestAddContent() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? '저장 중...' : metaId ? '수정 및 파일추가' : '추가'}
+          {loading ? '저장 중...' : isEdit ? '수정 저장' : '추가'}
         </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-lg"
-          onClick={() => router.push(`/admin/prev-test-dashboard?region=${regionParam}`)}
-        >
-          목록으로
-        </button>
+        {isEdit && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-lg"
+            onClick={backToManage}
+            disabled={loading}
+          >
+            수정 취소
+          </button>
+        )}
       </div>
     </div>
   );

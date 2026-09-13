@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { deletePrevTestFileInfoById } from '@edenschool/common/queries/prev-test';
 
-// 기출 파일 **한 개** 삭제 (메타 정보는 남긴다).
+// 기출 파일 **한 개** 삭제 (메타 정보는 남긴다). 관리 메뉴 전용 — 원장(O)만 가능
 // 상위의 DELETE /api/admin/prev-test?id= 는 메타 + 딸린 파일 전체를 지우는 다른 동작이다.
 export const DELETE = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   const id = Number(req.nextUrl.searchParams.get('id'));
   if (!id || !Number.isInteger(id) || id <= 0) {

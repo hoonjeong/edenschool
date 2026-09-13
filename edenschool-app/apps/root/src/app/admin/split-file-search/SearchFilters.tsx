@@ -5,9 +5,11 @@ import { useCallback } from 'react';
 
 interface Props {
   grades: string[];
+  /** 필터 변경 시 이동할 경로 (기본: 검색 페이지). 관리 페이지에서는 /admin/split-file-add */
+  basePath?: string;
 }
 
-export default function SearchFilters({ grades }: Props) {
+export default function SearchFilters({ grades, basePath = '/admin/split-file-search' }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,10 +25,11 @@ export default function SearchFilters({ grades }: Props) {
         params.delete(key);
       }
       params.delete('page');
+      params.delete('metaId'); // 필터를 바꾸면 수정 모드는 해제
       const qs = params.toString();
-      router.replace(`/admin/split-file-search?${qs}`);
+      router.replace(`${basePath}?${qs}`);
     },
-    [router, searchParams]
+    [router, searchParams, basePath]
   );
 
   const toggleCheckbox = (key: string, value: string, current: string[]) => {
@@ -44,8 +47,9 @@ export default function SearchFilters({ grades }: Props) {
       params.delete(key);
     }
     params.delete('page');
+    params.delete('metaId');
     const qs = params.toString();
-    router.replace(`/admin/split-file-search?${qs}`);
+    router.replace(`${basePath}?${qs}`);
   };
 
   return (

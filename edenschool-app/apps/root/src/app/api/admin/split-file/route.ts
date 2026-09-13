@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminApiSession } from '@/lib/admin-session';
+import { requireAdminApiSession, requireOwnerApiSession } from '@/lib/admin-session';
 import { withErrorHandler } from '@/lib/api-handler';
 import { validateUploadedFile } from '@/lib/upload-validation';
 import {
   insertSplitFileMetaInfo,
   insertSplitFileContent,
+  updateSplitFileMetaInfoById,
   deleteSplitFileMetaInfoById,
   deleteSplitFileContentByMetaId,
   selectSplitFileMetaInfoById,
@@ -91,8 +92,56 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   }
 });
 
+// PUT: 쪼개기 메타 정보 수정 (+ 파일 교체). 관리 메뉴 전용 — 원장(O)만 가능
+export const PUT = withErrorHandler(async (req: NextRequest) => {
+  await requireOwnerApiSession();
+
+  try {
+    const formData = await req.formData();
+    const metaId = toId(formData.get('metaId') as string | null);
+    if (!metaId) {
+      return NextResponse.json({ ok: false, error: 'Missing metaId' }, { status: 400 });
+    }
+    const existing = await selectSplitFileMetaInfoById(metaId);
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: '쪼개기 파일 정보를 찾을 수 없습니다.' }, { status: 404 });
+    }
+
+    const file = formData.get('formFile') as File | null;
+    const hasFile = !!file && file.size > 0;
+
+    await updateSplitFileMetaInfoById(metaId, {
+      grade: (formData.get('grade') as string) || '',
+      subject: (formData.get('subject') as string) || '',
+      publisher: (formData.get('publisher') as string) || '',
+      searchKeyword: (formData.get('search_keyword') as string) || '',
+      schoolName: (formData.get('school_name') as string) || '',
+      year: Number(formData.get('year')) || 0,
+      term: Number(formData.get('term')) || 0,
+      testType: Number(formData.get('test_type')) || 0,
+      // 새 파일이 없으면 기존 file_type 유지
+      fileType: hasFile ? ((formData.get('fileType') as string) || 'HWP') : existing.fileType || 'HWP',
+    });
+
+    // 새 파일이 올라오면 기존 파일을 교체한다
+    if (hasFile) {
+      const validationError = await validateUploadedFile(file);
+      if (validationError) return validationError;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await deleteSplitFileContentByMetaId(metaId);
+      await insertSplitFileContent(metaId, buffer, file.name);
+    }
+
+    return NextResponse.json({ ok: true, id: metaId });
+  } catch (error) {
+    console.error('Update split file error:', error);
+    return NextResponse.json({ ok: false, error: 'Failed to update split file' }, { status: 500 });
+  }
+});
+
+// DELETE: 쪼개기 메타 + 파일 삭제. 관리 메뉴 전용 — 원장(O)만 가능
 export const DELETE = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  await requireOwnerApiSession();
 
   try {
     const { searchParams } = new URL(req.url);

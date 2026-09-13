@@ -69,6 +69,14 @@ function SplitFileAddContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const metaId = searchParams.get('metaId');
+  const isEdit = !!metaId;
+  // 수정 취소/완료 후 돌아갈 관리 페이지 (검색 조건은 유지, metaId만 제거)
+  const backToManage = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('metaId');
+    const qs = params.toString();
+    router.push(`/admin/split-file-add${qs ? '?' + qs : ''}`);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -77,7 +85,7 @@ function SplitFileAddContent() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  const [form, setForm] = useState({
+  const emptyForm = () => ({
     searchKeyword: '',
     grade: '고1',
     subject: '',
@@ -87,10 +95,17 @@ function SplitFileAddContent() {
     term: '1',
     testType: '1',
   });
+  const [form, setForm] = useState(emptyForm);
 
-  // 수정 모드: 기존 데이터 불러오기
+  // 수정 모드: 기존 데이터 불러오기 (수정 취소로 metaId가 사라지면 폼 초기화)
   useEffect(() => {
-    if (!metaId) return;
+    if (!metaId) {
+      setForm(emptyForm());
+      setExistingFile(null);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     setFetching(true);
     fetch(`/api/admin/split-file?metaId=${metaId}`)
       .then((res) => res.json())
@@ -174,6 +189,7 @@ function SplitFileAddContent() {
     setLoading(true);
     try {
       const formData = new FormData();
+      if (metaId) formData.append('metaId', metaId);
       formData.append('search_keyword', form.searchKeyword);
       formData.append('grade', form.grade);
       formData.append('subject', form.subject);
@@ -190,29 +206,23 @@ function SplitFileAddContent() {
       }
       formData.append('fileType', fileType);
 
+      // 수정 모드는 PUT(원장 전용), 추가는 POST
       const res = await fetch('/api/admin/split-file', {
-        method: 'POST',
+        method: metaId ? 'PUT' : 'POST',
         body: formData,
       });
       const data = await res.json();
-      if (data.error) {
-        alert(`저장 실패: ${data.error}`);
+      if (!res.ok || data.error) {
+        alert(`저장 실패: ${data.error || res.statusText}`);
       } else {
-        alert('저장되었습니다.');
+        alert(metaId ? '수정되었습니다.' : '저장되었습니다.');
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (!metaId) {
-          setForm({
-            searchKeyword: '',
-            grade: '고1',
-            subject: '',
-            publisher: '',
-            schoolName: '',
-            year: String(new Date().getFullYear()),
-            term: '1',
-            testType: '1',
-          });
+          setForm(emptyForm());
+          router.refresh(); // 하단 관리 목록 갱신
         } else {
+          backToManage();
           router.refresh();
         }
       }
@@ -242,7 +252,16 @@ function SplitFileAddContent() {
   return (
     <div>
       <h4 className="mb-3">
-        {metaId ? '쪼개기 파일 관리' : '쪼개기 파일 추가'}
+        {isEdit ? (
+          <>
+            쪼개기 파일 수정
+            <span className="badge badge-warning ml-2" style={{ fontSize: '12px', verticalAlign: 'middle' }}>
+              ID {metaId}
+            </span>
+          </>
+        ) : (
+          '쪼개기 파일 추가'
+        )}
       </h4>
 
       {/* 파일 첨부 (드래그 앤 드롭) */}
@@ -305,7 +324,9 @@ function SplitFileAddContent() {
               +
             </div>
             <div className="text-muted">
-              파일을 드래그하여 놓거나 클릭하여 선택하세요
+              {isEdit
+                ? '새 파일을 올리면 기존 파일이 교체됩니다 (파일 변경이 없으면 비워두세요)'
+                : '파일을 드래그하여 놓거나 클릭하여 선택하세요'}
             </div>
             <div className="text-muted small mt-1">HWP, PDF 파일 지원</div>
           </div>
@@ -485,15 +506,18 @@ function SplitFileAddContent() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? '저장 중...' : metaId ? '수정' : '추가'}
+          {loading ? '저장 중...' : isEdit ? '수정 저장' : '추가'}
         </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-lg"
-          onClick={() => router.push('/admin/split-file-search')}
-        >
-          목록으로
-        </button>
+        {isEdit && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-lg"
+            onClick={backToManage}
+            disabled={loading}
+          >
+            수정 취소
+          </button>
+        )}
       </div>
     </div>
   );

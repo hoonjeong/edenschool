@@ -18,6 +18,18 @@ export async function insertPrevTestFileInfo(infoId: number, content: Buffer, fi
   return result.insertId;
 }
 
+// 관리 화면 수정용 — 메타 정보만 갱신 (파일은 별도 처리)
+export async function updatePrevTestMetaInfoById(
+  id: number,
+  info: Omit<PrevTestMetaInfo, 'id' | 'insertTime' | 'region'>
+): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE prev_test_meta_info SET school_type=?, school_name=?, year=?, grade=?, term=?, test_type=?, section=?, publisher=?, file_type=? WHERE id=?`,
+    [info.schoolType, info.schoolName, info.year, info.grade, info.term, info.testType, info.section, info.publisher, info.fileType, id]
+  );
+  return result.affectedRows;
+}
+
 export async function selectPrevTestMetaInfoAll(): Promise<PrevTestMetaInfo[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT id, region, school_type as schoolType, school_name as schoolName, year, grade, term, test_type as testType, section, publisher, file_type as fileType, insert_time as insertTime FROM prev_test_meta_info ORDER BY id DESC LIMIT 5000`

@@ -25,6 +25,18 @@ export async function insertSplitFileContent(
   return result.insertId;
 }
 
+// 관리 화면 수정용 — 메타 정보만 갱신 (파일은 별도 처리)
+export async function updateSplitFileMetaInfoById(
+  id: number,
+  info: Omit<SplitFileMetaInfo, 'id' | 'insertTime'>
+): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE split_file_meta_info SET grade=?, subject=?, publisher=?, search_keyword=?, school_name=?, year=?, term=?, test_type=?, file_type=? WHERE id=?`,
+    [info.grade, info.subject, info.publisher, info.searchKeyword, info.schoolName, info.year, info.term, info.testType, info.fileType, id]
+  );
+  return result.affectedRows;
+}
+
 export async function selectSplitFileMetaInfoById(
   id: number
 ): Promise<SplitFileMetaInfo | null> {
