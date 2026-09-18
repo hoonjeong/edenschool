@@ -1,4 +1,4 @@
-import pool from '../db';
+import pool, { withTransaction } from '../db';
 import type { AdminUserInfo } from '../types';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
@@ -133,6 +133,45 @@ export async function selectAcaPhoneByTeacherId(teacherId: number): Promise<stri
     [teacherId]
   );
   return rows[0]?.aca_phone || null;
+}
+
+// aca_part 에서 '관 번호'(본관=1, 2관=2, 3관=3, 5관=5)를 담는 컬럼명.
+// 운영 DB 스키마와 다르면 이 상수 한 줄만 고치면 된다.
+const ACA_PART_NO_COLUMN = 'part';
+
+// Admin: selectAcaPartByTeacherId — 선생님의 근무 관 + 발신번호
+export async function selectAcaPartByTeacherId(
+  teacherId: number
+): Promise<{ part: number; acaPhone: string } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT \`${ACA_PART_NO_COLUMN}\` AS part, aca_phone FROM aca_part WHERE teacher_id=?`,
+    [teacherId]
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return { part: Number(row.part), acaPhone: row.aca_phone || '' };
+}
+
+// Admin: upsertAcaPart — 근무 관 저장. 기존 행이 있으면 UPDATE, 없으면 INSERT.
+// teacher_id 에 UNIQUE 제약이 없을 수 있어 ON DUPLICATE KEY 대신 조회 후 분기한다.
+export async function upsertAcaPart(teacherId: number, part: number, acaPhone: string): Promise<void> {
+  await withTransaction(async (conn) => {
+    const [rows] = await conn.query<RowDataPacket[]>(
+      `SELECT teacher_id FROM aca_part WHERE teacher_id=? FOR UPDATE`,
+      [teacherId]
+    );
+    if (rows.length > 0) {
+      await conn.query(
+        `UPDATE aca_part SET \`${ACA_PART_NO_COLUMN}\`=?, aca_phone=? WHERE teacher_id=?`,
+        [part, acaPhone, teacherId]
+      );
+    } else {
+      await conn.query(
+        `INSERT INTO aca_part (teacher_id, \`${ACA_PART_NO_COLUMN}\`, aca_phone) VALUES (?,?,?)`,
+        [teacherId, part, acaPhone]
+      );
+    }
+  });
 }
 
 // Admin: selectTeacherList

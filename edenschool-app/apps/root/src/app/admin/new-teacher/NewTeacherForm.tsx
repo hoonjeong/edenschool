@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ASSIGNABLE_ROLES, adminRoleLabel } from '@/lib/admin-roles';
+import { ACA_PARTS, findAcaPart } from '@/lib/aca-parts';
 
 export function NewTeacherForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('T');
+  const [acaPart, setAcaPart] = useState(String(ACA_PARTS[0].part));
   const [loading, setLoading] = useState(false);
+
+  const selectedPart = findAcaPart(acaPart);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +27,24 @@ export function NewTeacherForm() {
       return;
     }
 
-    if (!confirm(`이름: ${name}\n핸드폰: ${phone}\n역할: ${adminRoleLabel(code)}\n\n추가하시겠습니까?`)) return;
+    if (!selectedPart) {
+      alert('근무 관을 선택해주세요.');
+      return;
+    }
+
+    if (
+      !confirm(
+        `이름: ${name}\n핸드폰: ${phone}\n역할: ${adminRoleLabel(code)}\n근무 관: ${selectedPart.label} (발신번호 ${selectedPart.phone})\n\n추가하시겠습니까?`
+      )
+    )
+      return;
 
     setLoading(true);
     try {
       const res = await fetch('/api/admin/teacher', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), code }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), code, acaPart: selectedPart.part }),
       });
       const data = await res.json();
       if (data.success) {
@@ -84,6 +98,23 @@ export function NewTeacherForm() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="form-group">
+          <label>근무 관</label>
+          <select
+            className="form-control"
+            value={acaPart}
+            onChange={(e) => setAcaPart(e.target.value)}
+          >
+            {ACA_PARTS.map((p) => (
+              <option key={p.part} value={p.part}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            문자 발송 시 발신번호: {selectedPart ? selectedPart.phone : '-'}
+          </small>
         </div>
         <div className="form-group mt-4">
           <button type="submit" className="btn btn-primary" disabled={loading}>

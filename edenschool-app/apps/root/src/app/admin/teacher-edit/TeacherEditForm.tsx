@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ASSIGNABLE_ROLES, adminRoleLabel } from '@/lib/admin-roles';
+import { ACA_PARTS, findAcaPart } from '@/lib/aca-parts';
 
 function TeacherEditContent() {
   const searchParams = useSearchParams();
@@ -13,8 +14,12 @@ function TeacherEditContent() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('T');
+  // '' = 미지정. 미지정 상태로 저장하면 aca_part 행을 건드리지 않는다.
+  const [acaPart, setAcaPart] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const selectedPart = findAcaPart(acaPart);
 
   useEffect(() => {
     if (!id) return;
@@ -26,6 +31,9 @@ function TeacherEditContent() {
           setEmail(data.teacher.email || '');
           setPhone(data.teacher.phone || '');
           setCode(data.teacher.code || 'T');
+        }
+        if (data.acaPart && findAcaPart(data.acaPart.part)) {
+          setAcaPart(String(data.acaPart.part));
         }
       })
       .catch(() => alert('선생님 정보를 불러오지 못했습니다.'))
@@ -48,7 +56,14 @@ function TeacherEditContent() {
       const res = await fetch('/api/admin/teacher', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: Number(id), name: name.trim(), email: email.trim(), phone: phone.trim(), code }),
+        body: JSON.stringify({
+          id: Number(id),
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          code,
+          ...(selectedPart ? { acaPart: selectedPart.part } : {}),
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -122,6 +137,26 @@ function TeacherEditContent() {
               </option>
             ))}
           </select>
+        </div>
+        <div className="form-group">
+          <label>근무 관</label>
+          <select
+            className="form-control"
+            value={acaPart}
+            onChange={(e) => setAcaPart(e.target.value)}
+          >
+            <option value="">미지정 (변경 안 함)</option>
+            {ACA_PARTS.map((p) => (
+              <option key={p.part} value={p.part}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+          <small className="form-text text-muted">
+            {selectedPart
+              ? `문자 발송 시 발신번호: ${selectedPart.phone}`
+              : '관을 선택하지 않으면 기존 근무 관 정보를 그대로 둡니다.'}
+          </small>
         </div>
         <div className="form-group mt-4">
           <button type="submit" className="btn btn-primary" disabled={saving}>
