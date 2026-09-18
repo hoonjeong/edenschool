@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendSms, MMS_MAX_IMAGES, MMS_MAX_IMAGE_BYTES, MMS_ALLOWED_MIME, type SmsImage } from '@edenschool/common/sms';
+import {
+  sendSms,
+  isSmsSuccess,
+  smsFailureReason,
+  MMS_MAX_IMAGES,
+  MMS_MAX_IMAGE_BYTES,
+  MMS_ALLOWED_MIME,
+  type SmsImage,
+} from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
@@ -100,13 +108,31 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     // use default srcNum
   }
 
-  const results: { phone: string; result: string | null }[] = [];
+  const results: { phone: string; success: boolean; reason?: string }[] = [];
 
   for (const phone of numbers) {
     if (!phone) continue;
     const result = await sendSms(smsType, phone, message, srcNum, session.user.id, { images });
-    results.push({ phone, result });
+    const success = isSmsSuccess(result);
+    results.push(success ? { phone, success } : { phone, success, reason: smsFailureReason(result) });
   }
 
-  return NextResponse.json({ ok: true, count: results.length, results });
+  const sent = results.filter((r) => r.success).length;
+  const failed = results.length - sent;
+
+  if (failed > 0) {
+    // 발신번호 미등록처럼 전량 실패하는 경우가 있어 서버 로그에도 남긴다.
+    console.error(`SMS 발송 실패 ${failed}/${results.length}건 (발신번호 ${srcNum}):`, results.find((r) => !r.success)?.reason);
+  }
+
+  return NextResponse.json({
+    ok: failed === 0,
+    count: results.length,
+    sent,
+    failed,
+    callNum: srcNum,
+    // 실패 사유는 같은 원인인 경우가 대부분이라 대표 1건만 돌려준다.
+    failReason: results.find((r) => !r.success)?.reason,
+    results,
+  });
 });

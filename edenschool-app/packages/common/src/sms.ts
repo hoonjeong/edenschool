@@ -70,17 +70,40 @@ export async function sendSms(
     const response = await fetch(smsApiUrl, { method: 'POST', headers, body });
 
     resultString = await response.text();
+  } catch (e) {
+    console.error('SMS send error:', e);
+    // 발송 자체가 실패해도 이력은 남긴다. 예전엔 이 경우 로그가 아예 안 남아
+    // "보낸 적 없는 문자"가 되어 실패 사실을 추적할 수 없었다.
+    resultString = JSON.stringify({
+      result_code: -99,
+      message: e instanceof Error ? e.message : String(e),
+    });
+  }
 
-    // Log SMS result to sms_send_result_renew
+  // Log SMS result to sms_send_result_renew
+  try {
     await pool.query(
       `INSERT INTO sms_send_result_renew (send_id, phone, message, type, result_message, send_time) VALUES (?,?,?,?,?,now())`,
       [sendId, phone, message, type, resultString]
     );
   } catch (e) {
-    console.error('SMS send error:', e);
+    console.error('SMS log insert error:', e);
   }
 
   return resultString;
+}
+
+/** 알리고 응답에서 사람이 읽을 실패 사유를 뽑아낸다. (예: 등록되지 않은 발신번호) */
+export function smsFailureReason(result: string | null): string {
+  if (!result) return '응답 없음';
+  try {
+    const parsed = JSON.parse(result);
+    const code = parsed.result_code;
+    const msg = parsed.message || '알 수 없는 오류';
+    return code === undefined ? String(msg) : `[${code}] ${msg}`;
+  } catch {
+    return result.slice(0, 200);
+  }
 }
 
 /** Check if Aligo API response indicates success (result_code > 0) */

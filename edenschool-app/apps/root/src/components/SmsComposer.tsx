@@ -44,6 +44,16 @@ interface Props {
   mode: 'admin' | 'teacher';
 }
 
+/** 발송 이력 한 건이 실제로 발송 성공했는지 (알리고 result_code > 0) */
+function isLogSuccess(log: SendLog): boolean {
+  if (!log.result_message) return false;
+  try {
+    return Number(JSON.parse(log.result_message).result_code) > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** MMS 첨부 이미지 (압축 완료본) */
 interface AttachedImage {
   id: string;
@@ -93,6 +103,8 @@ export default function SmsComposer({ mode }: Props) {
   /* ─── Card 4: 전송 ─── */
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  // 결과 배너 색상. 문자열에 '실패'가 들어있는지로 판정하면 "실패 0건"도 빨갛게 되어 따로 둔다.
+  const [resultTone, setResultTone] = useState<'success' | 'danger'>('success');
   const [allHistory, setAllHistory] = useState<SendLog[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
@@ -405,6 +417,7 @@ export default function SmsComposer({ mode }: Props) {
 
     setLoading(true);
     setResult(null);
+    setResultTone('success');
     try {
       let res: Response;
       if (smsType === 'MMS') {
@@ -424,13 +437,33 @@ export default function SmsComposer({ mode }: Props) {
       }
       const data = await res.json();
       if (data.error) {
+        setResultTone('danger');
         setResult(`발송 실패: ${data.error}`);
       } else {
-        setResult(`발송 완료: 총 ${data.count || checkedPhones.length}건`);
+        const total: number = data.count ?? checkedPhones.length;
+        const failed: number = data.failed ?? 0;
+        const sent: number = data.sent ?? total - failed;
+
+        if (failed > 0) {
+          // 알리고가 거절한 건은 문자가 실제로 가지 않는다. 반드시 눈에 띄게 알린다.
+          setResultTone('danger');
+          setResult(
+            `⚠ 발송 실패 ${failed}건 (성공 ${sent}건 / 총 ${total}건)` +
+              (data.failReason ? ` — 사유: ${data.failReason}` : '') +
+              (data.callNum ? ` / 발신번호: ${data.callNum}` : '') +
+              (data.failReason && /발신번호|1521|-101/.test(String(data.failReason))
+                ? '\n※ 알리고에 등록되지 않은 발신번호로 보입니다. 발신번호 등록 여부를 확인해주세요.'
+                : '')
+          );
+        } else {
+          setResultTone('success');
+          setResult(`발송 완료: 총 ${sent}건${data.callNum ? ` (발신번호 ${data.callNum})` : ''}`);
+        }
         fetchAllHistory();
         if (selectedNumber) fetchNumberHistory(selectedNumber);
       }
     } catch {
+      setResultTone('danger');
       setResult('발송 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -443,6 +476,7 @@ export default function SmsComposer({ mode }: Props) {
     setCheckedPhones([]);
     setMessage('');
     setResult(null);
+    setResultTone('success');
     setSearchQuery('');
     setSelectedNumber(null);
     setNumberHistory([]);
@@ -458,26 +492,38 @@ export default function SmsComposer({ mode }: Props) {
         <table className="table table-sm" style={{ marginBottom: 0, fontSize: '12px' }}>
           <thead>
             <tr>
+              <th style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>상태</th>
               <th style={{ padding: '6px 10px' }}>수신번호</th>
               <th style={{ padding: '6px 10px' }}>내용</th>
               <th style={{ padding: '6px 10px', whiteSpace: 'nowrap' }}>발송시간</th>
             </tr>
           </thead>
           <tbody>
-            {list.map((h, i) => (
+            {list.map((h, i) => {
+              const ok = isLogSuccess(h);
+              return (
               <tr
                 key={i}
                 onClick={() => setDetailLog(h)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', background: ok ? undefined : '#fef2f2' }}
                 title="클릭하면 전체 내용을 볼 수 있습니다"
               >
+                <td style={{ padding: '4px 10px', whiteSpace: 'nowrap' }}>
+                  <span
+                    className={`badge ${ok ? 'badge-success' : 'badge-danger'}`}
+                    style={{ fontSize: '11px' }}
+                  >
+                    {ok ? '성공' : '실패'}
+                  </span>
+                </td>
                 <td style={{ padding: '4px 10px', whiteSpace: 'nowrap' }}>{h.phone}</td>
                 <td style={{ padding: '4px 10px', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {h.message}
                 </td>
                 <td style={{ padding: '4px 10px', whiteSpace: 'nowrap', color: '#64748b' }}>{h.send_time}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -888,8 +934,8 @@ export default function SmsComposer({ mode }: Props) {
             {/* Result */}
             {result && (
               <div
-                className={`alert ${result.includes('실패') || result.includes('오류') ? 'alert-danger' : 'alert-success'}`}
-                style={{ marginTop: '12px', marginBottom: 0, fontSize: '13px' }}
+                className={`alert ${resultTone === 'danger' ? 'alert-danger' : 'alert-success'}`}
+                style={{ marginTop: '12px', marginBottom: 0, fontSize: '13px', whiteSpace: 'pre-line' }}
               >
                 {result}
               </div>
