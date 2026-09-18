@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { compressImageForMms, formatBytes } from '@/lib/image-compress';
-import { SENDER_PARTS, DEFAULT_SENDER_PART, findAcaPart } from '@/lib/aca-parts';
+import { SENDER_PARTS, DEFAULT_SENDER_PART, findAcaPart, acaPartLabel } from '@/lib/aca-parts';
 
 const MMS_MAX_IMAGES = 3;
 const MMS_MAX_BYTES = 2000; // LMS/MMS 본문 최대 byte
@@ -107,9 +107,12 @@ export default function SmsComposer({ mode }: Props) {
   /* ─── Card 4: 전송 ─── */
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  // 발신번호(관). 초기값은 본관으로 두고, 마운트 후 localStorage 값으로 덮어쓴다.
-  // 처음부터 localStorage 를 읽으면 서버 렌더 결과와 달라져 hydration 오류가 난다.
+  // 발신번호(관) — 운영진(admin)만 직접 고른다.
+  // 초기값은 본관으로 두고 마운트 후 localStorage 값으로 덮어쓴다. 처음부터
+  // localStorage 를 읽으면 서버 렌더 결과와 달라져 hydration 오류가 난다.
   const [senderPart, setSenderPart] = useState<number>(DEFAULT_SENDER_PART);
+  // 선생님(teacher) 화면은 고르지 않고 본인 근무 관(aca_part)에서 자동으로 가져온다.
+  const [teacherSender, setTeacherSender] = useState<{ part: number | null; phone: string; assigned: boolean } | null>(null);
   // 결과 배너 색상. 문자열에 '실패'가 들어있는지로 판정하면 "실패 0건"도 빨갛게 되어 따로 둔다.
   const [resultTone, setResultTone] = useState<'success' | 'danger'>('success');
   const [allHistory, setAllHistory] = useState<SendLog[]>([]);
@@ -145,8 +148,15 @@ export default function SmsComposer({ mode }: Props) {
       .catch(() => {});
   }, []);
 
-  // 이 브라우저에 기억해 둔 발신번호 복원
+  // 발신번호 결정: 선생님은 서버에서 자동 조회, 운영진은 이 브라우저에 기억된 값 복원
   useEffect(() => {
+    if (mode === 'teacher') {
+      fetch('/api/admin/sms?sender=true')
+        .then((r) => r.json())
+        .then((data) => setTeacherSender(data.sender || null))
+        .catch(() => setTeacherSender(null));
+      return;
+    }
     try {
       const saved = window.localStorage.getItem(SENDER_PART_STORAGE_KEY);
       if (saved && SENDER_PARTS.some((p) => String(p.part) === saved)) {
@@ -155,7 +165,18 @@ export default function SmsComposer({ mode }: Props) {
     } catch {
       // 프라이빗 모드 등으로 localStorage 를 못 읽으면 기본값(본관) 유지
     }
-  }, []);
+  }, [mode]);
+
+  // 화면에 보여줄 발신번호 (모드 공용)
+  const senderInfo: { label: string; phone: string } | null =
+    mode === 'teacher'
+      ? teacherSender
+        ? { label: acaPartLabel(teacherSender.part), phone: teacherSender.phone }
+        : null
+      : (() => {
+          const p = findAcaPart(senderPart);
+          return p ? { label: p.label, phone: p.phone } : null;
+        })();
 
   const handleSenderPartChange = (part: number) => {
     setSenderPart(part);
@@ -459,14 +480,20 @@ export default function SmsComposer({ mode }: Props) {
         form.append('numbers', JSON.stringify(checkedPhones));
         form.append('message', message);
         form.append('type', 'MMS');
-        form.append('acaPart', String(senderPart));
+        if (mode === 'admin') form.append('acaPart', String(senderPart));
         images.forEach((img) => form.append('images', img.file, img.file.name));
         res = await fetch('/api/admin/sms', { method: 'POST', body: form });
       } else {
         res = await fetch('/api/admin/sms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numbers: checkedPhones, message, type: smsType, acaPart: senderPart }),
+          body: JSON.stringify({
+            numbers: checkedPhones,
+            message,
+            type: smsType,
+            // 선생님 화면은 보내지 않는다. 서버가 로그인 계정의 aca_part 로 결정한다.
+            ...(mode === 'admin' ? { acaPart: senderPart } : {}),
+          }),
         });
       }
       const data = await res.json();
@@ -963,22 +990,44 @@ export default function SmsComposer({ mode }: Props) {
               <label style={{ margin: 0, fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}>
                 발신번호
               </label>
-              <select
-                className="form-control form-control-sm"
-                style={{ width: 'auto' }}
-                value={senderPart}
-                onChange={(e) => handleSenderPartChange(Number(e.target.value))}
-                disabled={loading}
-              >
-                {SENDER_PARTS.map((p) => (
-                  <option key={p.part} value={p.part}>
-                    {p.label} ({p.phone})
-                  </option>
-                ))}
-              </select>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                선택한 번호는 이 브라우저에 기억됩니다.
-              </span>
+              {mode === 'teacher' ? (
+                /* 선생님 화면: 본인 근무 관(aca_part)에서 자동 결정 — 고를 수 없다 */
+                <>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                    {senderInfo ? `${senderInfo.label} ${senderInfo.phone}` : '불러오는 중...'}
+                  </span>
+                  {teacherSender && !teacherSender.assigned && (
+                    <span className="badge badge-warning" style={{ fontSize: '11px' }}>
+                      본관 기본값
+                    </span>
+                  )}
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    {teacherSender && !teacherSender.assigned
+                      ? '근무 관이 지정되지 않아 본관 번호로 지정되었습니다. (관리자에게 관 지정을 요청하세요)'
+                      : '담당 관에 따라 자동 설정됩니다.'}
+                  </span>
+                </>
+              ) : (
+                /* 운영진 화면: 직접 선택 */
+                <>
+                  <select
+                    className="form-control form-control-sm"
+                    style={{ width: 'auto' }}
+                    value={senderPart}
+                    onChange={(e) => handleSenderPartChange(Number(e.target.value))}
+                    disabled={loading}
+                  >
+                    {SENDER_PARTS.map((p) => (
+                      <option key={p.part} value={p.part}>
+                        {p.label} ({p.phone})
+                      </option>
+                    ))}
+                  </select>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    선택한 번호는 이 브라우저에 기억됩니다.
+                  </span>
+                </>
+              )}
             </div>
 
             {/* Action buttons */}

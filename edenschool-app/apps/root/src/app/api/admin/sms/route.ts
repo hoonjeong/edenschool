@@ -10,17 +10,34 @@ import {
 } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
-import { findAcaPart } from '@/lib/aca-parts';
-import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
+import { findAcaPart, DEFAULT_SENDER_PART } from '@/lib/aca-parts';
+import { selectAcaPhoneByTeacherId, selectAcaPartByTeacherId } from '@edenschool/common/queries/admin-user';
 import { selectSendHistoryByPhone, selectRecentSendHistory } from '@edenschool/common/queries/sms-log';
 
 // GET: 발송 이력 조회 (발송자 구분 없이 전체 이력)
 export const GET = withErrorHandler(async (req: NextRequest) => {
-  await requireAdminApiSession();
+  const session = await requireAdminApiSession();
 
   const { searchParams } = new URL(req.url);
   const phone = searchParams.get('phone');
   const allHistory = searchParams.get('allHistory');
+
+  // 로그인한 계정의 발신번호(근무 관 기준). 선생님 화면에서 자동 세팅용.
+  if (searchParams.get('sender') === 'true') {
+    const fallback = findAcaPart(DEFAULT_SENDER_PART);
+    try {
+      const acaPart = await selectAcaPartByTeacherId(session.user.id);
+      if (acaPart?.acaPhone) {
+        return NextResponse.json({ sender: { part: acaPart.part, phone: acaPart.acaPhone, assigned: true } });
+      }
+    } catch (e) {
+      console.error('aca_part fetch error:', e);
+    }
+    // 근무 관이 지정되지 않은 계정은 본관 번호로 나간다. assigned:false 로 그 사실을 화면에 알린다.
+    return NextResponse.json({
+      sender: { part: fallback?.part ?? DEFAULT_SENDER_PART, phone: fallback?.phone ?? process.env.SMS_DEFAULT_CALLNUM ?? '', assigned: false },
+    });
+  }
 
   // 전체 최근 발송 이력: ?allHistory=true
   if (allHistory === 'true') {
@@ -100,9 +117,10 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   // ── 발신번호 결정 ──
   // 1순위: 화면에서 고른 관. 클라이언트가 보낸 번호를 그대로 쓰면 임의 번호로
   //        발송할 수 있으므로, 반드시 관 번호로 받아 서버의 목록에서 찾아 쓴다.
-  // 2순위: 선택이 없으면 기존 동작대로 이 선생님의 aca_part 번호
-  // 3순위: 그것도 없으면 SMS_DEFAULT_CALLNUM
-  let srcNum = process.env.SMS_DEFAULT_CALLNUM;
+  // 2순위: 선택이 없으면(선생님 화면) 이 선생님의 aca_part 번호
+  // 3순위: aca_part 에 없으면 본관 번호 — 화면에 표시되는 폴백과 같은 값을 쓴다.
+  //        (예전엔 SMS_DEFAULT_CALLNUM 을 썼는데, 그 값이 바뀌면 화면 표시와 실제 발송이 어긋난다)
+  let srcNum = findAcaPart(DEFAULT_SENDER_PART)?.phone || process.env.SMS_DEFAULT_CALLNUM;
   if (!srcNum) {
     return NextResponse.json({ ok: false, error: 'SMS_DEFAULT_CALLNUM not configured' }, { status: 500 });
   }
