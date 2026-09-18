@@ -1,29 +1,17 @@
 import pool from './db';
 
-/** MMS 첨부 이미지 (알리고: image/image1~image3, JPEG·PNG·GIF, 최대 3장) */
-export interface SmsImage {
-  buffer: Buffer;
-  filename: string;
-  mimeType: string;
-}
+// 발송 규칙(바이트 계산·종류 판정·MMS 제약·실패 안내)은 sms-rules.ts 에 모여 있다.
+// 이 파일은 db.ts(mysql2)를 쓰기 때문에 클라이언트 컴포넌트가 직접 import 할 수 없다.
+// 화면에서는 '@edenschool/common/sms-rules' 를 쓸 것.
+import { MMS_MAX_IMAGES, type SendSmsOptions } from './sms-rules';
 
-export const MMS_MAX_IMAGES = 3;
-export const MMS_MAX_IMAGE_BYTES = 300 * 1024; // 알리고 권장 상한 (장당 300KB)
-export const MMS_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/gif'];
+export * from './sms-rules';
 
-export interface SendSmsOptions {
-  /** MMS 첨부 이미지 (type이 'MMS'일 때만 사용) */
-  images?: SmsImage[];
-  /** LMS/MMS 제목 (1~44 byte, 선택) */
-  title?: string;
-}
-
-export async function sendSms(
+export async function callSmsApi(
   type: string,
   phone: string,
   message: string,
   callNum = process.env.SMS_DEFAULT_CALLNUM || '',
-  sendId = 0,
   options: SendSmsOptions = {}
 ): Promise<string | null> {
   if (!process.env.SMS_USER_ID || !process.env.SMS_AUTH_KEY) {
@@ -64,23 +52,35 @@ export async function sendSms(
     headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
   }
 
-  let resultString: string | null = null;
-
   try {
     const response = await fetch(smsApiUrl, { method: 'POST', headers, body });
-
-    resultString = await response.text();
+    return await response.text();
   } catch (e) {
     console.error('SMS send error:', e);
-    // 발송 자체가 실패해도 이력은 남긴다. 예전엔 이 경우 로그가 아예 안 남아
-    // "보낸 적 없는 문자"가 되어 실패 사실을 추적할 수 없었다.
-    resultString = JSON.stringify({
+    // 네트워크 단계에서 터져도 호출자가 이력을 남길 수 있도록 실패 응답을 만들어 준다.
+    // 예전엔 여기서 예외를 삼켜 로그가 아예 안 남았고, "보낸 적 없는 문자"가 됐다.
+    return JSON.stringify({
       result_code: -99,
       message: e instanceof Error ? e.message : String(e),
     });
   }
+}
 
-  // Log SMS result to sms_send_result_renew
+/**
+ * 학원(edenschool) 문자 발송 — 알리고 호출 + sms_send_result_renew 에 이력 기록.
+ * 독서교육원은 로그 DB 가 달라 callSmsApi() 를 직접 쓴다.
+ */
+export async function sendSms(
+  type: string,
+  phone: string,
+  message: string,
+  callNum = process.env.SMS_DEFAULT_CALLNUM || '',
+  sendId = 0,
+  options: SendSmsOptions = {}
+): Promise<string | null> {
+  const resultString = await callSmsApi(type, phone, message, callNum, options);
+  if (resultString === null) return null;
+
   try {
     await pool.query(
       `INSERT INTO sms_send_result_renew (send_id, phone, message, type, result_message, send_time) VALUES (?,?,?,?,?,now())`,

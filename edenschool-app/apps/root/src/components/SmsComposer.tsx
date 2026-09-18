@@ -3,9 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { compressImageForMms, formatBytes } from '@/lib/image-compress';
 import { SENDER_PARTS, DEFAULT_SENDER_PART, findAcaPart, acaPartLabel } from '@/lib/aca-parts';
-
-const MMS_MAX_IMAGES = 3;
-const MMS_MAX_BYTES = 2000; // LMS/MMS 본문 최대 byte
+// 발송 규칙(바이트 계산·종류 판정·MMS 제약)은 교육원 화면과 공유한다.
+// 여기서 따로 정의하면 한쪽만 고쳐져 두 화면이 어긋난다.
+import {
+  MMS_MAX_IMAGES,
+  SMS_MAX_BYTES as MMS_MAX_BYTES,
+  SMS_SINGLE_MAX_BYTES,
+  smsByteLength,
+  detectSmsType,
+  isSenderNotRegistered,
+  SENDER_NOT_REGISTERED_HINT,
+} from '@edenschool/common/sms-rules';
 
 /* ── types ── */
 interface ClassInfo {
@@ -69,15 +77,6 @@ interface AttachedImage {
   height: number;
 }
 
-/* ── helpers ── */
-function getByteLength(str: string): number {
-  let bytes = 0;
-  for (let i = 0; i < str.length; i++) {
-    bytes += encodeURIComponent(str.charAt(i)).length > 3 ? 2 : 1;
-  }
-  return bytes;
-}
-
 export default function SmsComposer({ mode }: Props) {
   /* ─── Card 1: 반 선택 ─── */
   const [sendType, setSendType] = useState<'HIGH' | 'MIDDLE'>('HIGH');
@@ -119,9 +118,10 @@ export default function SmsComposer({ mode }: Props) {
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
 
-  const byteLength = getByteLength(message);
-  const smsType = msgKind === 'IMAGE' ? 'MMS' : byteLength <= 90 ? 'SMS' : 'LMS';
+  const byteLength = smsByteLength(message);
+  const smsType = detectSmsType(message, msgKind === 'IMAGE');
   const overByteLimit = byteLength > MMS_MAX_BYTES;
+  const overSingleSms = msgKind === 'TEXT' && byteLength > SMS_SINGLE_MAX_BYTES;
 
   /* ─── 초기 데이터 로드 ─── */
   useEffect(() => {
@@ -968,7 +968,7 @@ export default function SmsComposer({ mode }: Props) {
             />
 
             {/* Type info */}
-            <div style={{ marginTop: '8px', fontSize: '13px', color: overByteLimit || (msgKind === 'TEXT' && byteLength > 90) ? '#dc2626' : '#64748b' }}>
+            <div style={{ marginTop: '8px', fontSize: '13px', color: overByteLimit || overSingleSms ? '#dc2626' : '#64748b' }}>
               {byteLength} byte{overByteLimit && ` (최대 ${MMS_MAX_BYTES})`} · {smsType}
               {smsType === 'MMS' && ` · 이미지 ${images.length}장`} · 대상 {checkedPhones.length}명
             </div>

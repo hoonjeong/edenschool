@@ -9,6 +9,7 @@
     "./db": "./src/db.ts",
     "./types": "./src/types.ts",
     "./sms": "./src/sms.ts",
+    "./sms-rules": "./src/sms-rules.ts",
     "./auth": "./src/auth.ts",
     "./password": "./src/password.ts",
     "./validation": "./src/validation.ts",
