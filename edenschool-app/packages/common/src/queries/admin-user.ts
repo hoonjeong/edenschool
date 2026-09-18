@@ -135,9 +135,9 @@ export async function selectAcaPhoneByTeacherId(teacherId: number): Promise<stri
   return rows[0]?.aca_phone || null;
 }
 
-// aca_part 에서 '관 번호'(본관=1, 2관=2, 3관=3, 5관=5)를 담는 컬럼명.
-// 운영 DB 스키마와 다르면 이 상수 한 줄만 고치면 된다.
-const ACA_PART_NO_COLUMN = 'part';
+// aca_part 에서 '관 번호'(본관=1, 2관=2, 3관=3, 교육원=4, 5관=5)를 담는 컬럼명.
+// 운영 DB 스키마 확인 완료(2026-09-18): id, teacher_id, aca_num, aca_phone
+const ACA_PART_NO_COLUMN = 'aca_num';
 
 // Admin: selectAcaPartByTeacherId — 선생님의 근무 관 + 발신번호
 export async function selectAcaPartByTeacherId(
