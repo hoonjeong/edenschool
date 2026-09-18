@@ -13,6 +13,11 @@ export interface SendResult {
 
 const SMS_PREFIX = process.env.SMS_PREFIX ?? "[이든국어독서교육원]";
 
+// 독서교육원 문자 발신번호 — 교육원 전용 번호로 고정한다.
+// SMS_DEFAULT_CALLNUM(본관 번호)을 쓰지 않으므로 .env 설정과 무관하게 항상 이 번호로 나간다.
+// ※ 알리고에 사전등록된 발신번호여야 실제 발송이 성공한다.
+const READING_CALLNUM = "010-5236-6362";
+
 /** 메시지 길이에 따라 SMS(단문)/LMS(장문) 자동 판별 (UTF-8 90byte 기준) */
 export function detectType(message: string): SmsType {
   const bytes = Buffer.byteLength(message, "utf8");
@@ -39,12 +44,11 @@ export async function sendSms(opts: {
   message: string;
   type?: SmsType;
   title?: string;
-  callNum?: string;
   sendId?: number;
   templateId?: number;
 }): Promise<SendResult> {
   const type = opts.type ?? detectType(opts.message);
-  const callNum = (opts.callNum ?? process.env.SMS_DEFAULT_CALLNUM ?? "").replace(/-/g, "");
+  const callNum = READING_CALLNUM.replace(/-/g, "");
   const phone = opts.phone.replace(/-/g, "");
   const message = opts.message;
 
