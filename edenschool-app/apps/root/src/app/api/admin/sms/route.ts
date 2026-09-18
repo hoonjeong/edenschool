@@ -10,6 +10,7 @@ import {
 } from '@edenschool/common/sms';
 import { withErrorHandler } from '@/lib/api-handler';
 import { requireAdminApiSession } from '@/lib/admin-session';
+import { findAcaPart } from '@/lib/aca-parts';
 import { selectAcaPhoneByTeacherId } from '@edenschool/common/queries/admin-user';
 import { selectSendHistoryByPhone, selectRecentSendHistory } from '@edenschool/common/queries/sms-log';
 
@@ -45,6 +46,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
   let numbers: unknown;
   let message: string;
   let type: string | undefined;
+  let acaPart: unknown;
   const images: SmsImage[] = [];
 
   if (req.headers.get('content-type')?.includes('multipart/form-data')) {
@@ -56,6 +58,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     }
     message = String(form.get('message') || '');
     type = String(form.get('type') || '') || undefined;
+    acaPart = form.get('acaPart') ?? undefined;
 
     const files = form.getAll('images').filter((f): f is File => f instanceof File && f.size > 0);
     if (files.length > MMS_MAX_IMAGES) {
@@ -78,6 +81,7 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     numbers = body.numbers;
     message = body.message;
     type = body.type;
+    acaPart = body.acaPart;
   }
 
   if (!numbers || !Array.isArray(numbers) || numbers.length === 0 || !message) {
@@ -93,19 +97,32 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     return NextResponse.json({ ok: false, error: '이미지 문자(MMS)는 이미지를 1장 이상 첨부해야 합니다.' }, { status: 400 });
   }
 
-  // Get the academy phone number for this teacher
+  // ── 발신번호 결정 ──
+  // 1순위: 화면에서 고른 관. 클라이언트가 보낸 번호를 그대로 쓰면 임의 번호로
+  //        발송할 수 있으므로, 반드시 관 번호로 받아 서버의 목록에서 찾아 쓴다.
+  // 2순위: 선택이 없으면 기존 동작대로 이 선생님의 aca_part 번호
+  // 3순위: 그것도 없으면 SMS_DEFAULT_CALLNUM
   let srcNum = process.env.SMS_DEFAULT_CALLNUM;
   if (!srcNum) {
     return NextResponse.json({ ok: false, error: 'SMS_DEFAULT_CALLNUM not configured' }, { status: 500 });
   }
 
-  try {
-    const acaPhone = await selectAcaPhoneByTeacherId(session.user.id);
-    if (acaPhone) {
-      srcNum = acaPhone;
+  const selectedPart = acaPart === undefined || acaPart === null || acaPart === '' ? null : findAcaPart(acaPart);
+  if (selectedPart === undefined) {
+    return NextResponse.json({ ok: false, error: '발신번호를 올바르게 선택해주세요.' }, { status: 400 });
+  }
+
+  if (selectedPart) {
+    srcNum = selectedPart.phone;
+  } else {
+    try {
+      const acaPhone = await selectAcaPhoneByTeacherId(session.user.id);
+      if (acaPhone) {
+        srcNum = acaPhone;
+      }
+    } catch {
+      // use default srcNum
     }
-  } catch {
-    // use default srcNum
   }
 
   const results: { phone: string; success: boolean; reason?: string }[] = [];

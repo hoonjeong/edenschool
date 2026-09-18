@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { compressImageForMms, formatBytes } from '@/lib/image-compress';
+import { SENDER_PARTS, DEFAULT_SENDER_PART, findAcaPart } from '@/lib/aca-parts';
 
 const MMS_MAX_IMAGES = 3;
 const MMS_MAX_BYTES = 2000; // LMS/MMS 본문 최대 byte
@@ -43,6 +44,9 @@ interface SendLog {
 interface Props {
   mode: 'admin' | 'teacher';
 }
+
+/** 고른 발신번호를 이 브라우저에 기억해 두는 키 */
+const SENDER_PART_STORAGE_KEY = 'edenschool.sms.senderPart';
 
 /** 발송 이력 한 건이 실제로 발송 성공했는지 (알리고 result_code > 0) */
 function isLogSuccess(log: SendLog): boolean {
@@ -103,6 +107,9 @@ export default function SmsComposer({ mode }: Props) {
   /* ─── Card 4: 전송 ─── */
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  // 발신번호(관). 초기값은 본관으로 두고, 마운트 후 localStorage 값으로 덮어쓴다.
+  // 처음부터 localStorage 를 읽으면 서버 렌더 결과와 달라져 hydration 오류가 난다.
+  const [senderPart, setSenderPart] = useState<number>(DEFAULT_SENDER_PART);
   // 결과 배너 색상. 문자열에 '실패'가 들어있는지로 판정하면 "실패 0건"도 빨갛게 되어 따로 둔다.
   const [resultTone, setResultTone] = useState<'success' | 'danger'>('success');
   const [allHistory, setAllHistory] = useState<SendLog[]>([]);
@@ -137,6 +144,27 @@ export default function SmsComposer({ mode }: Props) {
       .then((data) => setTemplates(data.templates || []))
       .catch(() => {});
   }, []);
+
+  // 이 브라우저에 기억해 둔 발신번호 복원
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SENDER_PART_STORAGE_KEY);
+      if (saved && SENDER_PARTS.some((p) => String(p.part) === saved)) {
+        setSenderPart(Number(saved));
+      }
+    } catch {
+      // 프라이빗 모드 등으로 localStorage 를 못 읽으면 기본값(본관) 유지
+    }
+  }, []);
+
+  const handleSenderPartChange = (part: number) => {
+    setSenderPart(part);
+    try {
+      window.localStorage.setItem(SENDER_PART_STORAGE_KEY, String(part));
+    } catch {
+      // 저장에 실패해도 이번 발송에는 선택한 번호가 쓰인다
+    }
+  };
 
   const fetchAllHistory = () => {
     fetch('/api/admin/sms?allHistory=true')
@@ -411,7 +439,12 @@ export default function SmsComposer({ mode }: Props) {
       return;
     }
     const kindLabel = smsType === 'MMS' ? `이미지 문자(MMS, 이미지 ${images.length}장)` : smsType;
-    if (!confirm(`총 ${checkedPhones.length}건의 ${kindLabel}를 발송하시겠습니까?`)) {
+    const sender = findAcaPart(senderPart);
+    if (
+      !confirm(
+        `발신번호: ${sender ? `${sender.label} ${sender.phone}` : '기본'}\n총 ${checkedPhones.length}건의 ${kindLabel}를 발송하시겠습니까?`
+      )
+    ) {
       return;
     }
 
@@ -426,13 +459,14 @@ export default function SmsComposer({ mode }: Props) {
         form.append('numbers', JSON.stringify(checkedPhones));
         form.append('message', message);
         form.append('type', 'MMS');
+        form.append('acaPart', String(senderPart));
         images.forEach((img) => form.append('images', img.file, img.file.name));
         res = await fetch('/api/admin/sms', { method: 'POST', body: form });
       } else {
         res = await fetch('/api/admin/sms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numbers: checkedPhones, message, type: smsType }),
+          body: JSON.stringify({ numbers: checkedPhones, message, type: smsType, acaPart: senderPart }),
         });
       }
       const data = await res.json();
@@ -910,6 +944,41 @@ export default function SmsComposer({ mode }: Props) {
             <div style={{ marginTop: '8px', fontSize: '13px', color: overByteLimit || (msgKind === 'TEXT' && byteLength > 90) ? '#dc2626' : '#64748b' }}>
               {byteLength} byte{overByteLimit && ` (최대 ${MMS_MAX_BYTES})`} · {smsType}
               {smsType === 'MMS' && ` · 이미지 ${images.length}장`} · 대상 {checkedPhones.length}명
+            </div>
+
+            {/* 발신번호 선택 — 고른 값은 이 브라우저에 기억된다 */}
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '10px 12px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                display: 'flex',
+                gap: '8px',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              <label style={{ margin: 0, fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                발신번호
+              </label>
+              <select
+                className="form-control form-control-sm"
+                style={{ width: 'auto' }}
+                value={senderPart}
+                onChange={(e) => handleSenderPartChange(Number(e.target.value))}
+                disabled={loading}
+              >
+                {SENDER_PARTS.map((p) => (
+                  <option key={p.part} value={p.part}>
+                    {p.label} ({p.phone})
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                선택한 번호는 이 브라우저에 기억됩니다.
+              </span>
             </div>
 
             {/* Action buttons */}

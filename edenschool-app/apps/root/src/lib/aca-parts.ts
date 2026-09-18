@@ -17,6 +17,13 @@ export const ACA_PARTS: AcaPart[] = [
   { part: 5, label: '5관', phone: '010-9103-6362' },
 ];
 
+// 관리자 문자 발송 화면에서 고를 수 있는 발신번호 목록.
+// 2관은 본관과 같은 번호(010-9363-6362)라 중복이라서 목록에서 뺀다.
+export const SENDER_PARTS: AcaPart[] = ACA_PARTS.filter((p) => p.part !== 2);
+
+// 발신번호를 고르지 않았을 때의 기본값 — 본관
+export const DEFAULT_SENDER_PART = 1;
+
 export function findAcaPart(part: unknown): AcaPart | undefined {
   const n = Number(part);
   return Number.isInteger(n) ? ACA_PARTS.find((p) => p.part === n) : undefined;
