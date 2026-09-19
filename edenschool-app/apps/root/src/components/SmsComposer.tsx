@@ -970,7 +970,7 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
                 rows={14}
                 value={manualText}
                 onChange={(e) => setManualText(e.target.value)}
-                placeholder={'010-1234-5678, 010-2345-6789\n01034567890\n...'}
+                placeholder="번호를 입력하거나 붙여넣으세요"
                 disabled={loading}
                 style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: '13px' }}
               />
