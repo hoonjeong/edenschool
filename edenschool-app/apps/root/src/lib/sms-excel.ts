@@ -36,7 +36,6 @@ export async function buildSmsExcelTemplate(): Promise<Buffer> {
 
   const ws = wb.addWorksheet(SMS_EXCEL_SHEET);
   ws.columns = [
-    { header: '이름', key: 'name', width: 16 },
     { header: '휴대폰번호', key: 'phone', width: 20 },
   ];
   const header = ws.getRow(1);
@@ -49,15 +48,16 @@ export async function buildSmsExcelTemplate(): Promise<Buffer> {
   ws.getColumn('phone').numFmt = '@';
   ws.getColumn('phone').alignment = { horizontal: 'left' };
 
-  ws.addRow(['예) 홍길동', '010-1234-5678']);
-  ws.addRow(['예) 김학생', '01098765432']);
+  // 번호 하나만 적으면 되는 양식. 이름 열은 두지 않는다(입력이 번거롭다는 요청).
+  ws.addRow(['예) 010-1234-5678']);
+  ws.addRow(['예) 01098765432']);
 
   const guide = wb.addWorksheet('안내');
   guide.getColumn(1).width = 90;
   const lines: [string, boolean][] = [
     ['문자 일괄발송 양식', true],
     ['', false],
-    ['· "발송대상" 시트의 휴대폰번호 열에 번호를 한 줄에 하나씩 입력하세요. (이름은 선택)', false],
+    ['· "발송대상" 시트의 휴대폰번호 열에 번호를 한 줄에 하나씩 입력하세요.', false],
     ['· 010-1234-5678, 01012345678 형식 모두 가능합니다. 하이픈은 있어도 되고 없어도 됩니다.', false],
     ['· "예)" 로 시작하는 예시 행은 발송되지 않습니다. 지우거나 그대로 두어도 됩니다.', false],
     ['· 같은 번호가 여러 번 있으면 한 번만 발송됩니다.', false],
@@ -73,7 +73,8 @@ export async function buildSmsExcelTemplate(): Promise<Buffer> {
 
 /**
  * 업로드된 엑셀에서 발송 대상을 추출한다.
- * - 머리글에서 번호/이름 열을 찾는다. 머리글이 없으면 번호처럼 보이는 첫 열을 쓴다.
+ * - 머리글에서 번호 열을 찾는다(이름 열이 있으면 표시용으로 함께 읽는다).
+ *   머리글이 없으면 번호처럼 보이는 첫 열을 쓴다.
  * - 첫 번째 시트만 읽는다(샘플 양식이면 "발송대상").
  */
 export async function parseSmsExcel(buf: Buffer): Promise<RecipientParseResult & { sheet: string; scanned: number }> {

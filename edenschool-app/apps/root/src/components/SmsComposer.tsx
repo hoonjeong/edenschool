@@ -987,7 +987,7 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
             <div className="card-header">1. 엑셀 업로드</div>
             <div className="card-body">
               <ol style={{ paddingLeft: '18px', fontSize: '13px', color: '#475569', marginBottom: '12px', lineHeight: 1.8 }}>
-                <li>샘플 양식을 내려받아 <strong>휴대폰번호</strong> 열에 번호를 입력합니다. (이름은 선택)</li>
+                <li>샘플 양식을 내려받아 <strong>휴대폰번호</strong> 열에 번호를 한 줄에 하나씩 입력합니다.</li>
                 <li>저장한 파일을 첨부하면 발송 대상이 오른쪽에 표시됩니다.</li>
                 <li>메시지를 작성하고 발송합니다.</li>
               </ol>
@@ -1046,6 +1046,8 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
           const valid = parsed?.valid ?? [];
           const invalid = parsed?.invalid ?? [];
           const duplicates = parsed?.duplicates ?? 0;
+          // 엑셀에 이름 열이 있을 때만 이름 열을 보여준다 (샘플 양식은 번호 열뿐)
+          const hasNames = valid.some((v) => !!v.name);
           return (
             <div className="card">
               <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1069,7 +1071,7 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
                         <thead>
                           <tr>
                             <th style={{ padding: '6px 10px', width: '50px' }}>#</th>
-                            {recipients === 'excel' && <th style={{ padding: '6px 10px' }}>이름</th>}
+                            {hasNames && <th style={{ padding: '6px 10px' }}>이름</th>}
                             <th style={{ padding: '6px 10px' }}>수신번호</th>
                             <th style={{ padding: '6px 10px', width: '60px' }}></th>
                           </tr>
@@ -1080,7 +1082,7 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
                             return (
                               <tr key={v.phone} style={{ background: active ? '#eff6ff' : undefined }}>
                                 <td style={{ padding: '4px 10px', color: '#94a3b8' }}>{v.row ?? idx + 1}</td>
-                                {recipients === 'excel' && <td style={{ padding: '4px 10px' }}>{v.name || <span style={{ color: '#cbd5e1' }}>-</span>}</td>}
+                                {hasNames && <td style={{ padding: '4px 10px' }}>{v.name || <span style={{ color: '#cbd5e1' }}>-</span>}</td>}
                                 <td style={{ padding: '4px 10px' }}>
                                   <span
                                     onClick={() => fetchNumberHistory(v.phone)}
