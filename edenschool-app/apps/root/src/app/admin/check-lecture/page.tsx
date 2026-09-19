@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectLectureListByStudentIdAdmin } from '@edenschool/common/queries/lecture';
 import { toId } from '@/lib/params';
@@ -10,6 +11,7 @@ export default async function CheckLecturePage({
   searchParams: Promise<{ sid?: string }>;
 }) {
   const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const studentId = toId((await searchParams).sid);
   if (!studentId) {

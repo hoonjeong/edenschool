@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { compressImageForMms, formatBytes } from '@/lib/image-compress';
 import { SENDER_PARTS, DEFAULT_SENDER_PART, findAcaPart, acaPartLabel } from '@/lib/aca-parts';
+import { parseRecipientText, normalizeRecipientPhone, type ParsedRecipient } from '@/lib/sms-recipients';
 // 발송 규칙(바이트 계산·종류 판정·MMS 제약)은 교육원 화면과 공유한다.
 // 여기서 따로 정의하면 한쪽만 고쳐져 두 화면이 어긋난다.
 import {
@@ -49,8 +50,24 @@ interface SendLog {
   send_time: string;
 }
 
+/** 발송 대상을 어디서 가져오는지 — 반 선택(기본) / 번호 붙여넣기 / 엑셀 업로드 */
+export type RecipientSource = 'class' | 'manual' | 'excel';
+
 interface Props {
   mode: 'admin' | 'teacher';
+  recipients?: RecipientSource;
+}
+
+/** 서버가 한 요청에 받는 최대 건수(/api/admin/sms). 넘으면 나눠 보낸다. */
+const SEND_CHUNK_SIZE = 100;
+
+/** 엑셀 파싱 API 응답 */
+interface ExcelParseResult {
+  valid: ParsedRecipient[];
+  invalid: ParsedRecipient[];
+  duplicates: number;
+  sheet: string;
+  scanned: number;
 }
 
 /** 고른 발신번호를 이 브라우저에 기억해 두는 키 */
@@ -77,7 +94,7 @@ interface AttachedImage {
   height: number;
 }
 
-export default function SmsComposer({ mode }: Props) {
+export default function SmsComposer({ mode, recipients = 'class' }: Props) {
   /* ─── Card 1: 반 선택 ─── */
   const [sendType, setSendType] = useState<'HIGH' | 'MIDDLE'>('HIGH');
   const [classList, setClassList] = useState<ClassInfo[]>([]);
@@ -89,6 +106,15 @@ export default function SmsComposer({ mode }: Props) {
   const [checkedPhones, setCheckedPhones] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [fetchingStudents, setFetchingStudents] = useState(false);
+
+  /* ─── 번호로 발송: 붙여넣은 번호 텍스트 ─── */
+  const [manualText, setManualText] = useState('');
+
+  /* ─── 엑셀로 발송: 업로드·파싱 결과 ─── */
+  const [excelFileName, setExcelFileName] = useState<string | null>(null);
+  const [excelResult, setExcelResult] = useState<ExcelParseResult | null>(null);
+  const [excelLoading, setExcelLoading] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   /* ─── Card 3: 내용 작성 ─── */
   const [message, setMessage] = useState('');
@@ -208,6 +234,17 @@ export default function SmsComposer({ mode }: Props) {
     fetchAllHistory();
   }, []);
 
+
+  /* ─── 발송 대상 확정 (대상 출처별) ─── */
+  // 반 선택은 체크한 번호, 번호 붙여넣기는 텍스트 파싱 결과, 엑셀은 서버 파싱 결과.
+  // 이 아래 발송·카운트·버튼 활성화는 전부 targetPhones 만 본다.
+  const manualParsed = recipients === 'manual' ? parseRecipientText(manualText) : null;
+  const targetPhones: string[] =
+    recipients === 'manual'
+      ? (manualParsed?.valid ?? []).map((v) => v.phone)
+      : recipients === 'excel'
+        ? (excelResult?.valid ?? []).map((v) => v.phone)
+        : checkedPhones;
 
   /* ─── Card 1 helpers ─── */
   const highClasses = classList.filter((c) => c.grade === '고');
@@ -331,6 +368,59 @@ export default function SmsComposer({ mode }: Props) {
     if (s.sphone) phoneNameMap[s.sphone] = s.studentName;
     if (s.pphone) phoneNameMap[s.pphone] = s.studentName + '(학부모)';
   });
+  excelResult?.valid.forEach((v) => {
+    if (v.name) phoneNameMap[v.phone] = v.name;
+  });
+
+  /* ─── 엑셀 업로드 helpers ─── */
+  const handleExcelSelected = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (excelInputRef.current) excelInputRef.current.value = '';
+    if (!file) return;
+    setExcelLoading(true);
+    setResult(null);
+    try {
+      const form = new FormData();
+      form.append('file', file, file.name);
+      const res = await fetch('/api/admin/sms/excel-parse', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert(data.error || '엑셀을 읽지 못했습니다.');
+        return;
+      }
+      setExcelFileName(file.name);
+      setExcelResult(data as ExcelParseResult);
+      if ((data as ExcelParseResult).valid.length === 0) {
+        alert('엑셀에서 발송 가능한 휴대폰 번호를 찾지 못했습니다. 샘플 양식을 확인해주세요.');
+      }
+    } catch {
+      alert('엑셀 업로드 중 오류가 발생했습니다.');
+    } finally {
+      setExcelLoading(false);
+    }
+  };
+
+  const clearExcel = () => {
+    setExcelFileName(null);
+    setExcelResult(null);
+  };
+
+  // 엑셀·붙여넣기 목록에서 번호 하나 제외 (엑셀은 결과에서, 붙여넣기는 텍스트에서 지운다)
+  const removeTargetPhone = (phone: string) => {
+    if (recipients === 'excel') {
+      setExcelResult((prev) => (prev ? { ...prev, valid: prev.valid.filter((v) => v.phone !== phone) } : prev));
+    } else if (recipients === 'manual') {
+      // 구분자는 남기고, 그 번호로 정규화되는 토큰만 비운다 (같은 번호가 여러 번 있어도 전부)
+      setManualText((prev) =>
+        prev
+          .split(/([,\n\r;\t]+)/)
+          .map((tok) => (normalizeRecipientPhone(tok) === phone ? '' : tok))
+          .join('')
+      );
+    } else {
+      removePhone(phone);
+    }
+  };
 
   /* ─── Card 3 helpers ─── */
   const handleTemplateSelect = (tpl: Template) => {
@@ -442,9 +532,43 @@ export default function SmsComposer({ mode }: Props) {
   };
 
   /* ─── Card 4 helpers ─── */
+  // /api/admin/sms 한 번 호출 (한 묶음). 서버 응답을 그대로 돌려준다.
+  const postSend = async (numbers: string[]) => {
+    let res: Response;
+    if (smsType === 'MMS') {
+      // 이미지 첨부는 multipart/form-data로 전송
+      const form = new FormData();
+      form.append('numbers', JSON.stringify(numbers));
+      form.append('message', message);
+      form.append('type', 'MMS');
+      if (mode === 'admin') form.append('acaPart', String(senderPart));
+      images.forEach((img) => form.append('images', img.file, img.file.name));
+      res = await fetch('/api/admin/sms', { method: 'POST', body: form });
+    } else {
+      res = await fetch('/api/admin/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numbers,
+          message,
+          type: smsType,
+          // 선생님 화면은 보내지 않는다. 서버가 로그인 계정의 aca_part 로 결정한다.
+          ...(mode === 'admin' ? { acaPart: senderPart } : {}),
+        }),
+      });
+    }
+    return res.json();
+  };
+
   const handleSend = async () => {
-    if (checkedPhones.length === 0) {
-      alert('발송 대상을 선택해주세요.');
+    if (targetPhones.length === 0) {
+      alert(
+        recipients === 'manual'
+          ? '발송할 번호를 입력해주세요.'
+          : recipients === 'excel'
+            ? '엑셀 파일을 첨부해 발송 대상을 불러와주세요.'
+            : '발송 대상을 선택해주세요.'
+      );
       return;
     }
     if (!message.trim()) {
@@ -463,7 +587,7 @@ export default function SmsComposer({ mode }: Props) {
     const sender = findAcaPart(senderPart);
     if (
       !confirm(
-        `발신번호: ${sender ? `${sender.label} ${sender.phone}` : '기본'}\n총 ${checkedPhones.length}건의 ${kindLabel}를 발송하시겠습니까?`
+        `발신번호: ${sender ? `${sender.label} ${sender.phone}` : '기본'}\n총 ${targetPhones.length}건의 ${kindLabel}를 발송하시겠습니까?`
       )
     ) {
       return;
@@ -473,37 +597,43 @@ export default function SmsComposer({ mode }: Props) {
     setResult(null);
     setResultTone('success');
     try {
-      let res: Response;
-      if (smsType === 'MMS') {
-        // 이미지 첨부는 multipart/form-data로 전송
-        const form = new FormData();
-        form.append('numbers', JSON.stringify(checkedPhones));
-        form.append('message', message);
-        form.append('type', 'MMS');
-        if (mode === 'admin') form.append('acaPart', String(senderPart));
-        images.forEach((img) => form.append('images', img.file, img.file.name));
-        res = await fetch('/api/admin/sms', { method: 'POST', body: form });
-      } else {
-        res = await fetch('/api/admin/sms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            numbers: checkedPhones,
-            message,
-            type: smsType,
-            // 선생님 화면은 보내지 않는다. 서버가 로그인 계정의 aca_part 로 결정한다.
-            ...(mode === 'admin' ? { acaPart: senderPart } : {}),
-          }),
-        });
+      // 서버는 한 요청에 100건까지만 받는다. 엑셀·붙여넣기는 그보다 클 수 있어
+      // 100건씩 순서대로 보내고 결과를 합산한다. 중간에 서버 오류가 나면 거기서 멈추고
+      // 그때까지의 결과와 함께 알린다(같은 번호로 다시 보내지 않도록).
+      const chunks: string[][] = [];
+      for (let i = 0; i < targetPhones.length; i += SEND_CHUNK_SIZE) {
+        chunks.push(targetPhones.slice(i, i + SEND_CHUNK_SIZE));
       }
-      const data = await res.json();
-      if (data.error) {
+      let total = 0;
+      let sent = 0;
+      let failed = 0;
+      let failReason: string | undefined;
+      let callNum: string | undefined;
+      let serverError: string | undefined;
+      for (const chunk of chunks) {
+        const data = await postSend(chunk);
+        if (data.error) {
+          serverError = String(data.error);
+          break;
+        }
+        const chunkTotal: number = data.count ?? chunk.length;
+        const chunkFailed: number = data.failed ?? 0;
+        total += chunkTotal;
+        failed += chunkFailed;
+        sent += data.sent ?? chunkTotal - chunkFailed;
+        if (!failReason && data.failReason) failReason = data.failReason;
+        if (!callNum && data.callNum) callNum = data.callNum;
+      }
+
+      if (serverError) {
         setResultTone('danger');
-        setResult(`발송 실패: ${data.error}`);
+        setResult(
+          `발송 실패: ${serverError}` +
+            (total > 0 ? `\n(오류 전까지 ${sent}건 발송됨 / 총 대상 ${targetPhones.length}건)` : '')
+        );
+        if (total > 0) fetchAllHistory();
       } else {
-        const total: number = data.count ?? checkedPhones.length;
-        const failed: number = data.failed ?? 0;
-        const sent: number = data.sent ?? total - failed;
+        const data = { failReason, callNum };
 
         if (failed > 0) {
           // 알리고가 거절한 건은 문자가 실제로 가지 않는다. 반드시 눈에 띄게 알린다.
@@ -535,6 +665,8 @@ export default function SmsComposer({ mode }: Props) {
     setCheckedClassIds([]);
     setStudentList([]);
     setCheckedPhones([]);
+    setManualText('');
+    clearExcel();
     setMessage('');
     setResult(null);
     setResultTone('success');
@@ -598,227 +730,405 @@ export default function SmsComposer({ mode }: Props) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        {/* ═══ Card 1: 반 선택 ═══ */}
-        <div className="card">
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>1. 반 선택</span>
-            {checkedClassIds.length > 0 && (
-              <span className="badge badge-primary" style={{ fontSize: '12px' }}>
-                {checkedClassIds.length}개 선택
-              </span>
-            )}
-          </div>
-          <div className="card-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {mode === 'admin' && (
-              <div style={{ marginBottom: '12px', position: 'sticky', top: 0, background: '#ffffff', zIndex: 1, paddingBottom: '8px' }}>
-                <div className="btn-group btn-group-sm" role="group">
-                  <button
-                    className={`btn ${sendType === 'HIGH' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleTypeChange('HIGH')}
-                  >
-                    고등부
-                  </button>
-                  <button
-                    className={`btn ${sendType === 'MIDDLE' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleTypeChange('MIDDLE')}
-                  >
-                    중등부
-                  </button>
+        {/* ═══ 반으로 발송(기본): Card 1 반 선택 + Card 2 인원 선택 ═══ */}
+        {recipients === 'class' && (
+          <>
+          {/* ═══ Card 1: 반 선택 ═══ */}
+          <div className="card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>1. 반 선택</span>
+              {checkedClassIds.length > 0 && (
+                <span className="badge badge-primary" style={{ fontSize: '12px' }}>
+                  {checkedClassIds.length}개 선택
+                </span>
+              )}
+            </div>
+            <div className="card-body" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {mode === 'admin' && (
+                <div style={{ marginBottom: '12px', position: 'sticky', top: 0, background: '#ffffff', zIndex: 1, paddingBottom: '8px' }}>
+                  <div className="btn-group btn-group-sm" role="group">
+                    <button
+                      className={`btn ${sendType === 'HIGH' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleTypeChange('HIGH')}
+                    >
+                      고등부
+                    </button>
+                    <button
+                      className={`btn ${sendType === 'MIDDLE' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleTypeChange('MIDDLE')}
+                    >
+                      중등부
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {mode === 'admin' && currentGroups && (
-              <div>
-                {Object.entries(currentGroups)
-                  .sort(([a], [b]) => Number(a) - Number(b))
-                  .map(([year, classes]) => (
-                    <div key={year} style={{ marginBottom: '10px' }}>
-                      <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>
-                        <label style={{ cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
-                          <input
-                            type="checkbox"
-                            checked={isYearAllChecked(classes)}
-                            onChange={(e) => handleYearAllToggle(classes, e.target.checked)}
-                            style={{ marginRight: '6px' }}
-                          />
-                          {year}학년 전체
-                        </label>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', paddingLeft: '4px' }}>
-                        {classes.map((cls) => (
-                          <label key={cls.id} style={{ cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>
+              {mode === 'admin' && currentGroups && (
+                <div>
+                  {Object.entries(currentGroups)
+                    .sort(([a], [b]) => Number(a) - Number(b))
+                    .map(([year, classes]) => (
+                      <div key={year} style={{ marginBottom: '10px' }}>
+                        <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>
+                          <label style={{ cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>
                             <input
                               type="checkbox"
-                              checked={checkedClassIds.includes(cls.id)}
-                              onChange={() => handleClassToggle(cls.id)}
-                              style={{ marginRight: '4px' }}
+                              checked={isYearAllChecked(classes)}
+                              onChange={(e) => handleYearAllToggle(classes, e.target.checked)}
+                              style={{ marginRight: '6px' }}
                             />
-                            {cls.name}
+                            {year}학년 전체
                           </label>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', paddingLeft: '4px' }}>
+                          {classes.map((cls) => (
+                            <label key={cls.id} style={{ cursor: 'pointer', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                              <input
+                                type="checkbox"
+                                checked={checkedClassIds.includes(cls.id)}
+                                onChange={() => handleClassToggle(cls.id)}
+                                style={{ marginRight: '4px' }}
+                              />
+                              {cls.name}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {mode === 'teacher' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {classList.map((cls) => (
+                    <label key={cls.id} style={{ cursor: 'pointer', fontSize: '13px' }}>
+                      <input
+                        type="checkbox"
+                        checked={checkedClassIds.includes(cls.id)}
+                        onChange={() => handleClassToggle(cls.id)}
+                        style={{ marginRight: '6px' }}
+                      />
+                      {cls.name}
+                    </label>
+                  ))}
+                  {classList.length === 0 && (
+                    <span style={{ color: '#94a3b8', fontSize: '13px' }}>담당 반이 없습니다.</span>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* 스크롤 밖 고정 영역 — 목록이 길어도 버튼이 항상 보이게 한다 */}
+            <div style={{ padding: '10px 12px', borderTop: '1px solid #e2e8f0' }}>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={fetchStudents}
+                disabled={fetchingStudents || checkedClassIds.length === 0}
+              >
+                {fetchingStudents ? '불러오는 중...' : '선택반 불러오기'}
+              </button>
+            </div>
+          </div>
+
+          {/* ═══ Card 2: 인원 선택 ═══ */}
+          <div className="card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>2. 인원 선택</span>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>
+                선택: <strong style={{ color: '#3b82f6' }}>{checkedPhones.length}명</strong>
+              </span>
+            </div>
+            <div className="card-body" style={{ padding: 0 }}>
+              {studentList.length > 0 ? (
+                <>
+                  {/* Toggle buttons + search */}
+                  <div style={{ padding: '10px 12px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                      className={`btn btn-sm ${allStudentsChecked ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleAllStudentToggle(!allStudentsChecked)}
+                    >
+                      학생 전체 ({studentList.filter((s) => s.sphone).length})
+                    </button>
+                    <button
+                      className={`btn btn-sm ${allParentsChecked ? 'btn-primary' : 'btn-outline-secondary'}`}
+                      onClick={() => handleAllParentToggle(!allParentsChecked)}
+                    >
+                      학부모 전체 ({studentList.filter((s) => s.pphone).length})
+                    </button>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="이름 검색..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ width: '140px', marginLeft: 'auto' }}
+                    />
+                  </div>
+
+                  {/* Student table */}
+                  <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                    <table className="table table-sm" style={{ marginBottom: 0, fontSize: '13px' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding: '6px 10px' }}>반 / 이름</th>
+                          <th style={{ padding: '6px 10px', width: '80px', textAlign: 'center' }}>학생</th>
+                          <th style={{ padding: '6px 10px', width: '80px', textAlign: 'center' }}>학부모</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredStudents.map((s, idx) => (
+                          <tr key={idx}>
+                            <td style={{ padding: '4px 10px' }}>{s.className} {s.studentName}</td>
+                            <td style={{ padding: '4px 10px', textAlign: 'center' }}>
+                              {s.sphone ? (
+                                <input
+                                  type="checkbox"
+                                  checked={checkedPhones.includes(s.sphone)}
+                                  onChange={() => handlePhoneToggle(s.sphone)}
+                                />
+                              ) : (
+                                <span style={{ color: '#cbd5e1' }}>-</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '4px 10px', textAlign: 'center' }}>
+                              {s.pphone ? (
+                                <input
+                                  type="checkbox"
+                                  checked={checkedPhones.includes(s.pphone)}
+                                  onChange={() => handlePhoneToggle(s.pphone)}
+                                />
+                              ) : (
+                                <span style={{ color: '#cbd5e1' }}>-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Selected chips */}
+                  {checkedPhones.length > 0 && (
+                    <div style={{ padding: '8px 12px', borderTop: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
+                      {checkedPhones.map((phone) => {
+                        const active = phone === selectedNumber;
+                        return (
+                          <span
+                            key={phone}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '2px 8px',
+                              backgroundColor: active ? '#2563eb' : '#eff6ff',
+                              border: `1px solid ${active ? '#2563eb' : '#bfdbfe'}`,
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              color: active ? '#fff' : '#1e40af',
+                            }}
+                          >
+                            <span
+                              onClick={() => fetchNumberHistory(phone)}
+                              style={{ cursor: 'pointer' }}
+                              title="이 번호의 발송 이력 보기"
+                            >
+                              {phoneNameMap[phone] || phone}
+                            </span>
+                            <span
+                              onClick={() => removePhone(phone)}
+                              style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '2px', color: active ? '#dbeafe' : '#6b7280' }}
+                            >
+                              ×
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                  반을 선택하고 &quot;선택반 불러오기&quot;를 클릭해주세요.
+                </div>
+              )}
+            </div>
+          </div>
+          </>
+        )}
+
+        {/* ═══ 번호로 발송: Card 1 번호 입력 ═══ */}
+        {recipients === 'manual' && (
+          <div className="card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>1. 번호 입력</span>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>쉼표(,) 또는 줄바꿈으로 구분</span>
+            </div>
+            <div className="card-body">
+              <textarea
+                className="form-control"
+                rows={14}
+                value={manualText}
+                onChange={(e) => setManualText(e.target.value)}
+                placeholder={'010-1234-5678, 010-2345-6789\n01034567890\n...'}
+                disabled={loading}
+                style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: '13px' }}
+              />
+              <div style={{ marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
+                하이픈은 있어도 없어도 됩니다. 같은 번호는 한 번만 발송됩니다.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 엑셀로 발송: Card 1 엑셀 업로드 ═══ */}
+        {recipients === 'excel' && (
+          <div className="card">
+            <div className="card-header">1. 엑셀 업로드</div>
+            <div className="card-body">
+              <ol style={{ paddingLeft: '18px', fontSize: '13px', color: '#475569', marginBottom: '12px', lineHeight: 1.8 }}>
+                <li>샘플 양식을 내려받아 <strong>휴대폰번호</strong> 열에 번호를 입력합니다. (이름은 선택)</li>
+                <li>저장한 파일을 첨부하면 발송 대상이 오른쪽에 표시됩니다.</li>
+                <li>메시지를 작성하고 발송합니다.</li>
+              </ol>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <a className="btn btn-sm btn-outline-success" href="/api/admin/sms/excel-template">
+                  <i className="fas fa-file-excel" style={{ marginRight: 4 }}></i>샘플 엑셀 다운로드
+                </a>
+                <input
+                  ref={excelInputRef}
+                  type="file"
+                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleExcelSelected(e.target.files)}
+                />
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={() => excelInputRef.current?.click()}
+                  disabled={excelLoading || loading}
+                >
+                  {excelLoading ? (
+                    <><i className="fas fa-spinner fa-spin" style={{ marginRight: 4 }}></i>읽는 중...</>
+                  ) : (
+                    <><i className="fas fa-paperclip" style={{ marginRight: 4 }}></i>엑셀 파일 첨부</>
+                  )}
+                </button>
+              </div>
+
+              {excelFileName && excelResult && (
+                <div style={{ marginTop: '14px', padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <i className="fas fa-file-excel" style={{ color: '#16a34a', marginRight: 4 }}></i>
+                      {excelFileName}
+                      <span style={{ color: '#94a3b8', marginLeft: 6 }}>({excelResult.sheet} 시트)</span>
+                    </span>
+                    <button className="btn btn-sm btn-outline-secondary" onClick={clearExcel} disabled={loading}>
+                      제거
+                    </button>
+                  </div>
+                  <div style={{ marginTop: '6px', color: '#475569' }}>
+                    읽은 행 {excelResult.scanned}개 → 발송 대상 <strong style={{ color: '#2563eb' }}>{excelResult.valid.length}건</strong>
+                    {excelResult.duplicates > 0 && ` · 중복 제외 ${excelResult.duplicates}건`}
+                    {excelResult.invalid.length > 0 && (
+                      <span style={{ color: '#dc2626' }}> · 번호 형식 오류 {excelResult.invalid.length}건</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ 번호로/엑셀로 발송: Card 2 발송 대상 확인 ═══ */}
+        {recipients !== 'class' && (() => {
+          const parsed = recipients === 'manual' ? manualParsed : excelResult;
+          const valid = parsed?.valid ?? [];
+          const invalid = parsed?.invalid ?? [];
+          const duplicates = parsed?.duplicates ?? 0;
+          return (
+            <div className="card">
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>2. 발송 대상 확인</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  대상: <strong style={{ color: '#3b82f6' }}>{valid.length}건</strong>
+                  {duplicates > 0 && <span style={{ marginLeft: 6, color: '#94a3b8' }}>중복 {duplicates}건 제외</span>}
+                </span>
+              </div>
+              <div className="card-body" style={{ padding: 0 }}>
+                {valid.length === 0 && invalid.length === 0 ? (
+                  <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    {recipients === 'manual'
+                      ? '왼쪽에 번호를 입력하면 여기에 발송 대상이 표시됩니다.'
+                      : '엑셀 파일을 첨부하면 여기에 발송 대상이 표시됩니다.'}
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                      <table className="table table-sm" style={{ marginBottom: 0, fontSize: '13px' }}>
+                        <thead>
+                          <tr>
+                            <th style={{ padding: '6px 10px', width: '50px' }}>#</th>
+                            {recipients === 'excel' && <th style={{ padding: '6px 10px' }}>이름</th>}
+                            <th style={{ padding: '6px 10px' }}>수신번호</th>
+                            <th style={{ padding: '6px 10px', width: '60px' }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {valid.map((v, idx) => {
+                            const active = v.phone === selectedNumber;
+                            return (
+                              <tr key={v.phone} style={{ background: active ? '#eff6ff' : undefined }}>
+                                <td style={{ padding: '4px 10px', color: '#94a3b8' }}>{v.row ?? idx + 1}</td>
+                                {recipients === 'excel' && <td style={{ padding: '4px 10px' }}>{v.name || <span style={{ color: '#cbd5e1' }}>-</span>}</td>}
+                                <td style={{ padding: '4px 10px' }}>
+                                  <span
+                                    onClick={() => fetchNumberHistory(v.phone)}
+                                    style={{ cursor: 'pointer', color: active ? '#2563eb' : undefined }}
+                                    title="이 번호의 발송 이력 보기"
+                                  >
+                                    {v.phone}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '4px 10px', textAlign: 'right' }}>
+                                  <span
+                                    onClick={() => removeTargetPhone(v.phone)}
+                                    style={{ cursor: 'pointer', color: '#6b7280', fontWeight: 'bold' }}
+                                    title="대상에서 제외"
+                                  >
+                                    ×
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {invalid.length > 0 && (
+                      <div style={{ padding: '8px 12px', borderTop: '1px solid #fecaca', background: '#fef2f2', fontSize: '12px', color: '#b91c1c', maxHeight: '110px', overflowY: 'auto' }}>
+                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                          <i className="fas fa-exclamation-triangle" style={{ marginRight: 4 }}></i>
+                          번호 형식이 아니어서 제외된 항목 {invalid.length}건
+                        </div>
+                        {invalid.map((v, i) => (
+                          <div key={i}>
+                            {v.row ? `${v.row}행: ` : ''}
+                            {v.name ? `${v.name} · ` : ''}
+                            {v.source}
+                          </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-            {mode === 'teacher' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {classList.map((cls) => (
-                  <label key={cls.id} style={{ cursor: 'pointer', fontSize: '13px' }}>
-                    <input
-                      type="checkbox"
-                      checked={checkedClassIds.includes(cls.id)}
-                      onChange={() => handleClassToggle(cls.id)}
-                      style={{ marginRight: '6px' }}
-                    />
-                    {cls.name}
-                  </label>
-                ))}
-                {classList.length === 0 && (
-                  <span style={{ color: '#94a3b8', fontSize: '13px' }}>담당 반이 없습니다.</span>
+                    )}
+                  </>
                 )}
               </div>
-            )}
+            </div>
+          );
+        })()}
 
-          </div>
 
-          {/* 스크롤 밖 고정 영역 — 목록이 길어도 버튼이 항상 보이게 한다 */}
-          <div style={{ padding: '10px 12px', borderTop: '1px solid #e2e8f0' }}>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={fetchStudents}
-              disabled={fetchingStudents || checkedClassIds.length === 0}
-            >
-              {fetchingStudents ? '불러오는 중...' : '선택반 불러오기'}
-            </button>
-          </div>
-        </div>
-
-        {/* ═══ Card 2: 인원 선택 ═══ */}
-        <div className="card">
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>2. 인원 선택</span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
-              선택: <strong style={{ color: '#3b82f6' }}>{checkedPhones.length}명</strong>
-            </span>
-          </div>
-          <div className="card-body" style={{ padding: 0 }}>
-            {studentList.length > 0 ? (
-              <>
-                {/* Toggle buttons + search */}
-                <div style={{ padding: '10px 12px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button
-                    className={`btn btn-sm ${allStudentsChecked ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleAllStudentToggle(!allStudentsChecked)}
-                  >
-                    학생 전체 ({studentList.filter((s) => s.sphone).length})
-                  </button>
-                  <button
-                    className={`btn btn-sm ${allParentsChecked ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => handleAllParentToggle(!allParentsChecked)}
-                  >
-                    학부모 전체 ({studentList.filter((s) => s.pphone).length})
-                  </button>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    placeholder="이름 검색..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ width: '140px', marginLeft: 'auto' }}
-                  />
-                </div>
-
-                {/* Student table */}
-                <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
-                  <table className="table table-sm" style={{ marginBottom: 0, fontSize: '13px' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ padding: '6px 10px' }}>반 / 이름</th>
-                        <th style={{ padding: '6px 10px', width: '80px', textAlign: 'center' }}>학생</th>
-                        <th style={{ padding: '6px 10px', width: '80px', textAlign: 'center' }}>학부모</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredStudents.map((s, idx) => (
-                        <tr key={idx}>
-                          <td style={{ padding: '4px 10px' }}>{s.className} {s.studentName}</td>
-                          <td style={{ padding: '4px 10px', textAlign: 'center' }}>
-                            {s.sphone ? (
-                              <input
-                                type="checkbox"
-                                checked={checkedPhones.includes(s.sphone)}
-                                onChange={() => handlePhoneToggle(s.sphone)}
-                              />
-                            ) : (
-                              <span style={{ color: '#cbd5e1' }}>-</span>
-                            )}
-                          </td>
-                          <td style={{ padding: '4px 10px', textAlign: 'center' }}>
-                            {s.pphone ? (
-                              <input
-                                type="checkbox"
-                                checked={checkedPhones.includes(s.pphone)}
-                                onChange={() => handlePhoneToggle(s.pphone)}
-                              />
-                            ) : (
-                              <span style={{ color: '#cbd5e1' }}>-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Selected chips */}
-                {checkedPhones.length > 0 && (
-                  <div style={{ padding: '8px 12px', borderTop: '1px solid #e2e8f0', display: 'flex', flexWrap: 'wrap', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
-                    {checkedPhones.map((phone) => {
-                      const active = phone === selectedNumber;
-                      return (
-                        <span
-                          key={phone}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '2px 8px',
-                            backgroundColor: active ? '#2563eb' : '#eff6ff',
-                            border: `1px solid ${active ? '#2563eb' : '#bfdbfe'}`,
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            color: active ? '#fff' : '#1e40af',
-                          }}
-                        >
-                          <span
-                            onClick={() => fetchNumberHistory(phone)}
-                            style={{ cursor: 'pointer' }}
-                            title="이 번호의 발송 이력 보기"
-                          >
-                            {phoneNameMap[phone] || phone}
-                          </span>
-                          <span
-                            onClick={() => removePhone(phone)}
-                            style={{ cursor: 'pointer', fontWeight: 'bold', marginLeft: '2px', color: active ? '#dbeafe' : '#6b7280' }}
-                          >
-                            ×
-                          </span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
-                반을 선택하고 &quot;선택반 불러오기&quot;를 클릭해주세요.
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* ═══ Card 3: 내용 작성 및 발송 ═══ */}
         <div className="card">
@@ -970,7 +1280,7 @@ export default function SmsComposer({ mode }: Props) {
             {/* Type info */}
             <div style={{ marginTop: '8px', fontSize: '13px', color: overByteLimit || overSingleSms ? '#dc2626' : '#64748b' }}>
               {byteLength} byte{overByteLimit && ` (최대 ${MMS_MAX_BYTES})`} · {smsType}
-              {smsType === 'MMS' && ` · 이미지 ${images.length}장`} · 대상 {checkedPhones.length}명
+              {smsType === 'MMS' && ` · 이미지 ${images.length}장`} · 대상 {targetPhones.length}명
             </div>
 
             {/* 발신번호 선택 — 고른 값은 이 브라우저에 기억된다 */}
@@ -1035,7 +1345,7 @@ export default function SmsComposer({ mode }: Props) {
               <button
                 className="btn btn-danger"
                 onClick={handleSend}
-                disabled={loading || compressing || checkedPhones.length === 0 || !message.trim() || overByteLimit || (smsType === 'MMS' && images.length === 0)}
+                disabled={loading || compressing || targetPhones.length === 0 || !message.trim() || overByteLimit || (smsType === 'MMS' && images.length === 0)}
                 style={{ flex: 1 }}
               >
                 {loading ? '발송 중...' : smsType === 'MMS' ? '이미지 문자 발송하기' : '발송하기'}

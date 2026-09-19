@@ -554,3 +554,26 @@
   color: var(--admin-primary);
   border-bottom-color: var(--admin-primary);
 }
+
+/* 링크 대신 버튼으로 만든 탭(같은 화면 안에서 전환) — a 와 같은 모양 */
+.admin-sub-nav button {
+  padding: 8px 16px;
+  color: #64748b;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.admin-sub-nav button:hover {
+  color: #1e293b;
+}
+
+.admin-sub-nav button.active {
+  color: var(--admin-primary);
+  border-bottom-color: var(--admin-primary);
+}

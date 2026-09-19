@@ -1,5 +1,5 @@
 import { requireAdminSession } from '@/lib/admin-session';
-import { redirect } from 'next/navigation';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectNewStudentList, selectReStudentList, selectExitStudentOneMonthList } from '@edenschool/common/queries/student';
 import { newStudentChart, exitStudentChart, gradeYearPieChart, studentAnalysisPieChart } from '@edenschool/common/queries/admin-user';
 import StatisticsClient from './StatisticsClient';
@@ -7,10 +7,8 @@ import StatisticsClient from './StatisticsClient';
 export default async function StatisticsPage() {
   const session = await requireAdminSession();
 
-  // Admin only - redirect non-admin users
-  if (session.user.code !== 'O') {
-    redirect('/admin');
-  }
+  // 운영진 전용 — 선생님/독서교육원은 권한 없음 안내
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   // New students (last month) - insert_date == modify_date means brand new
   const newStudents = await selectNewStudentList();

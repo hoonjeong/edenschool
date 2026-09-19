@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectClassInfoById } from '@edenschool/common/queries/class';
 import { selectClassStudentListByClassId } from '@edenschool/common/queries/student';
 import Link from 'next/link';
@@ -12,6 +13,7 @@ interface ClassInfoPageProps {
 
 export default async function ClassInfoPage({ searchParams }: ClassInfoPageProps) {
   const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   const classId = toId(params.id);

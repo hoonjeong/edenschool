@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectPostList } from '@edenschool/common/queries/post';
 import { boardPostPath } from '@/lib/board';
 
 export default async function PostInfoPage() {
   const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const posts = await selectPostList();
 

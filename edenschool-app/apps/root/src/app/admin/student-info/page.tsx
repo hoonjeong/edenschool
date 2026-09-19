@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { selectClassInfoByStudentId, selectClassInfoLive } from '@edenschool/common/queries/class';
 import { selectStudentMemos } from '@edenschool/common/queries/student-record';
@@ -13,7 +13,7 @@ export default async function StudentInfoPage({
 }) {
   const session = await requireAdminSession();
   // 원장 전용 페이지 — 선생님은 선생님용 상세(teacher-student-info)로 유도
-  if (session.user.code !== 'O') redirect('/admin/student-manage');
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   // 숫자가 아닌 값(?id=undefined 등)이 그대로 쿼리로 넘어가면 서버 예외가 난다.

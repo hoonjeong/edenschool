@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import {
   searchSplitFiles,
   selectSplitFileDistinctGrades,
@@ -23,7 +24,8 @@ export default async function SplitFileAddPage({
     metaId?: string;
   }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   const keyword = params.keyword || '';

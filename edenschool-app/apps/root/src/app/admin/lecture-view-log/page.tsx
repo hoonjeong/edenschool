@@ -1,9 +1,11 @@
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectLectureViewLogs } from '@edenschool/common/queries/lecture-view-log';
 import LectureViewLogClient from './LectureViewLogClient';
 
 export default async function LectureViewLogPage() {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const logs = await selectLectureViewLogs(200);
 

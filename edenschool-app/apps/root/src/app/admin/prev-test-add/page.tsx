@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { searchPrevTests, type PrevTestSearchParams } from '@/lib/prev-test-search';
 import DashboardFilters from '../prev-test-dashboard/DashboardFilters';
 import ResultTable from '../prev-test-dashboard/ResultTable';
@@ -14,7 +15,8 @@ export default async function PrevTestAddPage({
 }: {
   searchParams: Promise<PrevTestSearchParams & { metaId?: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   const { region, testList, schools, publishers, years } = await searchPrevTests(params);

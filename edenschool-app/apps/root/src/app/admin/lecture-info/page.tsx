@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { searchLectureList } from '@edenschool/common/queries/lecture';
 import LectureSearch from './LectureSearch';
 
@@ -17,7 +18,8 @@ export default async function LectureInfoPage({
 }: {
   searchParams: Promise<{ search?: string; page?: string; period?: string }>;
 }) {
-  await requireAdminSession();
+  const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   const search = params.search || '';

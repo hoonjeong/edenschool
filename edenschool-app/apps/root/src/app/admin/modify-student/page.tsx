@@ -1,4 +1,5 @@
 import { requireAdminSession } from '@/lib/admin-session';
+import { AdminAccessDenied } from '@/components/AdminAccessDenied';
 import { selectStudentById } from '@edenschool/common/queries/student';
 import { toId } from '@/lib/params';
 
@@ -8,6 +9,7 @@ export default async function ModifyStudentPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const session = await requireAdminSession();
+  if (session.user.code !== 'O') return <AdminAccessDenied />;
 
   const params = await searchParams;
   const studentId = toId(params.id);
