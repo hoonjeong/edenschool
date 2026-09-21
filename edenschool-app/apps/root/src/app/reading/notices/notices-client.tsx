@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Megaphone, Plus, Send, Eye, Pencil, Trash2, FileText, Info, Check, MessageSquare, ImagePlus, X } from "lucide-react";
+import { Megaphone, Plus, Send, Eye, Pencil, Trash2, FileText, Info, Check, MessageSquare, ImagePlus, X, Copy } from "lucide-react";
 import { compressImageForMms, formatBytes } from "@/lib/image-compress";
 // 발송 규칙은 학원 화면(SmsComposer)과 공유한다 — 한쪽만 고쳐져 어긋나지 않도록.
 import {
@@ -124,6 +124,7 @@ function SendView({ templates, students, recentLogs }: { templates: TemplateRow[
   const [result, setResult] = useState<SendResult | null>(null);
   const [images, setImages] = useState<AttachedImage[]>([]);
   const [compressing, setCompressing] = useState(false);
+  const [failedCopied, setFailedCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
 
@@ -215,7 +216,29 @@ ${selected.size}명에게 ${kindLabel}를 발송할까요?`)) return;
     start(async () => {
       const r = await sendNotices(template.body, [...selected], template.id, images.map((i) => i.dataUrl));
       setResult(r);
+      setFailedCopied(false);
     });
+  }
+
+  // 실패 번호를 한 줄에 하나씩 복사 — 다른 문자 도구에 붙여넣어 수동 재발송하는 용도.
+  async function copyFailed() {
+    if (!result?.failures.length) return;
+    const text = result.failures.map((f) => f.phone).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // http 환경 등 clipboard API 가 막힌 경우 임시 textarea 로 복사
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setFailedCopied(true);
+    setTimeout(() => setFailedCopied(false), 2000);
   }
 
   return (
@@ -338,6 +361,35 @@ ${selected.size}명에게 ${kindLabel}를 발송할까요?`)) return;
                   {isSenderNotRegistered(result.failReason) && <div>{SENDER_NOT_REGISTERED_HINT}</div>}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 실패 번호 목록 — 복사해서 수동으로 다시 보낼 수 있게 */}
+          {result && result.failures.length > 0 && (
+            <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50/60 px-4 py-3 text-[13px]">
+              <div className="flex items-center justify-between mb-2">
+                <strong className="text-rose-700">발송 실패 번호 {result.failures.length}건</strong>
+                <Button variant="danger" size="sm" onClick={copyFailed}>
+                  {failedCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  {failedCopied ? "복사됨" : "번호 복사"}
+                </Button>
+              </div>
+              <textarea
+                readOnly
+                value={result.failures.map((f) => f.phone).join("\n")}
+                onFocus={(e) => e.currentTarget.select()}
+                rows={Math.min(result.failures.length, 6)}
+                className="w-full rounded-md border border-rose-200 bg-white px-2 py-1.5 font-mono text-[13px] resize-y"
+              />
+              <ul className="mt-2 pl-4 list-disc text-[12px] text-rose-800 space-y-0.5">
+                {result.failures.map((f, i) => (
+                  <li key={`${f.phone}-${i}`}>
+                    {f.name ? `${f.name} · ` : ""}{f.phone}
+                    {f.reason ? ` — ${f.reason}` : ""}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 text-[12px] text-rose-700">※ 번호를 복사해 두었다가 수동으로 다시 보내주세요.</div>
             </div>
           )}
 

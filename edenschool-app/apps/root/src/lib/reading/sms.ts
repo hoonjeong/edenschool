@@ -111,19 +111,44 @@ export async function sendSms(opts: {
   return ok ? { ok, raw, dryRun } : { ok, raw, dryRun, reason: smsFailureReason(raw) };
 }
 
+/** 실패한 건 하나 — 화면에서 번호를 복사해 수동 재발송하는 데 쓴다. */
+export interface BulkFailure {
+  phone: string;
+  /** 학생 이름 등 화면 표시용 (발송에는 쓰지 않는다) */
+  name?: string;
+  reason?: string;
+}
+
+export interface BulkResult {
+  total: number;
+  success: number;
+  failed: number;
+  dryRun: boolean;
+  /** 대표 실패 사유 1건 (대부분 같은 원인이라 요약용) */
+  failReason?: string;
+  /** 건별 실패 목록. "2건 실패"만으로는 어느 번호인지 알 수 없어 따로 돌려준다. */
+  failures: BulkFailure[];
+}
+
 /** 대량 발송 — 개인별 치환된 메시지 배열을 순차 발송 */
 export async function sendBulk(
-  items: { phone: string; message: string; title?: string }[],
+  items: { phone: string; message: string; title?: string; name?: string }[],
   opts: { sendId?: number; templateId?: number; images?: SmsImage[] } = {},
-): Promise<{ total: number; success: number; failed: number; dryRun: boolean; failReason?: string }> {
+): Promise<BulkResult> {
   let success = 0;
   let dryRun = false;
   let failReason: string | undefined;
+  const failures: BulkFailure[] = [];
 
   for (const it of items) {
-    const r = await sendSms({ ...it, ...opts });
-    if (r.ok) success++;
-    else failReason ??= r.reason;
+    const { name, ...sendArgs } = it;
+    const r = await sendSms({ ...sendArgs, ...opts });
+    if (r.ok) {
+      success++;
+    } else {
+      failReason ??= r.reason;
+      failures.push({ phone: it.phone, name, reason: r.reason });
+    }
     dryRun = r.dryRun;
   }
 
@@ -133,5 +158,5 @@ export async function sendBulk(
     console.error(`독서교육원 문자 실패 ${failed}/${items.length}건 (발신번호 ${READING_CALLNUM}):`, failReason);
   }
 
-  return { total: items.length, success, failed, dryRun, failReason };
+  return { total: items.length, success, failed, dryRun, failReason, failures };
 }

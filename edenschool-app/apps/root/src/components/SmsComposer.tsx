@@ -140,6 +140,10 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
   const [teacherSender, setTeacherSender] = useState<{ part: number | null; phone: string; assigned: boolean } | null>(null);
   // 결과 배너 색상. 문자열에 '실패'가 들어있는지로 판정하면 "실패 0건"도 빨갛게 되어 따로 둔다.
   const [resultTone, setResultTone] = useState<'success' | 'danger'>('success');
+  // 알리고가 거절했거나(통신사 사유 등) 서버 오류로 보내지 못한 번호 목록.
+  // "2건 실패"만 보여주면 어느 번호인지 이력에서 찾아야 해서, 복사해 수동 발송할 수 있게 따로 둔다.
+  const [failedPhones, setFailedPhones] = useState<{ phone: string; reason?: string }[]>([]);
+  const [failedCopied, setFailedCopied] = useState(false);
   const [allHistory, setAllHistory] = useState<SendLog[]>([]);
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [numberHistory, setNumberHistory] = useState<SendLog[]>([]);
@@ -596,6 +600,8 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
     setLoading(true);
     setResult(null);
     setResultTone('success');
+    setFailedPhones([]);
+    setFailedCopied(false);
     try {
       // 서버는 한 요청에 100건까지만 받는다. 엑셀·붙여넣기는 그보다 클 수 있어
       // 100건씩 순서대로 보내고 결과를 합산한다. 중간에 서버 오류가 나면 거기서 멈추고
@@ -610,10 +616,14 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
       let failReason: string | undefined;
       let callNum: string | undefined;
       let serverError: string | undefined;
-      for (const chunk of chunks) {
+      const failedList: { phone: string; reason?: string }[] = [];
+      for (let ci = 0; ci < chunks.length; ci++) {
+        const chunk = chunks[ci];
         const data = await postSend(chunk);
         if (data.error) {
           serverError = String(data.error);
+          // 오류가 난 청크부터는 한 건도 나가지 않았다. 수동 발송 대상에 같이 넣는다.
+          chunks.slice(ci).flat().forEach((phone) => failedList.push({ phone, reason: '서버 오류로 미발송' }));
           break;
         }
         const chunkTotal: number = data.count ?? chunk.length;
@@ -623,7 +633,12 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
         sent += data.sent ?? chunkTotal - chunkFailed;
         if (!failReason && data.failReason) failReason = data.failReason;
         if (!callNum && data.callNum) callNum = data.callNum;
+        // 서버가 건별 결과를 돌려주므로 실패한 번호만 골라 모은다.
+        (data.results as { phone: string; success: boolean; reason?: string }[] | undefined)
+          ?.filter((r) => !r.success)
+          .forEach((r) => failedList.push({ phone: r.phone, reason: r.reason }));
       }
+      setFailedPhones(failedList);
 
       if (serverError) {
         setResultTone('danger');
@@ -661,6 +676,26 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
     }
   };
 
+  // 실패 번호를 한 줄에 하나씩 클립보드에 복사. "번호로 발송" 탭이나 다른 문자 도구에 그대로 붙여넣을 수 있다.
+  const handleCopyFailed = async () => {
+    const text = failedPhones.map((f) => f.phone).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // http 환경 등 clipboard API 가 막힌 경우 임시 textarea 로 복사
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setFailedCopied(true);
+    setTimeout(() => setFailedCopied(false), 2000);
+  };
+
   const handleReset = () => {
     setCheckedClassIds([]);
     setStudentList([]);
@@ -670,6 +705,8 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
     setMessage('');
     setResult(null);
     setResultTone('success');
+    setFailedPhones([]);
+    setFailedCopied(false);
     setSearchQuery('');
     setSelectedNumber(null);
     setNumberHistory([]);
@@ -1368,6 +1405,56 @@ export default function SmsComposer({ mode, recipients = 'class' }: Props) {
                 style={{ marginTop: '12px', marginBottom: 0, fontSize: '13px', whiteSpace: 'pre-line' }}
               >
                 {result}
+              </div>
+            )}
+
+            {/* 실패 번호 목록 — 복사해서 수동으로 다시 보낼 수 있게 */}
+            {failedPhones.length > 0 && (
+              <div
+                style={{
+                  marginTop: '8px',
+                  padding: '10px 12px',
+                  border: '1px solid #fca5a5',
+                  borderRadius: '6px',
+                  background: '#fff7f7',
+                  fontSize: '13px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <strong style={{ color: '#b91c1c' }}>발송 실패 번호 {failedPhones.length}건</strong>
+                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={handleCopyFailed}>
+                    {failedCopied ? '복사됨 ✓' : '번호 복사'}
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={failedPhones.map((f) => f.phone).join('\n')}
+                  onFocus={(e) => e.currentTarget.select()}
+                  rows={Math.min(failedPhones.length, 6)}
+                  style={{
+                    width: '100%',
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    padding: '6px 8px',
+                    border: '1px solid #fecaca',
+                    borderRadius: '4px',
+                    background: '#fff',
+                    resize: 'vertical',
+                  }}
+                />
+                <ul style={{ margin: '6px 0 0', paddingLeft: '18px', color: '#7f1d1d', fontSize: '12px' }}>
+                  {failedPhones.map((f, i) => (
+                    <li key={`${f.phone}-${i}`}>
+                      {f.phone}
+                      {f.reason ? ` — ${f.reason}` : ''}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: '6px', color: '#991b1b', fontSize: '12px' }}>
+                  {mode === 'admin'
+                    ? '※ 번호를 복사해 "번호로 발송" 탭에 붙여넣으면 실패한 번호로만 다시 보낼 수 있습니다.'
+                    : '※ 번호를 복사해 두었다가 수동으로 다시 보내주세요.'}
+                </div>
               </div>
             )}
           </div>

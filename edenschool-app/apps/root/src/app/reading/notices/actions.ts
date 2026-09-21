@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/reading/prisma";
 import { revalidatePath } from "next/cache";
-import { sendBulk, dataUrlToSmsImage, MMS_MAX_IMAGES } from "@/lib/reading/sms";
+import { sendBulk, dataUrlToSmsImage, MMS_MAX_IMAGES, type BulkResult } from "@/lib/reading/sms";
 import { areaScores, type ObsItem } from "@/lib/reading/data";
 import { requireSession } from "@/lib/reading/session";
 
@@ -99,21 +99,25 @@ export async function sendNotices(
   templateId?: number,
   /** 첨부 이미지 data URL (최대 3장). 있으면 MMS 로 나간다. */
   imageDataUrls: string[] = [],
-) {
+): Promise<BulkResult> {
   const session = await requireSession();
 
+  // 발송 전 검증 실패 — 한 건도 나가지 않았으므로 실패 목록은 비어 있다.
+  const rejected = (failReason: string): BulkResult => ({ total: 0, success: 0, failed: 0, dryRun: false, failReason, failures: [] });
+
   if (imageDataUrls.length > MMS_MAX_IMAGES) {
-    return { total: 0, success: 0, failed: 0, dryRun: false, failReason: `이미지는 최대 ${MMS_MAX_IMAGES}장까지 첨부할 수 있습니다.` };
+    return rejected(`이미지는 최대 ${MMS_MAX_IMAGES}장까지 첨부할 수 있습니다.`);
   }
   let images;
   try {
     images = imageDataUrls.map((url, i) => dataUrlToSmsImage(url, i));
   } catch (e) {
-    return { total: 0, success: 0, failed: 0, dryRun: false, failReason: e instanceof Error ? e.message : "이미지를 처리할 수 없습니다." };
+    return rejected(e instanceof Error ? e.message : "이미지를 처리할 수 없습니다.");
   }
 
   const data = await buildVarsForStudents(studentIds);
-  const items = data.map((d) => ({ phone: d.phone, message: substitute(templateBody, d.vars) }));
+  // name 은 실패 목록에 "누구 번호인지" 보여주기 위한 것. 발송에는 쓰이지 않는다.
+  const items = data.map((d) => ({ phone: d.phone, name: d.name, message: substitute(templateBody, d.vars) }));
   // 누가 보냈는지 남긴다. 예전엔 sendId 가 항상 0 이라 발송자 추적이 불가능했다.
   const result = await sendBulk(items, { templateId, sendId: session.uid, images });
   revalidatePath("/reading/notices");
