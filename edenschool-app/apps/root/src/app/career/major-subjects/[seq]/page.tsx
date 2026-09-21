@@ -109,13 +109,7 @@ export default async function MajorSubjectsDetailPage({ params }: { params: Prom
         </div>
       </div>
 
-      <div className="career-eden-box">
-        <strong>이든배움 연결</strong> — 학교별 전담 선생님이 담당 학교의 선택과목 개설 현황과 내신 유형에 맞춰 지도합니다.
-        1:1 클리닉에서 수행평가 글쓰기·발표까지 함께 준비할 수 있습니다.{' '}
-        <a href="https://booking.naver.com/booking/13/bizes/844951">상담 예약</a>
-      </div>
-
-      <div className="career-mt" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <a href={`/career/reading-guide/${seq}`} className="eden-btn eden-btn-secondary">
           <i className="fas fa-book-reader"></i> 이 학과의 탐구 독서 가이드
         </a>
