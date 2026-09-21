@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/session';
+import { CAREER_MENU } from '@/lib/careernet/content';
 
 export async function Navbar() {
   const session = await getSession();
@@ -30,7 +31,23 @@ export async function Navbar() {
             <li><a href="/class-video">수업 소개영상</a></li>
             <li><a href="/board/review">수강후기</a></li>
             <li><a href="https://edenschool.kr/board/notice/3-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%8F-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%98%ED%99%98%EA%B8%B0%EC%A4%80">교습비</a></li>
-            <li><a href="/career">진로탐색</a></li>
+            <li className="eden-nav-dropdown eden-nav-dropdown-right">
+              <a href="/career" className="eden-nav-dropdown-toggle">진로탐색</a>
+              {/* 13개 하위 메뉴를 3개 그룹(열)로 펼치는 메가 메뉴 */}
+              <div className="eden-nav-dropdown-menu eden-nav-mega">
+                {CAREER_MENU.map((group) => (
+                  <div key={group.key} className="eden-nav-mega-col">
+                    <div className="eden-nav-mega-title">{group.title}</div>
+                    {group.items.map((item) => (
+                      <a key={item.href} href={item.href}>
+                        <i className={`fas ${item.icon}`}></i>
+                        {item.title}
+                      </a>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </li>
           </ul>
 
           <div className="eden-navbar-right">
@@ -94,7 +111,13 @@ export async function Navbar() {
         <a href="/class-video">수업 소개영상</a>
         <a href="/board/review">수강후기</a>
         <a href="https://edenschool.kr/board/notice/3-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%8F-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%98%ED%99%98%EA%B8%B0%EC%A4%80">교습비</a>
-        <a href="/career">진로탐색</a>
+        <div className="eden-mobile-group">진로탐색</div>
+        <a href="/career" className="eden-mobile-sub">이든 진로탐색 도우미</a>
+        {CAREER_MENU.flatMap((g) => g.items).map((item) => (
+          <a key={item.href} href={item.href} className="eden-mobile-sub">
+            {item.title}
+          </a>
+        ))}
         <div className="eden-mobile-divider"></div>
         {user ? (
           <>

@@ -196,12 +196,41 @@ export interface CoseItem {
 }
 
 export async function listCose(opts: { targt?: string; activityType?: string; page?: number; perPage?: number } = {}) {
+  // 매뉴얼은 `Tagrt` 로 적혀 있지만 실제로는 소문자 `targt` 만 필터가 걸린다 (Tagrt 는 무시됨).
   return openApi<CoseItem>('COSE', {
-    Tagrt: opts.targt,
+    targt: opts.targt,
     activityType: opts.activityType,
     thisPage: opts.page ?? 1,
     perPage: opts.perPage ?? 20,
   });
+}
+
+/**
+ * 첨부 파일명 조회 — attFile 은 fileDownload2.do?seq=&no= 형태라 이름이 없다.
+ * HEAD 요청의 Content-Disposition 에서 파일명을 읽는다(서버가 UTF-8 바이트를 latin-1 로 보내 되돌려 해석).
+ * 실패하면 null → 화면은 "첨부 n" 으로 표시한다. 1주 캐시.
+ */
+export async function getAttachmentName(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { method: 'HEAD', next: { revalidate: WEEK } });
+    const cd = res.headers.get('content-disposition') ?? '';
+    const m = /filename\*?=(?:UTF-8'')?"?([^";]+)/i.exec(cd);
+    if (!m) return null;
+    let name = m[1].trim();
+    try {
+      name = decodeURIComponent(name);
+    } catch {
+      /* 인코딩 안 된 값 */
+    }
+    // latin-1 로 잘못 해석된 UTF-8 복원
+    if (/[\u0080-\u00ff]/.test(name)) {
+      const bytes = Uint8Array.from(name, (ch) => ch.charCodeAt(0) & 0xff);
+      name = new TextDecoder('utf-8').decode(bytes);
+    }
+    return name || null;
+  } catch {
+    return null;
+  }
 }
 
 /* ───────────────── 직업백과 ───────────────── */

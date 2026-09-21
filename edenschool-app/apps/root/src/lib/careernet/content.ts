@@ -352,10 +352,12 @@ export function isPartnerSchool(name: string): boolean {
 
 /* ───────────────── 학부모 자료실 코드 ───────────────── */
 
+/** 자료 대상(targt). 매뉴얼의 I(일반고)는 실제 자료가 4건뿐이라 H(고등학교)를 쓴다. */
 export const COSE_TARGETS = [
-  { code: 'M', name: '중학교' },
-  { code: 'I', name: '일반고등학교' },
   { code: 'C', name: '공통' },
+  { code: 'M', name: '중학교' },
+  { code: 'H', name: '고등학교' },
+  { code: 'J', name: '직업계고' },
 ];
 
 export const COSE_ACTIVITY_TYPES = [
