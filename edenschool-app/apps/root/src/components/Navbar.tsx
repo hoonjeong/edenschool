@@ -30,6 +30,7 @@ export async function Navbar() {
             <li><a href="/class-video">수업 소개영상</a></li>
             <li><a href="/board/review">수강후기</a></li>
             <li><a href="https://edenschool.kr/board/notice/3-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%8F-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%98%ED%99%98%EA%B8%B0%EC%A4%80">교습비</a></li>
+            <li><a href="/career">진로탐색</a></li>
           </ul>
 
           <div className="eden-navbar-right">
@@ -93,6 +94,7 @@ export async function Navbar() {
         <a href="/class-video">수업 소개영상</a>
         <a href="/board/review">수강후기</a>
         <a href="https://edenschool.kr/board/notice/3-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%8F-%EA%B5%90%EC%8A%B5%EB%B9%84-%EB%B0%98%ED%99%98%EA%B8%B0%EC%A4%80">교습비</a>
+        <a href="/career">진로탐색</a>
         <div className="eden-mobile-divider"></div>
         {user ? (
           <>

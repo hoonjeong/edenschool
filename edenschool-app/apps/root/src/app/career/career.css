@@ -1,0 +1,384 @@
+/* ===== 이든 진로국어 (/career) 전용 스타일 =====
+   공용 eden-* 위에 얹는 보조 클래스만 둔다. 색은 student.css 의 --eden-* 변수를 따른다. */
+
+.career-subnav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.career-subnav a {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--eden-border);
+  background: #fff;
+  color: var(--eden-text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.career-subnav a:hover {
+  border-color: var(--eden-primary);
+  color: var(--eden-primary);
+}
+
+.career-subnav a.active {
+  background: var(--eden-primary);
+  border-color: var(--eden-primary);
+  color: #fff;
+}
+
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.career-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.career-menu-card {
+  display: block;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid var(--eden-border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--eden-text);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.career-menu-card:hover {
+  border-color: var(--eden-primary);
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.12);
+  text-decoration: none;
+  color: var(--eden-text);
+}
+
+.career-menu-card i {
+  font-size: 22px;
+  color: var(--eden-primary);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.career-menu-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.career-menu-card p {
+  font-size: 13px;
+  color: var(--eden-text-muted);
+  margin: 0;
+}
+
+.career-group-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 28px 0 12px;
+  padding-left: 10px;
+  border-left: 4px solid var(--eden-primary);
+}
+
+/* 학과·직업 검색 결과 항목 */
+.career-result {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--eden-border);
+  border-radius: 10px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--eden-text);
+  margin-bottom: 10px;
+}
+
+.career-result:hover {
+  border-color: var(--eden-primary);
+  text-decoration: none;
+  color: var(--eden-text);
+}
+
+.career-result-title {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.career-result-sub {
+  font-size: 13px;
+  color: var(--eden-text-muted);
+  margin-top: 4px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 과목 칩 */
+.career-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: #f1f5f9;
+  color: #475569;
+  margin: 0 6px 6px 0;
+}
+
+.career-chip.korean {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+  font-weight: 700;
+}
+
+.career-chip.korean:hover {
+  background: #ffedd5;
+  text-decoration: none;
+}
+
+/* 과목 설명 카드 */
+.career-subject-card {
+  border: 1px solid #fdba74;
+  background: #fffaf5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.career-subject-card h5 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #9a3412;
+}
+
+.career-subject-card dl {
+  margin: 0;
+  font-size: 13px;
+}
+
+.career-subject-card dt {
+  font-weight: 700;
+  color: #475569;
+  margin-top: 6px;
+}
+
+.career-subject-card dd {
+  margin: 2px 0 0;
+  color: var(--eden-text);
+  line-height: 1.6;
+}
+
+/* 막대그래프 */
+.career-bar {
+  margin-bottom: 10px;
+}
+
+.career-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.career-bar-track {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.career-bar-fill {
+  height: 100%;
+  background: var(--eden-primary);
+  border-radius: 5px;
+}
+
+.career-bar-fill.accent {
+  background: #f97316;
+}
+
+/* 본문 텍스트 블록 */
+.career-text {
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.career-list {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.career-note {
+  font-size: 13px;
+  color: var(--eden-text-muted);
+  background: #f8fafc;
+  border: 1px dashed var(--eden-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.career-eden-box {
+  background: var(--eden-primary-light);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.career-eden-box strong {
+  color: var(--eden-primary);
+}
+
+.career-credit {
+  margin-top: 28px;
+  font-size: 12px;
+  color: var(--eden-text-muted);
+  text-align: right;
+}
+
+.career-stat-table {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+}
+
+.career-stat-table th,
+.career-stat-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--eden-border);
+  text-align: left;
+}
+
+.career-stat-table th {
+  color: var(--eden-text-muted);
+  font-weight: 600;
+  width: 40%;
+}
+
+.career-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.career-section-title i {
+  color: var(--eden-primary);
+}
+
+.career-mt {
+  margin-top: 20px;
+}
+
+/* 심리검사 문항 */
+.career-q {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--eden-border);
+}
+
+.career-q-title {
+  font-size: 13px;
+  color: var(--eden-text-muted);
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 16px 0 8px;
+}
+
+.career-q-text {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.career-q-text.unanswered {
+  color: #b91c1c;
+}
+
+.career-q-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.career-q-choices label {
+  font-size: 13px;
+  padding: 6px 12px;
+  border: 1px solid var(--eden-border);
+  border-radius: 999px;
+  cursor: pointer;
+  background: #fff;
+  user-select: none;
+}
+
+.career-q-choices label.checked {
+  background: var(--eden-primary);
+  border-color: var(--eden-primary);
+  color: #fff;
+}
+
+.career-q-choices input {
+  display: none;
+}
+
+.career-q-tip {
+  font-size: 12px;
+  color: var(--eden-text-muted);
+  margin-top: 6px;
+}
+
+.career-sticky-bar {
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  border-top: 1px solid var(--eden-border);
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.career-select {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--eden-border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.career-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 10px 12px;
+  border: 1px solid var(--eden-border);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .career-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

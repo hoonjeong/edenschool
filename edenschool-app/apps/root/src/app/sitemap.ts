@@ -26,6 +26,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${site}/about/clinic`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${site}/qna`, changeFrequency: 'daily', priority: 0.6 },
     { url: `${site}/class-video`, changeFrequency: 'monthly', priority: 0.7 },
+    // 이든 진로국어 (커리어넷 연동, 공개 페이지)
+    ...['', '/major-subjects', '/job-report', '/reading-guide', '/assessment-topics', '/today-job', '/test', '/subject-map', '/compare', '/themes', '/qna', '/high-schools', '/resources'].map(
+      (p) => ({ url: `${site}/career${p}`, changeFrequency: 'weekly' as const, priority: p === '' ? 0.8 : 0.6 })
+    ),
   ];
 
   // 게시판 전체보기 + 카테고리 목록 5종 (/board 는 301 되므로 등록하지 않는다)
