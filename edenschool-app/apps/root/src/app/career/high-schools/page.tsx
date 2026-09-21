@@ -1,6 +1,5 @@
 import { CareerShell, CareerError } from '@/components/career/CareerShell';
 import { listHighSchools, listHighMajors, type SchoolItem, type MajorListItem } from '@/lib/careernet/client';
-import { isPartnerSchool } from '@/lib/careernet/content';
 
 const GUBUN_ORDER = ['일반고', '자율고', '특수목적고', '특성화고'];
 
@@ -46,16 +45,10 @@ export default async function HighSchoolsPage({ searchParams }: { searchParams: 
 
       {tab === 'schools' && (
         <>
-          <div className="career-note" style={{ marginTop: 0, marginBottom: 16 }}>
-            <span className="eden-badge eden-badge-success" style={{ marginRight: 6 }}>
-              전담
-            </span>
-            표시는 이든배움 학교별 전담 선생님이 내신 시험 유형에 맞춰 지도하는 학교입니다.
-          </div>
           {gubuns.map((g) => {
             const rows = bucheon
               .filter((s) => s.schoolGubun === g)
-              .sort((a, b) => Number(isPartnerSchool(b.schoolName)) - Number(isPartnerSchool(a.schoolName)) || a.schoolName.localeCompare(b.schoolName, 'ko'));
+              .sort((a, b) => a.schoolName.localeCompare(b.schoolName, 'ko'));
             return (
               <div key={g} className="eden-card" style={{ marginBottom: 16 }}>
                 <div className="eden-card-header">
@@ -77,11 +70,6 @@ export default async function HighSchoolsPage({ searchParams }: { searchParams: 
                         <tr key={s.seq}>
                           <td>
                             <strong>{s.schoolName}</strong>
-                            {isPartnerSchool(s.schoolName) && (
-                              <span className="eden-badge eden-badge-success" style={{ marginLeft: 6 }}>
-                                전담
-                              </span>
-                            )}
                           </td>
                           <td>{s.estType}</td>
                           <td style={{ fontSize: 13, color: '#64748b' }}>{s.adres}</td>
@@ -123,10 +111,6 @@ export default async function HighSchoolsPage({ searchParams }: { searchParams: 
         </>
       )}
 
-      <div className="career-eden-box career-mt">
-        <strong>고입 준비와 국어</strong> — 어떤 고등학교를 가든 1학년 공통국어부터 내신이 시작됩니다. 이든배움은 중3 겨울부터 고1 국어 선행과 학교별 내신 유형 안내를 제공합니다.{' '}
-        <a href="https://booking.naver.com/booking/13/bizes/844951">상담 예약</a>
-      </div>
     </CareerShell>
   );
 }

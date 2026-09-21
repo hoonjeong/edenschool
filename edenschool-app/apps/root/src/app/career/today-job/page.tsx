@@ -85,10 +85,6 @@ export default async function TodayJobPage() {
         </div>
       </div>
 
-      <div className="career-eden-box">
-        <strong>클리닉 연결</strong> — 저장된 요약은 「나의 진로 포트폴리오」에 쌓이고, 담당 선생님이 클리닉 시간에 요약의 정확성과 문장 구조를 점검합니다.
-      </div>
-
       <div className="career-mt" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <a href={`/career/job-report/${cd}`} className="eden-btn eden-btn-secondary">
           <i className="fas fa-chart-bar"></i> 이 직업의 국어 역량 리포트

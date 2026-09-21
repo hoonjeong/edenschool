@@ -101,8 +101,6 @@ export default async function MajorSubjectsDetailPage({ params }: { params: Prom
                 <dd>{card.learn}</dd>
                 <dt>시험과 수행평가</dt>
                 <dd>{card.assess}</dd>
-                <dt>이든배움에서 이 과목을 준비하는 방법</dt>
-                <dd>{card.eden}</dd>
               </dl>
             </div>
           ))}

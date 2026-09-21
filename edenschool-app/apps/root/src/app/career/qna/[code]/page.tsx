@@ -33,9 +33,6 @@ export default async function QnaDetailPage({ params, searchParams }: { params: 
           <div className="career-note">출처: 커리어넷 진로상담사례(진로탐험대)</div>
         </div>
       </div>
-      <div className="career-eden-box career-mt">
-        <strong>이든배움 한마디</strong> — 진로 고민은 글로 정리하면 절반은 풀립니다. 이 답변을 읽고 나의 상황을 한 문단으로 써 보세요. 담당 선생님과의 상담 자료가 됩니다.
-      </div>
       <div className="career-mt">
         <a href={`/career/qna?g=${g.charAt(0)}`} className="eden-btn eden-btn-secondary">
           <i className="fas fa-list"></i> 목록으로

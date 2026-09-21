@@ -39,7 +39,7 @@ export default async function PortfolioPage() {
   }
 
   return (
-    <CareerShell title="나의 진로 포트폴리오" desc={`${session.user.name ?? ''} 학생의 진로 탐색 기록입니다. 담당 선생님과의 상담·클리닉에 활용됩니다.`}>
+    <CareerShell title="나의 진로 포트폴리오" desc={`${session.user.name ?? ''} 학생의 진로 탐색 기록입니다.`}>
       {unavailable ? (
         <div className="eden-empty">
           <i className="fas fa-tools"></i>
@@ -88,10 +88,6 @@ export default async function PortfolioPage() {
           );
         })
       )}
-
-      <div className="career-eden-box">
-        <strong>선생님과 함께</strong> — 이 화면을 담당 선생님께 보여 주면 관심 학과·직업에 맞춘 국어 선택과목 안내와 수행평가·독서 지도를 받을 수 있습니다.
-      </div>
     </CareerShell>
   );
 }

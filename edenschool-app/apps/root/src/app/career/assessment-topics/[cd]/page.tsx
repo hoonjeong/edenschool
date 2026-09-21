@@ -61,9 +61,6 @@ export default async function AssessmentTopicsDetailPage({ params, searchParams 
                 <li key={f}>{f}</li>
               ))}
             </ol>
-            <div className="career-note">
-              주제 문장과 구성 틀은 이든배움 기본 틀입니다. 학교별 전담 선생님이 담당 학교의 수행평가 경향에 맞춰 함께 다듬습니다.
-            </div>
           </div>
         </div>
 

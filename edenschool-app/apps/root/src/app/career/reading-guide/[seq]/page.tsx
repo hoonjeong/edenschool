@@ -86,7 +86,7 @@ export default async function ReadingGuideDetailPage({ params, searchParams }: {
 
       <div className="eden-card career-mt">
         <div className="eden-card-header">
-          <i className="fas fa-book-reader"></i> 이든배움 추천 도서와 탐구 질문
+          <i className="fas fa-book-reader"></i> 추천 도서와 탐구 질문
         </div>
         <div className="eden-card-body">
           {books.length > 0 ? (
@@ -105,7 +105,7 @@ export default async function ReadingGuideDetailPage({ params, searchParams }: {
           ) : (
             <>
               <div className="career-note" style={{ marginTop: 0 }}>
-                {cls ? `${cls} 추천 도서 목록은 담당 선생님이 준비 중입니다.` : '계열별 추천 도서 목록은 담당 선생님이 준비 중입니다.'} 그동안 아래 탐구 질문으로 시작해 보세요.
+                {cls ? `${cls} 추천 도서 목록은 준비 중입니다.` : '계열별 추천 도서 목록은 준비 중입니다.'} 그동안 아래 탐구 질문으로 시작해 보세요.
               </div>
               <div className="career-section-title career-mt">탐구 질문 (출발점)</div>
               <ul className="career-list">
@@ -116,11 +116,6 @@ export default async function ReadingGuideDetailPage({ params, searchParams }: {
             </>
           )}
         </div>
-      </div>
-
-      <div className="career-eden-box career-mt">
-        <strong>국어 연결</strong> — 이 가이드는 '주제 탐구 독서' 과목과 독서 관련 수행평가(독서 기록·탐구 보고서·발표)를 준비하는 출발점입니다.
-        이든배움 클리닉에서 책 선정부터 보고서 작성까지 단계별로 지도합니다.
       </div>
 
       <div className="career-mt" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

@@ -121,9 +121,6 @@ export default async function JobReportDetailPage({ params }: { params: Promise<
             <li key={t}>{t}</li>
           ))}
         </ul>
-        <div style={{ marginTop: 8 }}>
-          이든배움의 1:1 클리닉과 수행평가 지도가 이 훈련을 맡습니다. <a href="https://booking.naver.com/booking/13/bizes/844951">상담 예약</a>
-        </div>
       </div>
 
       {job.departList.length > 0 && (
