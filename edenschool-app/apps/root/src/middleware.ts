@@ -6,7 +6,7 @@ import { sessionOptions } from '@edenschool/common/auth';
 import { adminSessionOptions, type AdminSessionData } from '@/lib/admin-session';
 
 // Student protected paths
-const protectedPaths = ['/myinfo', '/lecture', '/lecture-view', '/free-lecture', '/special-lecture', '/school-lecture', '/carrer', '/carrer-view', '/major', '/major-view', '/my-dream', '/ai-career', '/career/portfolio'];
+const protectedPaths = ['/myinfo', '/lecture', '/lecture-view', '/free-lecture', '/special-lecture', '/school-lecture', '/career/portfolio'];
 const publicPaths = ['/', '/login', '/join', '/join-step2', '/find-email', '/find-pass', '/board', '/post-view', '/class-video', '/error', '/api', '/about'];
 // /career(이든 진로국어)는 /career/portfolio 만 보호(protectedPaths)하고 나머지는 어느 목록에도 없어 공개로 통과한다.
 

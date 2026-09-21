@@ -165,17 +165,6 @@ export interface FileInfo {
   filedata?: Buffer | null;
 }
 
-// MyDream.java
-export interface MyDream {
-  id: number;
-  userId: number;
-  name: string;
-  id1: string;
-  id2: string;
-  type: string;
-  insertTime?: string;
-}
-
 // ClassStatus.java (Admin)
 export interface ClassStatus {
   id: number;
