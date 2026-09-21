@@ -19,8 +19,8 @@ export async function CareerShell({
   return (
     <div className="eden-container">
       <div className="eden-breadcrumb">
-        <a href="/career">이든 진로국어</a>
-        {title !== '이든 진로국어' && <> &rsaquo; {title}</>}
+        <a href="/career">이든 진로탐색 도우미</a>
+        {title !== '이든 진로탐색 도우미' && <> &rsaquo; {title}</>}
       </div>
       <div className="eden-page-header">
         <h2>{title}</h2>

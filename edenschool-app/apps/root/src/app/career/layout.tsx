@@ -2,7 +2,7 @@ import './career.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '이든 진로국어 | 이든배움국어학원',
+  title: '이든 진로탐색 도우미 | 이든배움국어학원',
   description: '커리어넷 공공 데이터로 보는 진로와 국어 역량. 학과별 국어 선택과목, 직업별 국어 역량 리포트, 진로심리검사, 부천 고등학교 정보.',
 };
 

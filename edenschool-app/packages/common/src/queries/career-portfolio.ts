@@ -2,7 +2,7 @@ import pool from '../db';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 /**
- * 「이든 진로국어」 나의 진로 포트폴리오 (career_portfolio).
+ * 「이든 진로탐색 도우미」 나의 진로 포트폴리오 (career_portfolio).
  * 테이블 DDL: sql/career-portfolio.sql — 적용 전엔 조회가 실패하므로 호출자가 안내 화면으로 처리한다.
  */
 
