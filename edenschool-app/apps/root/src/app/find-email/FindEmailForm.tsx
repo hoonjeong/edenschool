@@ -2,11 +2,19 @@
 
 import { useState } from 'react';
 
+// 찾은 계정이 로그인할 수 없는 상태(퇴원 D·탈퇴 E)일 때 보여줄 안내
+export function inactiveNotice(status?: string): string {
+  if (status === 'D') return '이 계정은 퇴원 처리되어 현재 로그인할 수 없습니다. 다시 수강 중이라면 학원으로 문의해 주세요.';
+  if (status === 'E') return '이 계정은 탈퇴 처리되어 현재 로그인할 수 없습니다. 다시 이용하려면 학원으로 문의해 주세요.';
+  return '';
+}
+
 export function FindEmailForm() {
   const [phone, setPhone] = useState('');
   const [phoneType, setPhoneType] = useState('S');
   const [authCode, setAuthCode] = useState('');
   const [result, setResult] = useState('');
+  const [statusNotice, setStatusNotice] = useState('');
 
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [showAuthCode, setShowAuthCode] = useState(false);
@@ -78,6 +86,7 @@ export function FindEmailForm() {
     const data = await res.json();
     if (data.email) {
       setResult(`회원님의 가입 이메일은 ${data.email}입니다.`);
+      setStatusNotice(inactiveNotice(data.status));
     } else {
       setResult(data.error || '등록된 이메일을 찾을 수 없습니다.');
     }
@@ -128,6 +137,10 @@ export function FindEmailForm() {
           <div className="alert alert-success" style={{ textAlign: 'center', fontSize: 15, fontWeight: 500 }}>
             {result}
           </div>
+        )}
+
+        {phoneVerified && statusNotice && (
+          <div className="alert alert-danger">{statusNotice}</div>
         )}
 
         <div className="auth-links">

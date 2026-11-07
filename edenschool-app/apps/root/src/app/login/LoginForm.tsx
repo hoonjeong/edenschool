@@ -22,7 +22,11 @@ function LoginFormInner({ savedEmail }: { savedEmail: string }) {
 
         {error && (
           <div className="alert alert-danger">
-            이메일 또는 비밀번호가 올바르지 않습니다.
+            {error === 'exited'
+              ? '퇴원 처리되어 현재 로그인할 수 없는 계정입니다. 다시 수강 중이라면 학원으로 문의해 주세요.'
+              : error === 'withdrawn'
+                ? '탈퇴한 계정입니다. 다시 이용하려면 학원으로 문의해 주세요.'
+                : '이메일 또는 비밀번호가 올바르지 않습니다.'}
           </div>
         )}
 

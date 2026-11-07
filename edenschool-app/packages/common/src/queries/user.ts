@@ -38,6 +38,30 @@ export async function selectEmailByPhone(phone: string, type: string): Promise<s
   return rows[0]?.email || null;
 }
 
+// ROOT: selectAccountByPhone — selectEmailByPhone과 같은 계정을 고르되 상태(code)도 함께 돌려준다.
+// 이메일/비밀번호 찾기에서 찾은 계정이 로그인 불가(퇴원 'D'·탈퇴 'E') 상태인지 알려주기 위해 쓴다.
+export async function selectAccountByPhone(
+  phone: string,
+  type: string,
+): Promise<{ email: string; code: string } | null> {
+  const sql = type === 'P'
+    ? `SELECT email, code FROM user_info WHERE pphone=? ORDER BY id DESC LIMIT 1`
+    : `SELECT email, code FROM user_info WHERE sphone=? ORDER BY id DESC LIMIT 1`;
+  const [rows] = await pool.query<RowDataPacket[]>(sql, [phone]);
+  return rows[0] ? { email: rows[0].email, code: rows[0].code } : null;
+}
+
+// ROOT: selectInactiveUsersByEmail — 로그인 실패 시 원인 안내용.
+// 로그인 쿼리(selectUserInfoByEmail)는 code='S'만 보므로, 퇴원·탈퇴 계정은 비밀번호가 맞아도
+// "비밀번호가 올바르지 않습니다"로 끝난다. 그 경우를 구분하려고 S가 아닌 계정을 따로 읽는다.
+export async function selectInactiveUsersByEmail(email: string): Promise<{ pw: string; code: string }[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT pw, code FROM user_info WHERE email=? AND code<>'S' ORDER BY id DESC`,
+    [email]
+  );
+  return rows as { pw: string; code: string }[];
+}
+
 // ROOT: countLiveUserByStudentId — 한 학생당 살아있는 계정 하나. 중복 가입을 막는다.
 // (이메일 찾기가 user_info를 ORDER BY id DESC LIMIT 1로 조회하므로,
 //  쓸 수 있는 계정이 여러 개면 예전 계정이 묻혀 로그인 불가 상태가 된다.)

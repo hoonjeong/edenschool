@@ -1,7 +1,7 @@
 import { buildUrl, safeRedirectPath } from '@/lib/url';
 import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { selectUserInfoByEmail, updateUserInfoPw } from '@edenschool/common/queries/user';
+import { selectUserInfoByEmail, selectInactiveUsersByEmail, updateUserInfoPw } from '@edenschool/common/queries/user';
 import { verifyPassword, needsRehash, hashPassword } from '@edenschool/common/password';
 import { getSessionOptions } from '@edenschool/common/auth';
 import type { SessionData } from '@edenschool/common/auth';
@@ -27,7 +27,12 @@ export async function POST(req: NextRequest) {
     // Fetch user by email and verify password app-side (handles both bcrypt and SHA1)
     const user = await selectUserInfoByEmail(email);
     if (!user || !user.pw || !(await verifyPassword(pw, user.pw))) {
-      const errorUrl = referer && referer !== '/' ? `/login?error=1&referer=${encodeURIComponent(referer)}` : '/login?error=1';
+      // 사용 가능한 계정이 없을 때만, 퇴원·탈퇴 계정의 비밀번호가 맞는지 본다.
+      // 비밀번호가 맞을 때만 사유를 알려주므로 계정 존재 여부가 노출되지 않는다.
+      const reason = user ? '1' : await inactiveReason(email, pw);
+      const errorUrl = referer && referer !== '/'
+        ? `/login?error=${reason}&referer=${encodeURIComponent(referer)}`
+        : `/login?error=${reason}`;
       return NextResponse.redirect(buildUrl(errorUrl, req));
     }
 
@@ -72,4 +77,14 @@ export async function POST(req: NextRequest) {
     console.error('Login error:', error);
     return NextResponse.redirect(buildUrl('/login?error=1', req));
   }
+}
+
+// 로그인 실패 사유 코드: 'exited'(퇴원 처리 계정), 'withdrawn'(탈퇴 계정), '1'(일반 실패)
+async function inactiveReason(email: string, pw: string): Promise<string> {
+  for (const row of await selectInactiveUsersByEmail(email)) {
+    if (row.pw && (await verifyPassword(pw, row.pw))) {
+      return row.code === 'D' ? 'exited' : 'withdrawn';
+    }
+  }
+  return '1';
 }

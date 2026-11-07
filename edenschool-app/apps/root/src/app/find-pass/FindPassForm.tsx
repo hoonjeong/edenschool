@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
+import { inactiveNotice } from '../find-email/FindEmailForm';
 
 export function FindPassForm() {
   const [phone, setPhone] = useState('');
@@ -100,6 +101,12 @@ export function FindPassForm() {
     if (data.error) {
       setMessage(data.error);
       setMessageType('danger');
+    } else if (inactiveNotice(data.status)) {
+      // 로그인 페이지로 보내도 로그인이 안 되므로, 여기서 사유를 보여주고 멈춘다.
+      setMessage(`비밀번호는 변경되었습니다. 다만 ${inactiveNotice(data.status)}`);
+      setMessageType('danger');
+      setPhoneVerified(false);
+      setShowAuthCode(false);
     } else {
       alert('비밀번호가 변경되었습니다. 로그인 페이지로 이동합니다.');
       window.location.href = '/login';

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { selectEmailByPhone, updatePassByEmail } from '@edenschool/common/queries/user';
+import { selectAccountByPhone, updatePassByEmail } from '@edenschool/common/queries/user';
 import { hashPassword } from '@edenschool/common/password';
 import { normalizePhone, isValidPassword, PASSWORD_RULES } from '@edenschool/common/validation';
 import { getVerification, deleteVerification } from '@/lib/verification-store';
@@ -25,7 +25,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: PASSWORD_RULES }, { status: 400 });
   }
 
-  const email = await selectEmailByPhone(phone, phoneType);
+  const account = await selectAccountByPhone(phone, phoneType);
+  const email = account?.email;
   if (!email) {
     return NextResponse.json({ error: '해당하는 계정을 찾을 수 없습니다.' }, { status: 404 });
   }
@@ -35,5 +36,6 @@ export async function POST(req: NextRequest) {
 
   deleteVerification('user-find', phone);
 
-  return NextResponse.json({ success: true });
+  // 비밀번호는 바꿔주되, 퇴원('D')·탈퇴('E') 계정이면 로그인이 안 된다는 것을 함께 알린다.
+  return NextResponse.json({ success: true, status: account.code });
 }
