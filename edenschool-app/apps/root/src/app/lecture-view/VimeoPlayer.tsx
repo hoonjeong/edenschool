@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import Player from '@vimeo/player';
+
+/** 이 시간 안에 플레이어가 준비되지 않으면 차단된 것으로 보고 안내를 띄운다 */
+const READY_TIMEOUT_MS = 15000;
 
 interface Props {
   url: string;
@@ -16,6 +19,7 @@ export default function VimeoPlayer({ url, initialSeconds, lectureId }: Props) {
   const progressRef = useRef({ watchedSeconds: 0, duration: 0, percent: 0 });
   const viewLogIdRef = useRef<number | null>(null);
   const viewLogStartRef = useRef(0);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const saveProgress = useCallback(async (completed: boolean = false) => {
     const p = progressRef.current;
@@ -88,6 +92,23 @@ export default function VimeoPlayer({ url, initialSeconds, lectureId }: Props) {
 
     playerRef.current = player;
 
+    // 스크린 타임·차단 앱 등으로 vimeo.com 이 막히면 빈 화면만 남는다 → 안내 표시
+    let ready = false;
+    const readyTimer = window.setTimeout(() => {
+      if (!ready) setLoadFailed(true);
+    }, READY_TIMEOUT_MS);
+    player.ready().then(
+      () => {
+        ready = true;
+        window.clearTimeout(readyTimer);
+        setLoadFailed(false);
+      },
+      () => {
+        window.clearTimeout(readyTimer);
+        setLoadFailed(true);
+      }
+    );
+
     player.on('loaded', () => {
       if (initialSeconds > 0) {
         player.setCurrentTime(initialSeconds).catch(() => {});
@@ -152,10 +173,48 @@ export default function VimeoPlayer({ url, initialSeconds, lectureId }: Props) {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      window.clearTimeout(readyTimer);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       player.destroy().catch(() => {});
     };
   }, [url, initialSeconds, saveProgress, startViewLog, updateViewLog, endViewLog]);
 
-  return <div ref={containerRef} />;
+  return (
+    <>
+      <div ref={containerRef} />
+      {loadFailed && (
+        <div
+          role="alert"
+          style={{
+            padding: '28px 20px',
+            borderRadius: 10,
+            background: '#1e293b',
+            color: '#e2e8f0',
+            fontSize: 14,
+            lineHeight: 1.7,
+            textAlign: 'center',
+          }}
+        >
+          <i className="fas fa-exclamation-circle" style={{ fontSize: 28, color: '#fbbf24', marginBottom: 10 }} />
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>영상을 불러올 수 없습니다.</div>
+          <div>
+            휴대폰의 <b>스크린 타임(웹 콘텐츠 제한)</b>, 유해사이트 차단 앱, VPN 설정에서
+            <br />
+            <b>vimeo.com</b> 접속이 막혀 있는지 확인해 주세요.
+          </div>
+          <div style={{ marginTop: 6, color: '#94a3b8', fontSize: 13 }}>
+            계속 안 되면 다른 기기(PC 등)로 시청하거나 선생님께 문의해 주세요.
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="eden-btn eden-btn-secondary"
+            style={{ marginTop: 14 }}
+          >
+            <i className="fas fa-redo" /> 다시 시도
+          </button>
+        </div>
+      )}
+    </>
+  );
 }
